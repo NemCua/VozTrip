@@ -2,6 +2,8 @@
 // using Microsoft.VisualBasic;
 using Npgsql;
 using app_thuyet_minh_server.Models;
+using Microsoft.Extensions.ObjectPool;
+using System.Collections.Generic;
 namespace app_thuyet_minh_server.Services;
 
 public class UserService
@@ -25,24 +27,62 @@ public class UserService
 
         cmd.Parameters.AddWithValue("id", id);
 
-        var reader = await cmd.ExecuteReaderAsync();
+        await using var reader = await cmd.ExecuteReaderAsync();
 
         if (await reader.ReadAsync())
         {
             return new User
             {
-                Id = reader.GetInt32(0),
-                Name = reader.GetString(1),
-                Phone = reader.IsDBNull(2) ? null : reader.GetString(2),
-                Email = reader.GetString(3),
-                Role = reader.GetString(4),
-                PassHash = reader.GetString(5),
-                Status = reader.GetInt32(6),
-                CreatedAt = reader.GetDateTime(7),
-                UpdatedAt = reader.GetDateTime(8)
+                Id = reader.GetInt32(reader.GetOrdinal("id")),
+                Name = reader.GetString(reader.GetOrdinal("name")),
+
+                Phone = reader.IsDBNull(reader.GetOrdinal("phone"))
+            ? null
+            : reader.GetString(reader.GetOrdinal("phone")),
+
+                Email = reader.GetString(reader.GetOrdinal("email")),
+                Role = reader.GetString(reader.GetOrdinal("role")),
+                PassHash = reader.GetString(reader.GetOrdinal("pass_hash")),
+                Status = reader.GetInt32(reader.GetOrdinal("status")),
+
+                CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at")),
+                UpdatedAt = reader.GetDateTime(reader.GetOrdinal("updated_at"))
             };
         }
 
-        return null; 
+        return null;
+    }
+    public async Task<List<User>> GetUsers()
+    {
+        List<User> users = new List<User>();
+        await using var conn = new NpgsqlConnection(_connStr);
+        await conn.OpenAsync();
+
+        var cmd = new NpgsqlCommand(
+            "select id,name,phone,email,role,pass_hash,status,created_at,updated_at from users",
+            conn
+        );
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            users.Add(new User
+            {
+                Id = reader.GetInt32(reader.GetOrdinal("id")),
+                Name = reader.GetString(reader.GetOrdinal("name")),
+
+                Phone = reader.IsDBNull(reader.GetOrdinal("phone"))
+            ? null
+            : reader.GetString(reader.GetOrdinal("phone")),
+
+                Email = reader.GetString(reader.GetOrdinal("email")),
+                Role = reader.GetString(reader.GetOrdinal("role")),
+                PassHash = reader.GetString(reader.GetOrdinal("pass_hash")),
+                Status = reader.GetInt32(reader.GetOrdinal("status")),
+
+                CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at")),
+                UpdatedAt = reader.GetDateTime(reader.GetOrdinal("updated_at"))
+            });
+        }
+        return users;
     }
 }

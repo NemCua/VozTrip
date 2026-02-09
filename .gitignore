@@ -1,2 +1,2 @@
-obj/
-bin/
+.env
+.env*
