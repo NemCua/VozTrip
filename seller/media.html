@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media Library - Seller Dashboard</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <h2>TourGuide Seller</h2>
+        <p>Manage Your Content</p>
+      </div>
+      
+      <nav>
+        <ul class="sidebar-nav">
+          <li><a href="index.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+          <li><a href="shop-profile.html"><span class="nav-icon">🏪</span> Shop Profile</a></li>
+          <li><a href="pois.html"><span class="nav-icon">📍</span> POI Management</a></li>
+          <li><a href="narrations.html"><span class="nav-icon">🎙️</span> Narrations</a></li>
+          <li><a href="questions.html"><span class="nav-icon">❓</span> Questions & Answers</a></li>
+          <li><a href="media.html" class="active"><span class="nav-icon">🖼️</span> Media Library</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <h1>Media Library</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-profile">
+            <div class="user-avatar">TB</div>
+            <div class="user-info">
+              <span class="user-name">Tran Thi B</span>
+              <span class="user-role">Seller</span>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Content Area -->
+      <main class="content">
+        <!-- Media Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Media</div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Images</div>
+            <div class="stat-value" id="statImages">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Videos</div>
+            <div class="stat-value" id="statVideos">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Storage Used</div>
+            <div class="stat-value text-small">12.5 MB</div>
+          </div>
+        </div>
+        
+        <!-- Upload Section -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Upload Media</h3>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Select POI *</label>
+              <select id="poiSelect" class="form-select">
+                <option value="">Choose POI for this media...</option>
+                <!-- Populated by JavaScript -->
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Media Type</label>
+              <select id="mediaType" class="form-select">
+                <option value="image">Image (JPG, PNG, WebP)</option>
+                <option value="video">Video (MP4, MOV)</option>
+              </select>
+            </div>
+            
+            <div class="upload-area" onclick="simulateUpload()">
+              <div class="upload-icon">📁</div>
+              <p class="upload-text">Click to upload or drag and drop</p>
+              <p class="upload-hint">Images: JPG, PNG, WebP (max 5MB) • Videos: MP4, MOV (max 50MB)</p>
+            </div>
+            
+            <p class="form-help text-muted mt-md">
+              <strong>Note:</strong> This is a mock upload interface. In production, files would be uploaded to a cloud storage service.
+            </p>
+          </div>
+        </div>
+        
+        <!-- Media Gallery -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Media Gallery</h3>
+            <select id="filterPOI" class="form-select" style="max-width: 250px;">
+              <option value="">All POIs</option>
+              <!-- Populated by JavaScript -->
+            </select>
+          </div>
+          <div class="card-body">
+            <div id="mediaGallery" class="media-grid">
+              <!-- Populated by JavaScript -->
+            </div>
+            <div id="emptyState" class="empty-state">
+              <div class="empty-state-icon">🖼️</div>
+              <h4 class="empty-state-title">No media yet</h4>
+              <p class="empty-state-text">Upload your first image or video to showcase your POIs.</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  
+  <!-- Media Preview Modal -->
+  <div class="modal-overlay" id="mediaModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Media Details</h3>
+        <button class="modal-close" onclick="closeModal('mediaModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="mediaPreview" class="mb-lg">
+          <!-- Preview content -->
+        </div>
+        <div class="form-group">
+          <label class="form-label">POI</label>
+          <p id="mediaPOI">-</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Media Type</label>
+          <p id="mediaTypeInfo">-</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">URL</label>
+          <p id="mediaURL" class="text-small text-muted">-</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" onclick="deleteMedia()">Delete Media</button>
+        <button class="btn btn-secondary" onclick="closeModal('mediaModal')">Close</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="../shared/script.js"></script>
+  <script>
+    currentUser = MOCK_DATA.users.find(u => u.role === 'seller') || MOCK_DATA.users[1];
+    let seller = null;
+    let myPOIs = [];
+    let myMedia = [];
+    let selectedMedia = null;
+    
+    function initPage() {
+      seller = getSellerByUserId(currentUser.id);
+      if (!seller) {
+        document.querySelector('.content').innerHTML = '<div class="alert alert-danger">Seller profile not found.</div>';
+        return;
+      }
+      
+      myPOIs = getPOIsBySeller(seller.id);
+      myMedia = myPOIs.flatMap(poi => getMediaByPOI(poi.id));
+      
+      updateStats();
+      populateSelects();
+      renderGallery();
+      
+      document.getElementById('filterPOI').addEventListener('change', renderGallery);
+    }
+    
+    function updateStats() {
+      document.getElementById('statTotal').textContent = myMedia.length;
+      document.getElementById('statImages').textContent = myMedia.filter(m => m.type === 'image').length;
+      document.getElementById('statVideos').textContent = myMedia.filter(m => m.type === 'video').length;
+    }
+    
+    function populateSelects() {
+      const uploadSelect = document.getElementById('poiSelect');
+      const filterSelect = document.getElementById('filterPOI');
+      
+      myPOIs.forEach(poi => {
+        const option1 = document.createElement('option');
+        option1.value = poi.id;
+        option1.textContent = poi.name;
+        uploadSelect.appendChild(option1);
+        
+        const option2 = document.createElement('option');
+        option2.value = poi.id;
+        option2.textContent = poi.name;
+        filterSelect.appendChild(option2);
+      });
+    }
+    
+    function renderGallery() {
+      const filterPOI = document.getElementById('filterPOI').value;
+      let filtered = myMedia;
+      
+      if (filterPOI) {
+        filtered = myMedia.filter(m => m.poi_id === parseInt(filterPOI));
+      }
+      
+      const gallery = document.getElementById('mediaGallery');
+      const emptyState = document.getElementById('emptyState');
+      
+      if (filtered.length === 0) {
+        gallery.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      gallery.innerHTML = '';
+      
+      filtered.forEach(media => {
+        const mediaItem = document.createElement('div');
+        mediaItem.className = 'media-item';
+        mediaItem.onclick = () => viewMedia(media.id);
+        
+        if (media.type === 'image') {
+          mediaItem.innerHTML = `
+            <img src="${media.url}" alt="Media" />
+            <div class="media-item-actions">
+              <button class="media-action-btn" onclick="event.stopPropagation(); deleteMediaById(${media.id})">×</button>
+            </div>
+          `;
+        } else {
+          mediaItem.innerHTML = `
+            <div style="background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
+              ▶
+            </div>
+            <div class="media-item-actions">
+              <button class="media-action-btn" onclick="event.stopPropagation(); deleteMediaById(${media.id})">×</button>
+            </div>
+          `;
+        }
+        
+        gallery.appendChild(mediaItem);
+      });
+    }
+    
+    function simulateUpload() {
+      const poiId = document.getElementById('poiSelect').value;
+      const mediaType = document.getElementById('mediaType').value;
+      
+      if (!poiId) {
+        showNotification('Please select a POI first', 'error');
+        return;
+      }
+      
+      // Simulate file upload
+      const newMedia = {
+        id: MOCK_DATA.media.length + 1,
+        poi_id: parseInt(poiId),
+        type: mediaType,
+        url: mediaType === 'image' 
+          ? `https://via.placeholder.com/400x300/4A9B7F/FFFFFF?text=New+Image+${MOCK_DATA.media.length + 1}`
+          : `/video/sample-${MOCK_DATA.media.length + 1}.mp4`
+      };
+      
+      MOCK_DATA.media.push(newMedia);
+      myMedia.push(newMedia);
+      
+      showNotification('Media uploaded successfully! (Mock)', 'success');
+      updateStats();
+      renderGallery();
+    }
+    
+    function viewMedia(mediaId) {
+      const media = myMedia.find(m => m.id === mediaId);
+      if (!media) return;
+      
+      selectedMedia = media;
+      const poi = getPOIById(media.poi_id);
+      
+      const preview = document.getElementById('mediaPreview');
+      if (media.type === 'image') {
+        preview.innerHTML = `<img src="${media.url}" style="width: 100%; border-radius: var(--radius-md);" />`;
+      } else {
+        preview.innerHTML = `
+          <div style="width: 100%; aspect-ratio: 16/9; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">
+            ▶
+          </div>
+          <p class="text-muted text-small mt-sm">Video preview not available in mock</p>
+        `;
+      }
+      
+      document.getElementById('mediaPOI').textContent = poi ? poi.name : 'N/A';
+      document.getElementById('mediaTypeInfo').textContent = media.type.charAt(0).toUpperCase() + media.type.slice(1);
+      document.getElementById('mediaURL').textContent = media.url;
+      
+      openModal('mediaModal');
+    }
+    
+    function deleteMedia() {
+      if (!selectedMedia) return;
+      deleteMediaById(selectedMedia.id);
+      closeModal('mediaModal');
+    }
+    
+    function deleteMediaById(mediaId) {
+      const index = myMedia.findIndex(m => m.id === mediaId);
+      if (index !== -1) {
+        myMedia.splice(index, 1);
+      }
+      
+      const globalIndex = MOCK_DATA.media.findIndex(m => m.id === mediaId);
+      if (globalIndex !== -1) {
+        MOCK_DATA.media.splice(globalIndex, 1);
+      }
+      
+      showNotification('Media deleted', 'success');
+      updateStats();
+      renderGallery();
+    }
+    
+    document.addEventListener('DOMContentLoaded', initPage);
+  </script>
+</body>
+</html>

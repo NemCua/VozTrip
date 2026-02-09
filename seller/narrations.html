@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Narrations - Seller Dashboard</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <h2>TourGuide Seller</h2>
+        <p>Manage Your Content</p>
+      </div>
+      
+      <nav>
+        <ul class="sidebar-nav">
+          <li><a href="index.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+          <li><a href="shop-profile.html"><span class="nav-icon">🏪</span> Shop Profile</a></li>
+          <li><a href="pois.html"><span class="nav-icon">📍</span> POI Management</a></li>
+          <li><a href="narrations.html" class="active"><span class="nav-icon">🎙️</span> Narrations</a></li>
+          <li><a href="questions.html"><span class="nav-icon">❓</span> Questions & Answers</a></li>
+          <li><a href="media.html"><span class="nav-icon">🖼️</span> Media Library</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <h1>Narration Manager</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-profile">
+            <div class="user-avatar">TB</div>
+            <div class="user-info">
+              <span class="user-name">Tran Thi B</span>
+              <span class="user-role">Seller</span>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Content Area -->
+      <main class="content">
+        <!-- Narration Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Narrations</div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Approved</div>
+            <div class="stat-value" id="statApproved">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pending</div>
+            <div class="stat-value" id="statPending">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Draft</div>
+            <div class="stat-value" id="statDraft">0</div>
+          </div>
+        </div>
+        
+        <!-- Narrations Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Your Narrations</h3>
+            <button class="btn btn-accent" onclick="openCreateModal()">+ Add Narration</button>
+          </div>
+          <div class="card-body">
+            <!-- Filters -->
+            <div class="table-actions">
+              <div class="table-search">
+                <select id="poiFilter" class="form-select">
+                  <option value="">All POIs</option>
+                  <!-- Populated by JavaScript -->
+                </select>
+              </div>
+              <div class="table-filters">
+                <select id="languageFilter" class="form-select">
+                  <option value="">All Languages</option>
+                  <option value="vi">Vietnamese</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- Narrations Table -->
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>POI</th>
+                    <th>Language</th>
+                    <th>Text Preview</th>
+                    <th>Audio</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="narrationsTableBody">
+                  <!-- Populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  
+  <!-- Create/Edit Narration Modal -->
+  <div class="modal-overlay" id="narrationModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">Add Narration</h3>
+        <button class="modal-close" onclick="closeModal('narrationModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="narrationForm">
+          <div class="form-group">
+            <label class="form-label">Select POI *</label>
+            <select id="narrationPOI" class="form-select" required>
+              <option value="">Choose a POI...</option>
+              <!-- Populated by JavaScript -->
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Language *</label>
+            <select id="narrationLanguage" class="form-select" required>
+              <option value="vi">Vietnamese</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Narration Text *</label>
+            <textarea id="narrationText" class="form-textarea" rows="6" required placeholder="Enter the narration script in the selected language..."></textarea>
+            <p class="form-help">This text will be converted to audio or you can upload your own audio file</p>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Audio Source</label>
+            <select id="audioSource" class="form-select">
+              <option value="tts">Text-to-Speech (Auto-generate)</option>
+              <option value="upload">Upload Audio File</option>
+            </select>
+          </div>
+          
+          <div class="form-group" id="audioUploadSection" style="display: none;">
+            <label class="form-label">Upload Audio File</label>
+            <div class="upload-area">
+              <div class="upload-icon">🎵</div>
+              <p class="upload-text">Click to upload or drag and drop</p>
+              <p class="upload-hint">MP3, WAV, or M4A (max 10MB)</p>
+            </div>
+            <p class="form-help text-muted mt-sm">This is a mock upload. In production, files would be uploaded to server.</p>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Status *</label>
+            <select id="narrationStatus" class="form-select" required>
+              <option value="draft">Draft</option>
+              <option value="pending">Submit for Review</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="saveNarration()">Save Narration</button>
+        <button class="btn btn-secondary" onclick="closeModal('narrationModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="../shared/script.js"></script>
+  <script>
+    currentUser = MOCK_DATA.users.find(u => u.role === 'seller') || MOCK_DATA.users[1];
+    let seller = null;
+    let myPOIs = [];
+    let myNarrations = [];
+    let editingNarration = null;
+    
+    function initPage() {
+      seller = getSellerByUserId(currentUser.id);
+      if (!seller) {
+        document.querySelector('.content').innerHTML = '<div class="alert alert-danger">Seller profile not found.</div>';
+        return;
+      }
+      
+      myPOIs = getPOIsBySeller(seller.id);
+      myNarrations = myPOIs.flatMap(poi => getNarrationsByPOI(poi.id));
+      
+      updateStats();
+      populatePOIFilters();
+      renderTable();
+      
+      document.getElementById('poiFilter').addEventListener('change', renderTable);
+      document.getElementById('languageFilter').addEventListener('change', renderTable);
+      document.getElementById('audioSource').addEventListener('change', toggleAudioUpload);
+    }
+    
+    function updateStats() {
+      document.getElementById('statTotal').textContent = myNarrations.length;
+      document.getElementById('statApproved').textContent = myNarrations.filter(n => n.status === 'approved').length;
+      document.getElementById('statPending').textContent = myNarrations.filter(n => n.status === 'pending').length;
+      document.getElementById('statDraft').textContent = myNarrations.filter(n => n.status === 'draft').length;
+    }
+    
+    function populatePOIFilters() {
+      const filterSelect = document.getElementById('poiFilter');
+      const modalSelect = document.getElementById('narrationPOI');
+      
+      myPOIs.forEach(poi => {
+        const option1 = document.createElement('option');
+        option1.value = poi.id;
+        option1.textContent = poi.name;
+        filterSelect.appendChild(option1);
+        
+        const option2 = document.createElement('option');
+        option2.value = poi.id;
+        option2.textContent = poi.name;
+        modalSelect.appendChild(option2);
+      });
+    }
+    
+    function renderTable() {
+      const poiFilter = document.getElementById('poiFilter').value;
+      const languageFilter = document.getElementById('languageFilter').value;
+      
+      let filtered = myNarrations;
+      
+      if (poiFilter) {
+        filtered = filtered.filter(n => n.poi_id === parseInt(poiFilter));
+      }
+      
+      if (languageFilter) {
+        filtered = filtered.filter(n => n.language === languageFilter);
+      }
+      
+      const tbody = document.getElementById('narrationsTableBody');
+      tbody.innerHTML = '';
+      
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No narrations found</td></tr>';
+        return;
+      }
+      
+      filtered.forEach(narration => {
+        const poi = getPOIById(narration.poi_id);
+        const audio = getAudioById(narration.audio_id);
+        const preview = narration.text.length > 50 ? narration.text.substring(0, 50) + '...' : narration.text;
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${poi ? poi.name : 'N/A'}</td>
+          <td><span class="status-badge">${narration.language.toUpperCase()}</span></td>
+          <td>${preview}</td>
+          <td>${audio ? formatDuration(audio.duration) : 'N/A'}</td>
+          <td><span class="status-badge status-${narration.status}">${narration.status}</span></td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick="editNarration(${narration.id})">Edit</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    
+    function openCreateModal() {
+      if (myPOIs.length === 0) {
+        showNotification('Please create a POI first before adding narrations', 'error');
+        return;
+      }
+      
+      editingNarration = null;
+      document.getElementById('modalTitle').textContent = 'Add Narration';
+      document.getElementById('narrationForm').reset();
+      document.getElementById('audioSource').value = 'tts';
+      toggleAudioUpload();
+      openModal('narrationModal');
+    }
+    
+    function editNarration(narrationId) {
+      const narration = myNarrations.find(n => n.id === narrationId);
+      if (!narration) return;
+      
+      editingNarration = narration;
+      const audio = getAudioById(narration.audio_id);
+      
+      document.getElementById('modalTitle').textContent = 'Edit Narration';
+      document.getElementById('narrationPOI').value = narration.poi_id;
+      document.getElementById('narrationLanguage').value = narration.language;
+      document.getElementById('narrationText').value = narration.text;
+      document.getElementById('narrationStatus').value = narration.status;
+      document.getElementById('audioSource').value = audio ? audio.source_type : 'tts';
+      toggleAudioUpload();
+      openModal('narrationModal');
+    }
+    
+    function toggleAudioUpload() {
+      const source = document.getElementById('audioSource').value;
+      const uploadSection = document.getElementById('audioUploadSection');
+      uploadSection.style.display = source === 'upload' ? 'block' : 'none';
+    }
+    
+    function saveNarration() {
+      const poiId = parseInt(document.getElementById('narrationPOI').value);
+      const language = document.getElementById('narrationLanguage').value;
+      const text = document.getElementById('narrationText').value.trim();
+      const status = document.getElementById('narrationStatus').value;
+      const audioSource = document.getElementById('audioSource').value;
+      
+      if (!poiId || !text) {
+        showNotification('Please fill in all required fields', 'error');
+        return;
+      }
+      
+      if (editingNarration) {
+        // Update existing
+        editingNarration.poi_id = poiId;
+        editingNarration.language = language;
+        editingNarration.text = text;
+        editingNarration.status = status;
+        
+        const index = MOCK_DATA.narrations.findIndex(n => n.id === editingNarration.id);
+        if (index !== -1) {
+          MOCK_DATA.narrations[index] = editingNarration;
+        }
+        
+        showNotification('Narration updated successfully!', 'success');
+      } else {
+        // Create new
+        const newAudio = {
+          id: MOCK_DATA.audios.length + 1,
+          audio_url: `/audio/narration-${MOCK_DATA.audios.length + 1}.mp3`,
+          duration: 45,
+          source_type: audioSource
+        };
+        MOCK_DATA.audios.push(newAudio);
+        
+        const newNarration = {
+          id: MOCK_DATA.narrations.length + 1,
+          poi_id: poiId,
+          text,
+          language,
+          audio_id: newAudio.id,
+          status
+        };
+        
+        MOCK_DATA.narrations.push(newNarration);
+        myNarrations.push(newNarration);
+        
+        showNotification('Narration created successfully!', 'success');
+      }
+      
+      closeModal('narrationModal');
+      updateStats();
+      renderTable();
+    }
+    
+    document.addEventListener('DOMContentLoaded', initPage);
+  </script>
+</body>
+</html>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Questions & Answers - Seller Dashboard</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="../shared/styles.css">
+  
+  <style>
+    .question-item {
+      background-color: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-md);
+      cursor: move;
+      transition: all 0.2s ease;
+    }
+    
+    .question-item:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--color-primary);
+    }
+    
+    .question-item.dragging {
+      opacity: 0.5;
+    }
+    
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-md);
+    }
+    
+    .question-text {
+      font-weight: 600;
+      color: var(--color-primary);
+      font-size: 1rem;
+      flex: 1;
+    }
+    
+    .drag-handle {
+      cursor: move;
+      padding: var(--spacing-sm);
+      margin-right: var(--spacing-md);
+      color: var(--color-text-tertiary);
+    }
+    
+    .answer-list {
+      margin-left: var(--spacing-xl);
+      padding-left: var(--spacing-lg);
+      border-left: 2px solid var(--color-border);
+    }
+    
+    .answer-item {
+      margin-bottom: var(--spacing-sm);
+      padding: var(--spacing-sm) 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <h2>TourGuide Seller</h2>
+        <p>Manage Your Content</p>
+      </div>
+      
+      <nav>
+        <ul class="sidebar-nav">
+          <li><a href="index.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+          <li><a href="shop-profile.html"><span class="nav-icon">🏪</span> Shop Profile</a></li>
+          <li><a href="pois.html"><span class="nav-icon">📍</span> POI Management</a></li>
+          <li><a href="narrations.html"><span class="nav-icon">🎙️</span> Narrations</a></li>
+          <li><a href="questions.html" class="active"><span class="nav-icon">❓</span> Questions & Answers</a></li>
+          <li><a href="media.html"><span class="nav-icon">🖼️</span> Media Library</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <h1>Questions & Answers</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-profile">
+            <div class="user-avatar">TB</div>
+            <div class="user-info">
+              <span class="user-name">Tran Thi B</span>
+              <span class="user-role">Seller</span>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Content Area -->
+      <main class="content">
+        <!-- Info Alert -->
+        <div class="alert alert-info mb-lg">
+          <strong>Interactive Q&A System</strong><br>
+          Create questions and answers that tourists can access during their visit. Drag and drop questions to reorder them.
+        </div>
+        
+        <!-- POI Selection -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Select POI</h3>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Point of Interest</label>
+              <select id="poiSelect" class="form-select">
+                <option value="">Choose a POI to manage Q&A...</option>
+                <!-- Populated by JavaScript -->
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Questions List -->
+        <div id="questionsContainer" style="display: none;">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Questions for <span id="selectedPOIName">-</span></h3>
+              <button class="btn btn-accent" onclick="openQuestionModal()">+ Add Question</button>
+            </div>
+            <div class="card-body">
+              <div id="questionsList">
+                <!-- Populated by JavaScript -->
+              </div>
+              <div id="emptyState" class="empty-state">
+                <div class="empty-state-icon">❓</div>
+                <h4 class="empty-state-title">No questions yet</h4>
+                <p class="empty-state-text">Create your first question to help tourists learn more about this location.</p>
+                <button class="btn btn-primary" onclick="openQuestionModal()">Add First Question</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  
+  <!-- Add/Edit Question Modal -->
+  <div class="modal-overlay" id="questionModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">Add Question</h3>
+        <button class="modal-close" onclick="closeModal('questionModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="questionForm">
+          <div class="form-group">
+            <label class="form-label">Question Text *</label>
+            <input type="text" id="questionText" class="form-input" placeholder="e.g., What year was this building constructed?" required />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select id="questionStatus" class="form-select">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          
+          <div class="form-group mt-lg">
+            <label class="form-label">Answers</label>
+            <div id="answersList">
+              <!-- Dynamic answers -->
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm mt-sm" onclick="addAnswerField()">+ Add Answer</button>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="saveQuestion()">Save Question</button>
+        <button class="btn btn-secondary" onclick="closeModal('questionModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="../shared/script.js"></script>
+  <script>
+    currentUser = MOCK_DATA.users.find(u => u.role === 'seller') || MOCK_DATA.users[1];
+    let seller = null;
+    let myPOIs = [];
+    let selectedPOI = null;
+    let currentQuestions = [];
+    let editingQuestion = null;
+    let draggedElement = null;
+    
+    function initPage() {
+      seller = getSellerByUserId(currentUser.id);
+      if (!seller) {
+        document.querySelector('.content').innerHTML = '<div class="alert alert-danger">Seller profile not found.</div>';
+        return;
+      }
+      
+      myPOIs = getPOIsBySeller(seller.id);
+      populatePOISelect();
+      
+      document.getElementById('poiSelect').addEventListener('change', handlePOIChange);
+    }
+    
+    function populatePOISelect() {
+      const select = document.getElementById('poiSelect');
+      
+      myPOIs.forEach(poi => {
+        const option = document.createElement('option');
+        option.value = poi.id;
+        option.textContent = poi.name;
+        select.appendChild(option);
+      });
+    }
+    
+    function handlePOIChange() {
+      const poiId = parseInt(document.getElementById('poiSelect').value);
+      
+      if (!poiId) {
+        document.getElementById('questionsContainer').style.display = 'none';
+        return;
+      }
+      
+      selectedPOI = getPOIById(poiId);
+      currentQuestions = getQuestionsByPOI(poiId);
+      
+      document.getElementById('selectedPOIName').textContent = selectedPOI.name;
+      document.getElementById('questionsContainer').style.display = 'block';
+      
+      renderQuestions();
+    }
+    
+    function renderQuestions() {
+      const container = document.getElementById('questionsList');
+      const emptyState = document.getElementById('emptyState');
+      
+      if (currentQuestions.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      container.innerHTML = '';
+      
+      currentQuestions.forEach((question, index) => {
+        const answers = getAnswersByQuestion(question.id);
+        
+        const questionEl = document.createElement('div');
+        questionEl.className = 'question-item';
+        questionEl.draggable = true;
+        questionEl.dataset.questionId = question.id;
+        
+        questionEl.innerHTML = `
+          <div class="question-header">
+            <span class="drag-handle">⋮⋮</span>
+            <div class="question-text">${index + 1}. ${question.question_text}</div>
+            <div class="flex gap-sm">
+              <span class="status-badge status-${question.status}">${question.status}</span>
+              <button class="btn btn-sm btn-primary" onclick="editQuestion(${question.id})">Edit</button>
+            </div>
+          </div>
+          <div class="answer-list">
+            ${answers.length > 0 ? answers.map(a => `
+              <div class="answer-item">
+                <strong>${a.language.toUpperCase()}:</strong> ${a.answer_text}
+              </div>
+            `).join('') : '<p class="text-muted text-small">No answers added</p>'}
+          </div>
+        `;
+        
+        // Add drag and drop event listeners
+        questionEl.addEventListener('dragstart', handleDragStart);
+        questionEl.addEventListener('dragover', handleDragOver);
+        questionEl.addEventListener('drop', handleDrop);
+        questionEl.addEventListener('dragend', handleDragEnd);
+        
+        container.appendChild(questionEl);
+      });
+    }
+    
+    // Drag and drop handlers
+    function handleDragStart(e) {
+      draggedElement = this;
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    }
+    
+    function handleDragOver(e) {
+      if (e.preventDefault) {
+        e.preventDefault();
+      }
+      e.dataTransfer.dropEffect = 'move';
+      return false;
+    }
+    
+    function handleDrop(e) {
+      if (e.stopPropagation) {
+        e.stopPropagation();
+      }
+      
+      if (draggedElement !== this) {
+        const allItems = Array.from(document.querySelectorAll('.question-item'));
+        const draggedIndex = allItems.indexOf(draggedElement);
+        const targetIndex = allItems.indexOf(this);
+        
+        // Reorder in array
+        const [removed] = currentQuestions.splice(draggedIndex, 1);
+        currentQuestions.splice(targetIndex, 0, removed);
+        
+        // Update sort_order
+        currentQuestions.forEach((q, idx) => {
+          q.sort_order = idx + 1;
+          const qIndex = MOCK_DATA.questions.findIndex(mq => mq.id === q.id);
+          if (qIndex !== -1) {
+            MOCK_DATA.questions[qIndex].sort_order = idx + 1;
+          }
+        });
+        
+        showNotification('Question order updated', 'success');
+        renderQuestions();
+      }
+      
+      return false;
+    }
+    
+    function handleDragEnd() {
+      this.classList.remove('dragging');
+    }
+    
+    function openQuestionModal() {
+      if (!selectedPOI) return;
+      
+      editingQuestion = null;
+      document.getElementById('modalTitle').textContent = 'Add Question';
+      document.getElementById('questionForm').reset();
+      document.getElementById('answersList').innerHTML = '';
+      addAnswerField(); // Start with one answer field
+      openModal('questionModal');
+    }
+    
+    function editQuestion(questionId) {
+      const question = currentQuestions.find(q => q.id === questionId);
+      if (!question) return;
+      
+      editingQuestion = question;
+      const answers = getAnswersByQuestion(question.id);
+      
+      document.getElementById('modalTitle').textContent = 'Edit Question';
+      document.getElementById('questionText').value = question.question_text;
+      document.getElementById('questionStatus').value = question.status;
+      
+      const answersList = document.getElementById('answersList');
+      answersList.innerHTML = '';
+      
+      if (answers.length === 0) {
+        addAnswerField();
+      } else {
+        answers.forEach(answer => {
+          addAnswerField(answer.language, answer.answer_text);
+        });
+      }
+      
+      openModal('questionModal');
+    }
+    
+    function addAnswerField(language = 'en', text = '') {
+      const answersList = document.getElementById('answersList');
+      const answerId = Date.now() + Math.random();
+      
+      const answerDiv = document.createElement('div');
+      answerDiv.className = 'form-row mb-sm';
+      answerDiv.innerHTML = `
+        <div class="form-group" style="flex: 0 0 120px;">
+          <select class="form-select">
+            <option value="en" ${language === 'en' ? 'selected' : ''}>English</option>
+            <option value="vi" ${language === 'vi' ? 'selected' : ''}>Vietnamese</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <input type="text" class="form-input" placeholder="Answer text..." value="${text}" />
+        </div>
+        <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.form-row').remove()">Remove</button>
+      `;
+      
+      answersList.appendChild(answerDiv);
+    }
+    
+    function saveQuestion() {
+      const questionText = document.getElementById('questionText').value.trim();
+      const status = document.getElementById('questionStatus').value;
+      
+      if (!questionText) {
+        showNotification('Please enter a question', 'error');
+        return;
+      }
+      
+      // Collect answers
+      const answerRows = document.querySelectorAll('#answersList .form-row');
+      const answers = [];
+      
+      answerRows.forEach(row => {
+        const language = row.querySelector('select').value;
+        const text = row.querySelector('input').value.trim();
+        if (text) {
+          answers.push({ language, text });
+        }
+      });
+      
+      if (editingQuestion) {
+        // Update existing question
+        editingQuestion.question_text = questionText;
+        editingQuestion.status = status;
+        
+        const qIndex = MOCK_DATA.questions.findIndex(q => q.id === editingQuestion.id);
+        if (qIndex !== -1) {
+          MOCK_DATA.questions[qIndex] = editingQuestion;
+        }
+        
+        // Update answers
+        // Remove old answers
+        MOCK_DATA.answers = MOCK_DATA.answers.filter(a => a.question_id !== editingQuestion.id);
+        
+        // Add new answers
+        answers.forEach(ans => {
+          MOCK_DATA.answers.push({
+            id: MOCK_DATA.answers.length + 1,
+            question_id: editingQuestion.id,
+            answer_text: ans.text,
+            language: ans.language,
+            audio_id: null
+          });
+        });
+        
+        showNotification('Question updated successfully!', 'success');
+      } else {
+        // Create new question
+        const newQuestion = {
+          id: MOCK_DATA.questions.length + 1,
+          poi_id: selectedPOI.id,
+          question_text: questionText,
+          sort_order: currentQuestions.length + 1,
+          status
+        };
+        
+        MOCK_DATA.questions.push(newQuestion);
+        currentQuestions.push(newQuestion);
+        
+        // Add answers
+        answers.forEach(ans => {
+          MOCK_DATA.answers.push({
+            id: MOCK_DATA.answers.length + 1,
+            question_id: newQuestion.id,
+            answer_text: ans.text,
+            language: ans.language,
+            audio_id: null
+          });
+        });
+        
+        showNotification('Question created successfully!', 'success');
+      }
+      
+      closeModal('questionModal');
+      renderQuestions();
+    }
+    
+    document.addEventListener('DOMContentLoaded', initPage);
+  </script>
+</body>
+</html>

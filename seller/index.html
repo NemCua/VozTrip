@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Dashboard - Tour Guide Platform</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <h2>TourGuide Seller</h2>
+        <p>Manage Your Content</p>
+      </div>
+      
+      <nav>
+        <ul class="sidebar-nav">
+          <li><a href="index.html" class="active"><span class="nav-icon">📊</span> Dashboard</a></li>
+          <li><a href="shop-profile.html"><span class="nav-icon">🏪</span> Shop Profile</a></li>
+          <li><a href="pois.html"><span class="nav-icon">📍</span> POI Management</a></li>
+          <li><a href="narrations.html"><span class="nav-icon">🎙️</span> Narrations</a></li>
+          <li><a href="questions.html"><span class="nav-icon">❓</span> Questions & Answers</a></li>
+          <li><a href="media.html"><span class="nav-icon">🖼️</span> Media Library</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <h1>Dashboard Overview</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-profile">
+            <div class="user-avatar">TB</div>
+            <div class="user-info">
+              <span class="user-name" id="currentUserName">Tran Thi B</span>
+              <span class="user-role">Seller</span>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Content Area -->
+      <main class="content">
+        <!-- Verification Alert -->
+        <div id="verificationAlert"></div>
+        
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total POIs</div>
+            <div class="stat-value" id="statTotalPOIs">0</div>
+            <div class="stat-change positive">Your locations</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-label">Active POIs</div>
+            <div class="stat-value" id="statActivePOIs">0</div>
+            <div class="stat-change">Currently live</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-label">Narrations</div>
+            <div class="stat-value" id="statNarrations">0</div>
+            <div class="stat-change">Audio guides</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-label">Media Files</div>
+            <div class="stat-value" id="statMedia">0</div>
+            <div class="stat-change">Images & videos</div>
+          </div>
+        </div>
+        
+        <!-- Shop Information Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Shop Information</h3>
+            <a href="shop-profile.html" class="btn btn-secondary btn-sm">Edit Profile</a>
+          </div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Shop Name</label>
+                <p id="shopName" class="text-large">-</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Verification Status</label>
+                <p><span id="verificationStatus" class="status-badge">-</span></p>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <p id="shopDescription">-</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Address</label>
+              <p id="shopAddress">-</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Recent POIs -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Your Points of Interest</h3>
+            <a href="pois.html" class="btn btn-accent btn-sm">Manage POIs</a>
+          </div>
+          <div class="card-body">
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Narrations</th>
+                    <th>Media</th>
+                  </tr>
+                </thead>
+                <tbody id="poisTable">
+                  <!-- Populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Quick Actions</h3>
+          </div>
+          <div class="card-body">
+            <div class="flex gap-md flex-wrap">
+              <a href="pois.html" class="btn btn-primary">Create New POI</a>
+              <a href="narrations.html" class="btn btn-primary">Add Narration</a>
+              <a href="media.html" class="btn btn-primary">Upload Media</a>
+              <a href="questions.html" class="btn btn-primary">Add Q&A</a>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="../shared/script.js"></script>
+  <script>
+    // Set current user to seller for this dashboard
+    currentUser = MOCK_DATA.users.find(u => u.role === 'seller') || MOCK_DATA.users[1];
+    
+    // Initialize dashboard
+    function initializeDashboard() {
+      const seller = getSellerByUserId(currentUser.id);
+      
+      if (!seller) {
+        document.querySelector('.content').innerHTML = '<div class="alert alert-danger">Seller profile not found. Please contact support.</div>';
+        return;
+      }
+      
+      const pois = getPOIsBySeller(seller.id);
+      const narrations = pois.flatMap(poi => getNarrationsByPOI(poi.id));
+      const media = pois.flatMap(poi => getMediaByPOI(poi.id));
+      
+      // Update stats
+      document.getElementById('statTotalPOIs').textContent = pois.length;
+      document.getElementById('statActivePOIs').textContent = pois.filter(p => p.status === 'active').length;
+      document.getElementById('statNarrations').textContent = narrations.length;
+      document.getElementById('statMedia').textContent = media.length;
+      
+      // Show verification alert if not verified
+      const alertEl = document.getElementById('verificationAlert');
+      if (!seller.verified) {
+        alertEl.innerHTML = `
+          <div class="alert alert-warning">
+            <strong>Account Pending Verification</strong><br>
+            Your seller account is awaiting admin verification. Some features may be limited until verification is complete.
+          </div>
+        `;
+      }
+      
+      // Update shop info
+      document.getElementById('shopName').textContent = seller.shop_name;
+      document.getElementById('shopDescription').textContent = seller.description;
+      document.getElementById('shopAddress').textContent = seller.address;
+      document.getElementById('verificationStatus').textContent = seller.verified ? 'Verified' : 'Pending';
+      document.getElementById('verificationStatus').className = `status-badge status-${seller.verified ? 'verified' : 'pending'}`;
+      
+      // Load POIs table
+      loadPOIsTable(pois, narrations, media);
+      
+      // Update user info
+      document.getElementById('currentUserName').textContent = currentUser.name;
+    }
+    
+    function loadPOIsTable(pois, narrations, media) {
+      const tbody = document.getElementById('poisTable');
+      tbody.innerHTML = '';
+      
+      if (pois.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center text-muted">
+              No POIs created yet. <a href="pois.html">Create your first POI</a>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      pois.forEach(poi => {
+        const poiNarrations = narrations.filter(n => n.poi_id === poi.id);
+        const poiMedia = media.filter(m => m.poi_id === poi.id);
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${poi.name}</td>
+          <td>${poi.latitude.toFixed(4)}, ${poi.longitude.toFixed(4)}</td>
+          <td><span class="status-badge status-${poi.status}">${poi.status}</span></td>
+          <td>${poiNarrations.length}</td>
+          <td>${poiMedia.length}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initializeDashboard);
+  </script>
+</body>
+</html>

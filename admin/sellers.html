@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Management - Admin Dashboard</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <h2>TourGuide Admin</h2>
+        <p>Platform Management</p>
+      </div>
+      
+      <nav>
+        <ul class="sidebar-nav">
+          <li><a href="index.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+          <li><a href="users.html"><span class="nav-icon">👥</span> User Management</a></li>
+          <li><a href="sellers.html" class="active"><span class="nav-icon">🏪</span> Seller Management</a></li>
+          <li><a href="pois.html"><span class="nav-icon">📍</span> POI Management</a></li>
+          <li><a href="narrations.html"><span class="nav-icon">🎙️</span> Content Moderation</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <h1>Seller Management</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-profile">
+            <div class="user-avatar">NA</div>
+            <div class="user-info">
+              <span class="user-name">Nguyen Van A</span>
+              <span class="user-role">Administrator</span>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Content Area -->
+      <main class="content">
+        <!-- Seller Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Sellers</div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Verified Sellers</div>
+            <div class="stat-value" id="statVerified">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pending Verification</div>
+            <div class="stat-value" id="statPending">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total POIs</div>
+            <div class="stat-value" id="statPOIs">0</div>
+          </div>
+        </div>
+        
+        <!-- Sellers Table Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">All Sellers</h3>
+          </div>
+          <div class="card-body">
+            <!-- Table Actions -->
+            <div class="table-actions">
+              <div class="table-search">
+                <input 
+                  type="text" 
+                  id="searchInput" 
+                  class="search-input" 
+                  placeholder="Search by shop name or owner..."
+                >
+              </div>
+              <div class="table-filters">
+                <select id="verifiedFilter" class="form-select">
+                  <option value="">All Status</option>
+                  <option value="true">Verified</option>
+                  <option value="false">Unverified</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- Sellers Table -->
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Shop Name</th>
+                    <th>Owner</th>
+                    <th>Address</th>
+                    <th>POIs</th>
+                    <th>Verification</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="sellersTableBody">
+                  <!-- Populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  
+  <!-- Seller Detail Modal -->
+  <div class="modal-overlay" id="sellerDetailModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Seller Details</h3>
+        <button class="modal-close" onclick="closeModal('sellerDetailModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Shop Name</label>
+          <p id="detailShopName" class="text-large">-</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <p id="detailDescription">-</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Address</label>
+          <p id="detailAddress">-</p>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Owner</label>
+            <p id="detailOwner">-</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact Email</label>
+            <p id="detailEmail">-</p>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Contact Phone</label>
+            <p id="detailPhone">-</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Verification Status</label>
+            <p><span id="detailVerified" class="status-badge">-</span></p>
+          </div>
+        </div>
+        
+        <div class="form-group mt-lg">
+          <label class="form-label">Points of Interest (POIs)</label>
+          <div id="sellerPOIsList"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-success" id="btnVerify" onclick="toggleVerification()">Verify Seller</button>
+        <button class="btn btn-danger" id="btnUnverify" onclick="toggleVerification()">Unverify Seller</button>
+        <button class="btn btn-secondary" onclick="closeModal('sellerDetailModal')">Close</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="../shared/script.js"></script>
+  <script>
+    let currentSellerData = null;
+    let filteredSellers = [];
+    
+    // Initialize page
+    function initPage() {
+      updateStats();
+      filteredSellers = [...MOCK_DATA.sellers];
+      renderTable();
+      
+      // Add event listeners
+      document.getElementById('searchInput').addEventListener('input', handleFilter);
+      document.getElementById('verifiedFilter').addEventListener('change', handleFilter);
+    }
+    
+    // Update statistics
+    function updateStats() {
+      document.getElementById('statTotal').textContent = MOCK_DATA.sellers.length;
+      document.getElementById('statVerified').textContent = MOCK_DATA.sellers.filter(s => s.verified).length;
+      document.getElementById('statPending').textContent = MOCK_DATA.sellers.filter(s => !s.verified).length;
+      document.getElementById('statPOIs').textContent = MOCK_DATA.pois.length;
+    }
+    
+    // Handle search and filter
+    function handleFilter() {
+      const searchTerm = document.getElementById('searchInput').value;
+      const verifiedFilter = document.getElementById('verifiedFilter').value;
+      
+      filteredSellers = [...MOCK_DATA.sellers];
+      
+      // Apply search
+      if (searchTerm) {
+        filteredSellers = filteredSellers.filter(seller => {
+          const owner = getUserById(seller.user_id);
+          return seller.shop_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                 (owner && owner.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        });
+      }
+      
+      // Apply verified filter
+      if (verifiedFilter) {
+        const isVerified = verifiedFilter === 'true';
+        filteredSellers = filteredSellers.filter(s => s.verified === isVerified);
+      }
+      
+      renderTable();
+    }
+    
+    // Render sellers table
+    function renderTable() {
+      const tbody = document.getElementById('sellersTableBody');
+      tbody.innerHTML = '';
+      
+      if (filteredSellers.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-center text-muted">No sellers found</td>
+          </tr>
+        `;
+        return;
+      }
+      
+      filteredSellers.forEach(seller => {
+        const owner = getUserById(seller.user_id);
+        const poiCount = getPOIsBySeller(seller.id).length;
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${seller.id}</td>
+          <td>${seller.shop_name}</td>
+          <td>${owner ? owner.name : 'N/A'}</td>
+          <td>${seller.address}</td>
+          <td>${poiCount}</td>
+          <td><span class="status-badge status-${seller.verified ? 'verified' : 'unverified'}">${seller.verified ? 'Verified' : 'Unverified'}</span></td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick="viewSellerDetail(${seller.id})">View</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    
+    // View seller detail in modal
+    function viewSellerDetail(sellerId) {
+      const seller = getSellerById(sellerId);
+      if (!seller) return;
+      
+      currentSellerData = seller;
+      const owner = getUserById(seller.user_id);
+      const pois = getPOIsBySeller(seller.id);
+      
+      document.getElementById('detailShopName').textContent = seller.shop_name;
+      document.getElementById('detailDescription').textContent = seller.description;
+      document.getElementById('detailAddress').textContent = seller.address;
+      document.getElementById('detailOwner').textContent = owner ? owner.name : 'N/A';
+      document.getElementById('detailEmail').textContent = owner ? owner.email : 'N/A';
+      document.getElementById('detailPhone').textContent = owner ? owner.phone : 'N/A';
+      document.getElementById('detailVerified').textContent = seller.verified ? 'Verified' : 'Unverified';
+      document.getElementById('detailVerified').className = `status-badge status-${seller.verified ? 'verified' : 'unverified'}`;
+      
+      // Render POIs list
+      const poisList = document.getElementById('sellerPOIsList');
+      if (pois.length === 0) {
+        poisList.innerHTML = '<p class="text-muted">No POIs created yet</p>';
+      } else {
+        poisList.innerHTML = '<div class="table-container"><table class="table"><thead><tr><th>Name</th><th>Location</th><th>Status</th></tr></thead><tbody>' +
+          pois.map(poi => `
+            <tr>
+              <td>${poi.name}</td>
+              <td>${poi.latitude.toFixed(4)}, ${poi.longitude.toFixed(4)}</td>
+              <td><span class="status-badge status-${poi.status}">${poi.status}</span></td>
+            </tr>
+          `).join('') +
+          '</tbody></table></div>';
+      }
+      
+      // Update action buttons
+      if (seller.verified) {
+        document.getElementById('btnVerify').style.display = 'none';
+        document.getElementById('btnUnverify').style.display = 'inline-flex';
+      } else {
+        document.getElementById('btnVerify').style.display = 'inline-flex';
+        document.getElementById('btnUnverify').style.display = 'none';
+      }
+      
+      openModal('sellerDetailModal');
+    }
+    
+    // Toggle seller verification
+    function toggleVerification() {
+      if (!currentSellerData) return;
+      
+      const newStatus = !currentSellerData.verified;
+      currentSellerData.verified = newStatus;
+      
+      // Update in MOCK_DATA
+      const sellerIndex = MOCK_DATA.sellers.findIndex(s => s.id === currentSellerData.id);
+      if (sellerIndex !== -1) {
+        MOCK_DATA.sellers[sellerIndex].verified = newStatus;
+      }
+      
+      showNotification(`Seller ${newStatus ? 'verified' : 'unverified'} successfully`, 'success');
+      closeModal('sellerDetailModal');
+      
+      // Refresh table and stats
+      handleFilter();
+      updateStats();
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initPage);
+  </script>
+</body>
+</html>

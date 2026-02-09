@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POI Management - Seller Dashboard</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <h2>TourGuide Seller</h2>
+        <p>Manage Your Content</p>
+      </div>
+      
+      <nav>
+        <ul class="sidebar-nav">
+          <li><a href="index.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+          <li><a href="shop-profile.html"><span class="nav-icon">🏪</span> Shop Profile</a></li>
+          <li><a href="pois.html" class="active"><span class="nav-icon">📍</span> POI Management</a></li>
+          <li><a href="narrations.html"><span class="nav-icon">🎙️</span> Narrations</a></li>
+          <li><a href="questions.html"><span class="nav-icon">❓</span> Questions & Answers</a></li>
+          <li><a href="media.html"><span class="nav-icon">🖼️</span> Media Library</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <h1>POI Management</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-profile">
+            <div class="user-avatar">TB</div>
+            <div class="user-info">
+              <span class="user-name">Tran Thi B</span>
+              <span class="user-role">Seller</span>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Content Area -->
+      <main class="content">
+        <!-- POI Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total POIs</div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Active</div>
+            <div class="stat-value" id="statActive">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pending</div>
+            <div class="stat-value" id="statPending">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Draft</div>
+            <div class="stat-value" id="statDraft">0</div>
+          </div>
+        </div>
+        
+        <!-- POIs Table Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Your Points of Interest</h3>
+            <button class="btn btn-accent" onclick="openCreateModal()">+ Create New POI</button>
+          </div>
+          <div class="card-body">
+            <!-- Search -->
+            <div class="table-actions">
+              <div class="table-search">
+                <input 
+                  type="text" 
+                  id="searchInput" 
+                  class="search-input" 
+                  placeholder="Search POIs..."
+                >
+              </div>
+            </div>
+            
+            <!-- POIs Table -->
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>Radius (m)</th>
+                    <th>Status</th>
+                    <th>Narrations</th>
+                    <th>Media</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="poisTableBody">
+                  <!-- Populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  
+  <!-- Create/Edit POI Modal -->
+  <div class="modal-overlay" id="poiModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">Create New POI</h3>
+        <button class="modal-close" onclick="closeModal('poiModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="poiForm">
+          <div class="form-group">
+            <label class="form-label">POI Name *</label>
+            <input type="text" id="poiName" class="form-input" required />
+            <p class="form-help">Name of the tourist location or attraction</p>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Description *</label>
+            <textarea id="poiDescription" class="form-textarea" rows="4" required></textarea>
+            <p class="form-help">Detailed description of this point of interest</p>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Latitude *</label>
+              <input type="number" id="poiLatitude" class="form-input" step="0.0001" required />
+              <p class="form-help">GPS latitude coordinate</p>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Longitude *</label>
+              <input type="number" id="poiLongitude" class="form-input" step="0.0001" required />
+              <p class="form-help">GPS longitude coordinate</p>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Trigger Radius (meters) *</label>
+              <input type="number" id="poiRadius" class="form-input" value="50" min="10" max="500" required />
+              <p class="form-help">Distance in meters to trigger audio narration</p>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Status *</label>
+              <select id="poiStatus" class="form-select" required>
+                <option value="draft">Draft</option>
+                <option value="pending">Pending Review</option>
+                <option value="active">Active</option>
+              </select>
+              <p class="form-help">Publication status</p>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="savePOI()">Save POI</button>
+        <button class="btn btn-secondary" onclick="closeModal('poiModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="../shared/script.js"></script>
+  <script>
+    currentUser = MOCK_DATA.users.find(u => u.role === 'seller') || MOCK_DATA.users[1];
+    let seller = null;
+    let myPOIs = [];
+    let editingPOI = null;
+    
+    function initPage() {
+      seller = getSellerByUserId(currentUser.id);
+      if (!seller) {
+        document.querySelector('.content').innerHTML = '<div class="alert alert-danger">Seller profile not found.</div>';
+        return;
+      }
+      
+      myPOIs = getPOIsBySeller(seller.id);
+      updateStats();
+      renderTable();
+      
+      document.getElementById('searchInput').addEventListener('input', renderTable);
+    }
+    
+    function updateStats() {
+      document.getElementById('statTotal').textContent = myPOIs.length;
+      document.getElementById('statActive').textContent = myPOIs.filter(p => p.status === 'active').length;
+      document.getElementById('statPending').textContent = myPOIs.filter(p => p.status === 'pending').length;
+      document.getElementById('statDraft').textContent = myPOIs.filter(p => p.status === 'draft').length;
+    }
+    
+    function renderTable() {
+      const searchTerm = document.getElementById('searchInput').value;
+      let filtered = myPOIs;
+      
+      if (searchTerm) {
+        filtered = filterData(myPOIs, searchTerm, ['name', 'description']);
+      }
+      
+      const tbody = document.getElementById('poisTableBody');
+      tbody.innerHTML = '';
+      
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No POIs found</td></tr>';
+        return;
+      }
+      
+      filtered.forEach(poi => {
+        const narrations = getNarrationsByPOI(poi.id);
+        const media = getMediaByPOI(poi.id);
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${poi.name}</td>
+          <td>${poi.latitude.toFixed(4)}</td>
+          <td>${poi.longitude.toFixed(4)}</td>
+          <td>${poi.trigger_radius_meters}</td>
+          <td><span class="status-badge status-${poi.status}">${poi.status}</span></td>
+          <td>${narrations.length}</td>
+          <td>${media.length}</td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick="editPOI(${poi.id})">Edit</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    
+    function openCreateModal() {
+      editingPOI = null;
+      document.getElementById('modalTitle').textContent = 'Create New POI';
+      document.getElementById('poiForm').reset();
+      document.getElementById('poiRadius').value = 50;
+      document.getElementById('poiStatus').value = 'draft';
+      openModal('poiModal');
+    }
+    
+    function editPOI(poiId) {
+      const poi = getPOIById(poiId);
+      if (!poi) return;
+      
+      editingPOI = poi;
+      document.getElementById('modalTitle').textContent = 'Edit POI';
+      document.getElementById('poiName').value = poi.name;
+      document.getElementById('poiDescription').value = poi.description;
+      document.getElementById('poiLatitude').value = poi.latitude;
+      document.getElementById('poiLongitude').value = poi.longitude;
+      document.getElementById('poiRadius').value = poi.trigger_radius_meters;
+      document.getElementById('poiStatus').value = poi.status;
+      openModal('poiModal');
+    }
+    
+    function savePOI() {
+      const name = document.getElementById('poiName').value.trim();
+      const description = document.getElementById('poiDescription').value.trim();
+      const latitude = parseFloat(document.getElementById('poiLatitude').value);
+      const longitude = parseFloat(document.getElementById('poiLongitude').value);
+      const radius = parseInt(document.getElementById('poiRadius').value);
+      const status = document.getElementById('poiStatus').value;
+      
+      if (!name || !description || !latitude || !longitude || !radius) {
+        showNotification('Please fill in all required fields', 'error');
+        return;
+      }
+      
+      if (editingPOI) {
+        // Update existing POI
+        editingPOI.name = name;
+        editingPOI.description = description;
+        editingPOI.latitude = latitude;
+        editingPOI.longitude = longitude;
+        editingPOI.trigger_radius_meters = radius;
+        editingPOI.status = status;
+        
+        const index = MOCK_DATA.pois.findIndex(p => p.id === editingPOI.id);
+        if (index !== -1) {
+          MOCK_DATA.pois[index] = editingPOI;
+        }
+        
+        showNotification('POI updated successfully!', 'success');
+      } else {
+        // Create new POI
+        const newPOI = {
+          id: MOCK_DATA.pois.length + 1,
+          seller_id: seller.id,
+          name,
+          description,
+          latitude,
+          longitude,
+          trigger_radius_meters: radius,
+          status
+        };
+        
+        MOCK_DATA.pois.push(newPOI);
+        myPOIs.push(newPOI);
+        
+        showNotification('POI created successfully!', 'success');
+      }
+      
+      closeModal('poiModal');
+      updateStats();
+      renderTable();
+    }
+    
+    document.addEventListener('DOMContentLoaded', initPage);
+  </script>
+</body>
+</html>

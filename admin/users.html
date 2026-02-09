@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Management - Admin Dashboard</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <h2>TourGuide Admin</h2>
+        <p>Platform Management</p>
+      </div>
+      
+      <nav>
+        <ul class="sidebar-nav">
+          <li><a href="index.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+          <li><a href="users.html" class="active"><span class="nav-icon">👥</span> User Management</a></li>
+          <li><a href="sellers.html"><span class="nav-icon">🏪</span> Seller Management</a></li>
+          <li><a href="pois.html"><span class="nav-icon">📍</span> POI Management</a></li>
+          <li><a href="narrations.html"><span class="nav-icon">🎙️</span> Content Moderation</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <h1>User Management</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-profile">
+            <div class="user-avatar">NA</div>
+            <div class="user-info">
+              <span class="user-name">Nguyen Van A</span>
+              <span class="user-role">Administrator</span>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Content Area -->
+      <main class="content">
+        <!-- User Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Active Users</div>
+            <div class="stat-value" id="statActive">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Sellers</div>
+            <div class="stat-value" id="statSellers">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Tourists</div>
+            <div class="stat-value" id="statTourists">0</div>
+          </div>
+        </div>
+        
+        <!-- Users Table Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">All Users</h3>
+          </div>
+          <div class="card-body">
+            <!-- Table Actions: Search and Filter -->
+            <div class="table-actions">
+              <div class="table-search">
+                <input 
+                  type="text" 
+                  id="searchInput" 
+                  class="search-input" 
+                  placeholder="Search by name, email, or phone..."
+                >
+              </div>
+              <div class="table-filters">
+                <select id="roleFilter" class="form-select">
+                  <option value="">All Roles</option>
+                  <option value="admin">Admin</option>
+                  <option value="seller">Seller</option>
+                  <option value="tourist">Tourist</option>
+                </select>
+                <select id="statusFilter" class="form-select">
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- Users Table -->
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                  <!-- Populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination" id="pagination">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  
+  <!-- User Detail Modal -->
+  <div class="modal-overlay" id="userDetailModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">User Details</h3>
+        <button class="modal-close" onclick="closeModal('userDetailModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <p id="detailName" class="text-large">-</p>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <p id="detailEmail">-</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <p id="detailPhone">-</p>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Role</label>
+            <p><span id="detailRole" class="status-badge">-</span></p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <p><span id="detailStatus" class="status-badge">-</span></p>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Joined Date</label>
+          <p id="detailCreated">-</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-success" id="btnActivate" onclick="toggleUserStatus()">Activate</button>
+        <button class="btn btn-danger" id="btnDeactivate" onclick="toggleUserStatus()">Deactivate</button>
+        <button class="btn btn-secondary" onclick="closeModal('userDetailModal')">Close</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="../shared/script.js"></script>
+  <script>
+    let currentUserData = null;
+    let pagination = null;
+    let filteredUsers = [];
+    
+    // Initialize page
+    function initPage() {
+      updateStats();
+      filteredUsers = [...MOCK_DATA.users];
+      pagination = new TablePagination(filteredUsers, 10);
+      renderTable();
+      renderPagination();
+      
+      // Add event listeners
+      document.getElementById('searchInput').addEventListener('input', handleFilter);
+      document.getElementById('roleFilter').addEventListener('change', handleFilter);
+      document.getElementById('statusFilter').addEventListener('change', handleFilter);
+    }
+    
+    // Update statistics
+    function updateStats() {
+      document.getElementById('statTotal').textContent = MOCK_DATA.users.length;
+      document.getElementById('statActive').textContent = MOCK_DATA.users.filter(u => u.status === 'active').length;
+      document.getElementById('statSellers').textContent = MOCK_DATA.users.filter(u => u.role === 'seller').length;
+      document.getElementById('statTourists').textContent = MOCK_DATA.users.filter(u => u.role === 'tourist').length;
+    }
+    
+    // Handle search and filter
+    function handleFilter() {
+      const searchTerm = document.getElementById('searchInput').value;
+      const roleFilter = document.getElementById('roleFilter').value;
+      const statusFilter = document.getElementById('statusFilter').value;
+      
+      // Start with all users
+      filteredUsers = [...MOCK_DATA.users];
+      
+      // Apply search
+      if (searchTerm) {
+        filteredUsers = filterData(filteredUsers, searchTerm, ['name', 'email', 'phone']);
+      }
+      
+      // Apply role filter
+      if (roleFilter) {
+        filteredUsers = filteredUsers.filter(u => u.role === roleFilter);
+      }
+      
+      // Apply status filter
+      if (statusFilter) {
+        filteredUsers = filteredUsers.filter(u => u.status === statusFilter);
+      }
+      
+      // Update pagination with filtered data
+      pagination = new TablePagination(filteredUsers, 10);
+      renderTable();
+      renderPagination();
+    }
+    
+    // Render users table
+    function renderTable() {
+      const tbody = document.getElementById('usersTableBody');
+      tbody.innerHTML = '';
+      
+      const currentPageData = pagination.getCurrentPageData();
+      
+      if (currentPageData.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="text-center text-muted">No users found</td>
+          </tr>
+        `;
+        return;
+      }
+      
+      currentPageData.forEach(user => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${user.id}</td>
+          <td>${user.name}</td>
+          <td>${user.email}</td>
+          <td>${user.phone}</td>
+          <td><span class="status-badge status-${user.role}">${user.role}</span></td>
+          <td><span class="status-badge status-${user.status}">${user.status}</span></td>
+          <td>${formatDate(user.created_at)}</td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick="viewUserDetail(${user.id})">View</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    
+    // Render pagination controls
+    function renderPagination() {
+      const paginationEl = document.getElementById('pagination');
+      paginationEl.innerHTML = '';
+      
+      if (pagination.totalPages <= 1) return;
+      
+      // Previous button
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'pagination-btn';
+      prevBtn.textContent = '‹';
+      prevBtn.disabled = pagination.currentPage === 1;
+      prevBtn.onclick = () => {
+        if (pagination.previousPage()) {
+          renderTable();
+          renderPagination();
+        }
+      };
+      paginationEl.appendChild(prevBtn);
+      
+      // Page numbers
+      for (let i = 1; i <= pagination.totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = 'pagination-btn';
+        if (i === pagination.currentPage) {
+          pageBtn.classList.add('active');
+        }
+        pageBtn.textContent = i;
+        pageBtn.onclick = () => {
+          if (pagination.goToPage(i)) {
+            renderTable();
+            renderPagination();
+          }
+        };
+        paginationEl.appendChild(pageBtn);
+      }
+      
+      // Next button
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'pagination-btn';
+      nextBtn.textContent = '›';
+      nextBtn.disabled = pagination.currentPage === pagination.totalPages;
+      nextBtn.onclick = () => {
+        if (pagination.nextPage()) {
+          renderTable();
+          renderPagination();
+        }
+      };
+      paginationEl.appendChild(nextBtn);
+      
+      // Info
+      const info = document.createElement('span');
+      info.className = 'pagination-info';
+      info.textContent = `Page ${pagination.currentPage} of ${pagination.totalPages}`;
+      paginationEl.appendChild(info);
+    }
+    
+    // View user detail in modal
+    function viewUserDetail(userId) {
+      const user = getUserById(userId);
+      if (!user) return;
+      
+      currentUserData = user;
+      
+      document.getElementById('detailName').textContent = user.name;
+      document.getElementById('detailEmail').textContent = user.email;
+      document.getElementById('detailPhone').textContent = user.phone;
+      document.getElementById('detailRole').textContent = user.role;
+      document.getElementById('detailRole').className = `status-badge status-${user.role}`;
+      document.getElementById('detailStatus').textContent = user.status;
+      document.getElementById('detailStatus').className = `status-badge status-${user.status}`;
+      document.getElementById('detailCreated').textContent = formatDate(user.created_at);
+      
+      // Update action buttons
+      if (user.status === 'active') {
+        document.getElementById('btnActivate').style.display = 'none';
+        document.getElementById('btnDeactivate').style.display = 'inline-flex';
+      } else {
+        document.getElementById('btnActivate').style.display = 'inline-flex';
+        document.getElementById('btnDeactivate').style.display = 'none';
+      }
+      
+      openModal('userDetailModal');
+    }
+    
+    // Toggle user status
+    function toggleUserStatus() {
+      if (!currentUserData) return;
+      
+      const newStatus = currentUserData.status === 'active' ? 'inactive' : 'active';
+      currentUserData.status = newStatus;
+      
+      // Update in MOCK_DATA
+      const userIndex = MOCK_DATA.users.findIndex(u => u.id === currentUserData.id);
+      if (userIndex !== -1) {
+        MOCK_DATA.users[userIndex].status = newStatus;
+      }
+      
+      showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+      closeModal('userDetailModal');
+      
+      // Refresh table and stats
+      handleFilter();
+      updateStats();
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initPage);
+  </script>
+</body>
+</html>

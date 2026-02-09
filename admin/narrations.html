@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Content Moderation - Admin Dashboard</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <h2>TourGuide Admin</h2>
+        <p>Platform Management</p>
+      </div>
+      
+      <nav>
+        <ul class="sidebar-nav">
+          <li><a href="index.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+          <li><a href="users.html"><span class="nav-icon">👥</span> User Management</a></li>
+          <li><a href="sellers.html"><span class="nav-icon">🏪</span> Seller Management</a></li>
+          <li><a href="pois.html"><span class="nav-icon">📍</span> POI Management</a></li>
+          <li><a href="narrations.html" class="active"><span class="nav-icon">🎙️</span> Content Moderation</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <h1>Content Moderation</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-profile">
+            <div class="user-avatar">NA</div>
+            <div class="user-info">
+              <span class="user-name">Nguyen Van A</span>
+              <span class="user-role">Administrator</span>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Content Area -->
+      <main class="content">
+        <!-- Narration Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Narrations</div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Approved</div>
+            <div class="stat-value" id="statApproved">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pending Review</div>
+            <div class="stat-value" id="statPending">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Draft</div>
+            <div class="stat-value" id="statDraft">0</div>
+          </div>
+        </div>
+        
+        <!-- Narrations Table Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">All Narrations</h3>
+          </div>
+          <div class="card-body">
+            <!-- Table Actions -->
+            <div class="table-actions">
+              <div class="table-search">
+                <input 
+                  type="text" 
+                  id="searchInput" 
+                  class="search-input" 
+                  placeholder="Search narration text..."
+                >
+              </div>
+              <div class="table-filters">
+                <select id="languageFilter" class="form-select">
+                  <option value="">All Languages</option>
+                  <option value="vi">Vietnamese</option>
+                  <option value="en">English</option>
+                </select>
+                <select id="statusFilter" class="form-select">
+                  <option value="">All Status</option>
+                  <option value="approved">Approved</option>
+                  <option value="pending">Pending</option>
+                  <option value="draft">Draft</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- Narrations Table -->
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>POI</th>
+                    <th>Language</th>
+                    <th>Text Preview</th>
+                    <th>Audio</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="narrationsTableBody">
+                  <!-- Populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination" id="pagination"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  
+  <!-- Narration Detail Modal -->
+  <div class="modal-overlay" id="narrationDetailModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Narration Review</h3>
+        <button class="modal-close" onclick="closeModal('narrationDetailModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Point of Interest</label>
+          <p id="detailPOI" class="text-large">-</p>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Language</label>
+            <p><span id="detailLanguage" class="status-badge">-</span></p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <p><span id="detailStatus" class="status-badge">-</span></p>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Narration Text</label>
+          <div style="background-color: var(--color-bg-tertiary); padding: var(--spacing-lg); border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+            <p id="detailText" style="margin-bottom: 0; line-height: 1.8;">-</p>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Audio Information</label>
+          <div id="audioInfo" class="text-muted">-</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-success" onclick="approveNarration()">✓ Approve</button>
+        <button class="btn btn-danger" onclick="rejectNarration()">✗ Reject</button>
+        <button class="btn btn-secondary" onclick="closeModal('narrationDetailModal')">Close</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="../shared/script.js"></script>
+  <script>
+    let currentNarration = null;
+    let pagination = null;
+    let filteredNarrations = [];
+    
+    // Initialize page
+    function initPage() {
+      updateStats();
+      filteredNarrations = [...MOCK_DATA.narrations];
+      pagination = new TablePagination(filteredNarrations, 10);
+      renderTable();
+      renderPagination();
+      
+      // Add event listeners
+      document.getElementById('searchInput').addEventListener('input', handleFilter);
+      document.getElementById('languageFilter').addEventListener('change', handleFilter);
+      document.getElementById('statusFilter').addEventListener('change', handleFilter);
+    }
+    
+    // Update statistics
+    function updateStats() {
+      document.getElementById('statTotal').textContent = MOCK_DATA.narrations.length;
+      document.getElementById('statApproved').textContent = MOCK_DATA.narrations.filter(n => n.status === 'approved').length;
+      document.getElementById('statPending').textContent = MOCK_DATA.narrations.filter(n => n.status === 'pending').length;
+      document.getElementById('statDraft').textContent = MOCK_DATA.narrations.filter(n => n.status === 'draft').length;
+    }
+    
+    // Handle filter
+    function handleFilter() {
+      const searchTerm = document.getElementById('searchInput').value;
+      const languageFilter = document.getElementById('languageFilter').value;
+      const statusFilter = document.getElementById('statusFilter').value;
+      
+      filteredNarrations = [...MOCK_DATA.narrations];
+      
+      if (searchTerm) {
+        filteredNarrations = filterData(filteredNarrations, searchTerm, ['text']);
+      }
+      
+      if (languageFilter) {
+        filteredNarrations = filteredNarrations.filter(n => n.language === languageFilter);
+      }
+      
+      if (statusFilter) {
+        filteredNarrations = filteredNarrations.filter(n => n.status === statusFilter);
+      }
+      
+      pagination = new TablePagination(filteredNarrations, 10);
+      renderTable();
+      renderPagination();
+    }
+    
+    // Render table
+    function renderTable() {
+      const tbody = document.getElementById('narrationsTableBody');
+      tbody.innerHTML = '';
+      
+      const currentPageData = pagination.getCurrentPageData();
+      
+      if (currentPageData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No narrations found</td></tr>';
+        return;
+      }
+      
+      currentPageData.forEach(narration => {
+        const poi = getPOIById(narration.poi_id);
+        const audio = getAudioById(narration.audio_id);
+        const preview = narration.text.length > 60 ? narration.text.substring(0, 60) + '...' : narration.text;
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${narration.id}</td>
+          <td>${poi ? poi.name : 'N/A'}</td>
+          <td><span class="status-badge">${narration.language.toUpperCase()}</span></td>
+          <td>${preview}</td>
+          <td>${audio ? formatDuration(audio.duration) : 'N/A'}</td>
+          <td><span class="status-badge status-${narration.status}">${narration.status}</span></td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick="viewNarrationDetail(${narration.id})">Review</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    
+    // Render pagination
+    function renderPagination() {
+      const paginationEl = document.getElementById('pagination');
+      paginationEl.innerHTML = '';
+      
+      if (pagination.totalPages <= 1) return;
+      
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'pagination-btn';
+      prevBtn.textContent = '‹';
+      prevBtn.disabled = pagination.currentPage === 1;
+      prevBtn.onclick = () => {
+        if (pagination.previousPage()) {
+          renderTable();
+          renderPagination();
+        }
+      };
+      paginationEl.appendChild(prevBtn);
+      
+      for (let i = 1; i <= pagination.totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = 'pagination-btn';
+        if (i === pagination.currentPage) pageBtn.classList.add('active');
+        pageBtn.textContent = i;
+        pageBtn.onclick = () => {
+          if (pagination.goToPage(i)) {
+            renderTable();
+            renderPagination();
+          }
+        };
+        paginationEl.appendChild(pageBtn);
+      }
+      
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'pagination-btn';
+      nextBtn.textContent = '›';
+      nextBtn.disabled = pagination.currentPage === pagination.totalPages;
+      nextBtn.onclick = () => {
+        if (pagination.nextPage()) {
+          renderTable();
+          renderPagination();
+        }
+      };
+      paginationEl.appendChild(nextBtn);
+    }
+    
+    // View narration detail
+    function viewNarrationDetail(narrationId) {
+      const narration = MOCK_DATA.narrations.find(n => n.id === narrationId);
+      if (!narration) return;
+      
+      currentNarration = narration;
+      const poi = getPOIById(narration.poi_id);
+      const audio = getAudioById(narration.audio_id);
+      
+      document.getElementById('detailPOI').textContent = poi ? poi.name : 'N/A';
+      document.getElementById('detailLanguage').textContent = narration.language.toUpperCase();
+      document.getElementById('detailStatus').textContent = narration.status;
+      document.getElementById('detailStatus').className = `status-badge status-${narration.status}`;
+      document.getElementById('detailText').textContent = narration.text;
+      
+      if (audio) {
+        document.getElementById('audioInfo').innerHTML = `
+          <p><strong>Duration:</strong> ${formatDuration(audio.duration)}</p>
+          <p><strong>Source:</strong> ${audio.source_type === 'upload' ? 'Uploaded' : 'Text-to-Speech'}</p>
+          <p><strong>URL:</strong> ${audio.audio_url}</p>
+        `;
+      } else {
+        document.getElementById('audioInfo').textContent = 'No audio attached';
+      }
+      
+      openModal('narrationDetailModal');
+    }
+    
+    // Approve narration
+    function approveNarration() {
+      if (!currentNarration) return;
+      
+      currentNarration.status = 'approved';
+      const narrationIndex = MOCK_DATA.narrations.findIndex(n => n.id === currentNarration.id);
+      if (narrationIndex !== -1) {
+        MOCK_DATA.narrations[narrationIndex].status = 'approved';
+      }
+      
+      showNotification('Narration approved successfully', 'success');
+      closeModal('narrationDetailModal');
+      handleFilter();
+      updateStats();
+    }
+    
+    // Reject narration
+    function rejectNarration() {
+      if (!currentNarration) return;
+      
+      currentNarration.status = 'rejected';
+      const narrationIndex = MOCK_DATA.narrations.findIndex(n => n.id === currentNarration.id);
+      if (narrationIndex !== -1) {
+        MOCK_DATA.narrations[narrationIndex].status = 'rejected';
+      }
+      
+      showNotification('Narration rejected', 'success');
+      closeModal('narrationDetailModal');
+      handleFilter();
+      updateStats();
+    }
+    
+    document.addEventListener('DOMContentLoaded', initPage);
+  </script>
+</body>
+</html>

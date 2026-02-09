@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POI Management - Admin Dashboard</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <h2>TourGuide Admin</h2>
+        <p>Platform Management</p>
+      </div>
+      
+      <nav>
+        <ul class="sidebar-nav">
+          <li><a href="index.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+          <li><a href="users.html"><span class="nav-icon">👥</span> User Management</a></li>
+          <li><a href="sellers.html"><span class="nav-icon">🏪</span> Seller Management</a></li>
+          <li><a href="pois.html" class="active"><span class="nav-icon">📍</span> POI Management</a></li>
+          <li><a href="narrations.html"><span class="nav-icon">🎙️</span> Content Moderation</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <h1>POI Management</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-profile">
+            <div class="user-avatar">NA</div>
+            <div class="user-info">
+              <span class="user-name">Nguyen Van A</span>
+              <span class="user-role">Administrator</span>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Content Area -->
+      <main class="content">
+        <!-- POI Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total POIs</div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Active POIs</div>
+            <div class="stat-value" id="statActive">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pending Review</div>
+            <div class="stat-value" id="statPending">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Draft POIs</div>
+            <div class="stat-value" id="statDraft">0</div>
+          </div>
+        </div>
+        
+        <!-- POIs Table Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">All Points of Interest</h3>
+          </div>
+          <div class="card-body">
+            <!-- Table Actions -->
+            <div class="table-actions">
+              <div class="table-search">
+                <input 
+                  type="text" 
+                  id="searchInput" 
+                  class="search-input" 
+                  placeholder="Search POI by name..."
+                >
+              </div>
+              <div class="table-filters">
+                <select id="statusFilter" class="form-select">
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="pending">Pending</option>
+                  <option value="draft">Draft</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- POIs Table -->
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Seller</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>Radius (m)</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="poisTableBody">
+                  <!-- Populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination" id="pagination"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  
+  <!-- POI Detail Modal -->
+  <div class="modal-overlay" id="poiDetailModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">POI Details</h3>
+        <button class="modal-close" onclick="closeModal('poiDetailModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input type="text" id="editName" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="editDescription" class="form-textarea"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Latitude</label>
+            <input type="number" id="editLatitude" class="form-input" step="0.0001" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Longitude</label>
+            <input type="number" id="editLongitude" class="form-input" step="0.0001" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Trigger Radius (meters)</label>
+            <input type="number" id="editRadius" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select id="editStatus" class="form-select">
+              <option value="active">Active</option>
+              <option value="pending">Pending</option>
+              <option value="draft">Draft</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Seller</label>
+          <p id="detailSeller" class="text-muted">-</p>
+        </div>
+        
+        <div class="form-group mt-lg">
+          <label class="form-label">Media Gallery</label>
+          <div id="mediaGallery" class="media-grid"></div>
+        </div>
+        
+        <div class="form-group mt-lg">
+          <label class="form-label">Narrations</label>
+          <div id="narrationsInfo"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="savePOI()">Save Changes</button>
+        <button class="btn btn-secondary" onclick="closeModal('poiDetailModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="../shared/script.js"></script>
+  <script>
+    let currentPOI = null;
+    let pagination = null;
+    let filteredPOIs = [];
+    
+    // Initialize page
+    function initPage() {
+      updateStats();
+      filteredPOIs = [...MOCK_DATA.pois];
+      pagination = new TablePagination(filteredPOIs, 10);
+      renderTable();
+      renderPagination();
+      
+      // Add event listeners
+      document.getElementById('searchInput').addEventListener('input', handleFilter);
+      document.getElementById('statusFilter').addEventListener('change', handleFilter);
+    }
+    
+    // Update statistics
+    function updateStats() {
+      document.getElementById('statTotal').textContent = MOCK_DATA.pois.length;
+      document.getElementById('statActive').textContent = MOCK_DATA.pois.filter(p => p.status === 'active').length;
+      document.getElementById('statPending').textContent = MOCK_DATA.pois.filter(p => p.status === 'pending').length;
+      document.getElementById('statDraft').textContent = MOCK_DATA.pois.filter(p => p.status === 'draft').length;
+    }
+    
+    // Handle filter
+    function handleFilter() {
+      const searchTerm = document.getElementById('searchInput').value;
+      const statusFilter = document.getElementById('statusFilter').value;
+      
+      filteredPOIs = [...MOCK_DATA.pois];
+      
+      if (searchTerm) {
+        filteredPOIs = filterData(filteredPOIs, searchTerm, ['name']);
+      }
+      
+      if (statusFilter) {
+        filteredPOIs = filteredPOIs.filter(p => p.status === statusFilter);
+      }
+      
+      pagination = new TablePagination(filteredPOIs, 10);
+      renderTable();
+      renderPagination();
+    }
+    
+    // Render table
+    function renderTable() {
+      const tbody = document.getElementById('poisTableBody');
+      tbody.innerHTML = '';
+      
+      const currentPageData = pagination.getCurrentPageData();
+      
+      if (currentPageData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No POIs found</td></tr>';
+        return;
+      }
+      
+      currentPageData.forEach(poi => {
+        const seller = getSellerById(poi.seller_id);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${poi.id}</td>
+          <td>${poi.name}</td>
+          <td>${seller ? seller.shop_name : 'N/A'}</td>
+          <td>${poi.latitude.toFixed(4)}</td>
+          <td>${poi.longitude.toFixed(4)}</td>
+          <td>${poi.trigger_radius_meters}</td>
+          <td><span class="status-badge status-${poi.status}">${poi.status}</span></td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick="viewPOIDetail(${poi.id})">Edit</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    
+    // Render pagination
+    function renderPagination() {
+      const paginationEl = document.getElementById('pagination');
+      paginationEl.innerHTML = '';
+      
+      if (pagination.totalPages <= 1) return;
+      
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'pagination-btn';
+      prevBtn.textContent = '‹';
+      prevBtn.disabled = pagination.currentPage === 1;
+      prevBtn.onclick = () => {
+        if (pagination.previousPage()) {
+          renderTable();
+          renderPagination();
+        }
+      };
+      paginationEl.appendChild(prevBtn);
+      
+      for (let i = 1; i <= pagination.totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = 'pagination-btn';
+        if (i === pagination.currentPage) pageBtn.classList.add('active');
+        pageBtn.textContent = i;
+        pageBtn.onclick = () => {
+          if (pagination.goToPage(i)) {
+            renderTable();
+            renderPagination();
+          }
+        };
+        paginationEl.appendChild(pageBtn);
+      }
+      
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'pagination-btn';
+      nextBtn.textContent = '›';
+      nextBtn.disabled = pagination.currentPage === pagination.totalPages;
+      nextBtn.onclick = () => {
+        if (pagination.nextPage()) {
+          renderTable();
+          renderPagination();
+        }
+      };
+      paginationEl.appendChild(nextBtn);
+    }
+    
+    // View POI detail
+    function viewPOIDetail(poiId) {
+      const poi = getPOIById(poiId);
+      if (!poi) return;
+      
+      currentPOI = poi;
+      const seller = getSellerById(poi.seller_id);
+      const media = getMediaByPOI(poi.id);
+      const narrations = getNarrationsByPOI(poi.id);
+      
+      document.getElementById('editName').value = poi.name;
+      document.getElementById('editDescription').value = poi.description;
+      document.getElementById('editLatitude').value = poi.latitude;
+      document.getElementById('editLongitude').value = poi.longitude;
+      document.getElementById('editRadius').value = poi.trigger_radius_meters;
+      document.getElementById('editStatus').value = poi.status;
+      document.getElementById('detailSeller').textContent = seller ? seller.shop_name : 'N/A';
+      
+      // Render media
+      const mediaGallery = document.getElementById('mediaGallery');
+      if (media.length === 0) {
+        mediaGallery.innerHTML = '<p class="text-muted">No media uploaded</p>';
+      } else {
+        mediaGallery.innerHTML = media.map(m => `
+          <div class="media-item">
+            <img src="${m.url}" alt="POI media" />
+          </div>
+        `).join('');
+      }
+      
+      // Render narrations
+      const narrationsInfo = document.getElementById('narrationsInfo');
+      if (narrations.length === 0) {
+        narrationsInfo.innerHTML = '<p class="text-muted">No narrations added</p>';
+      } else {
+        narrationsInfo.innerHTML = '<div class="table-container"><table class="table"><thead><tr><th>Language</th><th>Status</th></tr></thead><tbody>' +
+          narrations.map(n => `
+            <tr>
+              <td>${n.language.toUpperCase()}</td>
+              <td><span class="status-badge status-${n.status}">${n.status}</span></td>
+            </tr>
+          `).join('') +
+          '</tbody></table></div>';
+      }
+      
+      openModal('poiDetailModal');
+    }
+    
+    // Save POI changes
+    function savePOI() {
+      if (!currentPOI) return;
+      
+      currentPOI.name = document.getElementById('editName').value;
+      currentPOI.description = document.getElementById('editDescription').value;
+      currentPOI.latitude = parseFloat(document.getElementById('editLatitude').value);
+      currentPOI.longitude = parseFloat(document.getElementById('editLongitude').value);
+      currentPOI.trigger_radius_meters = parseInt(document.getElementById('editRadius').value);
+      currentPOI.status = document.getElementById('editStatus').value;
+      
+      const poiIndex = MOCK_DATA.pois.findIndex(p => p.id === currentPOI.id);
+      if (poiIndex !== -1) {
+        MOCK_DATA.pois[poiIndex] = currentPOI;
+      }
+      
+      showNotification('POI updated successfully', 'success');
+      closeModal('poiDetailModal');
+      handleFilter();
+      updateStats();
+    }
+    
+    document.addEventListener('DOMContentLoaded', initPage);
+  </script>
+</body>
+</html>

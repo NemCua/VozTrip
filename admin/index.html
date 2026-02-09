@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Tour Guide Platform</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <h2>TourGuide Admin</h2>
+        <p>Platform Management</p>
+      </div>
+      
+      <nav>
+        <ul class="sidebar-nav">
+          <li><a href="index.html" class="active"><span class="nav-icon">📊</span> Dashboard</a></li>
+          <li><a href="users.html"><span class="nav-icon">👥</span> User Management</a></li>
+          <li><a href="sellers.html"><span class="nav-icon">🏪</span> Seller Management</a></li>
+          <li><a href="pois.html"><span class="nav-icon">📍</span> POI Management</a></li>
+          <li><a href="narrations.html"><span class="nav-icon">🎙️</span> Content Moderation</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <h1>Dashboard Overview</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-profile">
+            <div class="user-avatar">NA</div>
+            <div class="user-info">
+              <span class="user-name" id="currentUserName">Nguyen Van A</span>
+              <span class="user-role" id="currentUserRole">Administrator</span>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Content Area -->
+      <main class="content">
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value" id="statTotalUsers">0</div>
+            <div class="stat-change positive" id="statUsersChange">+12% this month</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-label">Total Sellers</div>
+            <div class="stat-value" id="statTotalSellers">0</div>
+            <div class="stat-change positive" id="statSellersChange">+8% this month</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-label">Total POIs</div>
+            <div class="stat-value" id="statTotalPOIs">0</div>
+            <div class="stat-change positive" id="statPOIsChange">+15% this month</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-label">Total Narrations</div>
+            <div class="stat-value" id="statTotalNarrations">0</div>
+            <div class="stat-change" id="statNarrationsChange">+5% this month</div>
+          </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Platform Activity</h3>
+          </div>
+          <div class="card-body">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Active Users</div>
+                <div class="stat-value" id="statActiveUsers">0</div>
+              </div>
+              
+              <div class="stat-card">
+                <div class="stat-label">Verified Sellers</div>
+                <div class="stat-value" id="statVerifiedSellers">0</div>
+              </div>
+              
+              <div class="stat-card">
+                <div class="stat-label">Active POIs</div>
+                <div class="stat-value" id="statActivePOIs">0</div>
+              </div>
+              
+              <div class="stat-card">
+                <div class="stat-label">Pending Approvals</div>
+                <div class="stat-value" id="statPendingNarrations">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Recent Users -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Recent User Registrations</h3>
+            <a href="users.html" class="btn btn-secondary btn-sm">View All</a>
+          </div>
+          <div class="card-body">
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                  </tr>
+                </thead>
+                <tbody id="recentUsersTable">
+                  <!-- Populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Recent POIs -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Recent Points of Interest</h3>
+            <a href="pois.html" class="btn btn-secondary btn-sm">View All</a>
+          </div>
+          <div class="card-body">
+            <div class="table-container">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Seller</th>
+                  </tr>
+                </thead>
+                <tbody id="recentPOIsTable">
+                  <!-- Populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="../shared/script.js"></script>
+  <script>
+    // Initialize dashboard with statistics
+    function initializeDashboard() {
+      const stats = getStatistics();
+      
+      // Update stat cards
+      document.getElementById('statTotalUsers').textContent = stats.totalUsers;
+      document.getElementById('statTotalSellers').textContent = stats.totalSellers;
+      document.getElementById('statTotalPOIs').textContent = stats.totalPOIs;
+      document.getElementById('statTotalNarrations').textContent = stats.totalNarrations;
+      
+      document.getElementById('statActiveUsers').textContent = stats.activeUsers;
+      document.getElementById('statVerifiedSellers').textContent = stats.verifiedSellers;
+      document.getElementById('statActivePOIs').textContent = stats.activePOIs;
+      document.getElementById('statPendingNarrations').textContent = stats.pendingNarrations;
+      
+      // Load recent users (last 5)
+      loadRecentUsers();
+      
+      // Load recent POIs (last 5)
+      loadRecentPOIs();
+      
+      // Update current user info
+      document.getElementById('currentUserName').textContent = currentUser.name;
+      document.getElementById('currentUserRole').textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+    }
+    
+    function loadRecentUsers() {
+      const recentUsers = MOCK_DATA.users
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 5);
+      
+      const tbody = document.getElementById('recentUsersTable');
+      tbody.innerHTML = '';
+      
+      recentUsers.forEach(user => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${user.name}</td>
+          <td>${user.email}</td>
+          <td><span class="status-badge status-${user.role}">${user.role}</span></td>
+          <td><span class="status-badge status-${user.status}">${user.status}</span></td>
+          <td>${formatDate(user.created_at)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    
+    function loadRecentPOIs() {
+      const recentPOIs = MOCK_DATA.pois.slice(-5).reverse();
+      
+      const tbody = document.getElementById('recentPOIsTable');
+      tbody.innerHTML = '';
+      
+      recentPOIs.forEach(poi => {
+        const seller = getSellerById(poi.seller_id);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${poi.name}</td>
+          <td>${poi.latitude.toFixed(4)}, ${poi.longitude.toFixed(4)}</td>
+          <td><span class="status-badge status-${poi.status}">${poi.status}</span></td>
+          <td>${seller ? seller.shop_name : 'N/A'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initializeDashboard);
+  </script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile - Dashboard</title>
+    
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h2>TourGuide</h2>
+      <p>Control Panel</p>
+    </div>
+
+    <ul class="sidebar-nav">
+      <li><a href="index.html">📊 Dashboard</a></li>
+      <li><a href="users.html">👥 Users</a></li>
+      <li><a href="sellers.html">🏪 Sellers</a></li>
+      <li><a href="profile.html" class="active">👤 Profile</a></li>
+      <li><a href="settings.html">⚙️ Settings</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-content">
+
+    <header class="header">
+      <div class="header-left">
+        <h1>Profile</h1>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <div class="profile-grid">
+
+        <!-- Left -->
+        <div class="card">
+          <div class="card-body profile-card">
+            <div class="profile-avatar-lg" id="profileAvatar">NA</div>
+            <h3 id="profileName">Name</h3>
+            <p class="profile-role" id="profileRole">Role</p>
+            <p class="profile-email" id="profileEmail">email</p>
+          </div>
+        </div>
+
+        <!-- Right -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">User Information</h3>
+          </div>
+          <div class="card-body info-list" id="userInfoBox">
+          </div>
+        </div>
+
+        <!-- Seller shop info -->
+        <div class="card" id="shopCard" style="display:none;">
+          <div class="card-header">
+            <h3 class="card-title">Shop Information</h3>
+          </div>
+          <div class="card-body info-list" id="shopInfoBox"></div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../shared/script.js"></script>
+
+<script>
+// const currentUser = MOCK_DATA.users[0]; // demo login user
+
+function renderProfile() {
+
+  // ===== USER UI =====
+  profileName.textContent = "Nguyễn Quốc Huy";
+  profileRole.textContent = "SELLER";
+  profileEmail.textContent = "huy.seller@tourguide.vn";
+  profileAvatar.textContent = "NH";
+
+  userInfoBox.innerHTML = `
+    <div><span>ID</span><b>712371801929830</b></div>
+    <div><span>Phone</span><b>+84 901 234 567</b></div>
+    <div><span>Status</span><b>Active</b></div>
+    <div><span>Created</span><b>2025-12-01</b></div>
+  `;
+
+  // ===== SHOP UI (luôn hiện để test layout) =====
+  shopCard.style.display = "block";
+
+  shopInfoBox.innerHTML = `
+    <div><span>Shop Name</span><b>Huy Heritage Tours</b></div>
+    <div><span>Address</span><b>123 Nguyễn Huệ, Q1, TP.HCM</b></div>
+    <div><span>Verified</span><b>Yes</b></div>
+    <div><span>Description</span>
+      <b>Chuyên tour văn hóa, lịch sử và trải nghiệm địa phương cao cấp.</b>
+    </div>
+  `;
+}
+
+renderProfile();
+</script>
+
+</body>
+</html>
