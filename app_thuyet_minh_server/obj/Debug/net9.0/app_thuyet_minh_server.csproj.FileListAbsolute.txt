@@ -29,3 +29,11 @@
 /Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/obj/Debug/net9.0/app_thuyet_minh_server.pdb
 /Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/obj/Debug/net9.0/app_thuyet_minh_server.genruntimeconfig.cache
 /Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/obj/Debug/net9.0/ref/app_thuyet_minh_server.dll
+/Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+/Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/Microsoft.IdentityModel.Abstractions.dll
+/Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/Microsoft.IdentityModel.JsonWebTokens.dll
+/Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/Microsoft.IdentityModel.Logging.dll
+/Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/Microsoft.IdentityModel.Protocols.dll
+/Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+/Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/Microsoft.IdentityModel.Tokens.dll
+/Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/System.IdentityModel.Tokens.Jwt.dll
