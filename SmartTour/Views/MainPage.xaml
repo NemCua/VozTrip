@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:SmartTour.ViewModels"
+             xmlns:models="clr-namespace:SmartTour.Models"
+             x:Class="SmartTour.Views.MainPage"
+             x:DataType="viewmodels:MainViewModel"
+             Title="SmartTour - Hệ Thống Thuyết Minh Thông Minh"
+             BackgroundColor="{StaticResource Primary}">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        
+        <!-- Header -->
+        <Border Grid.Row="0" 
+                BackgroundColor="{StaticResource Primary}"
+                Padding="20,10">
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <VerticalStackLayout>
+                    <Label Text="SMARTTOUR" 
+                           FontSize="24" 
+                           FontAttributes="Bold"
+                           TextColor="White"/>
+                    <Label Text="{Binding CurrentLocationText}"
+                           FontSize="12"
+                           TextColor="White"
+                           Opacity="0.8"/>
+                </VerticalStackLayout>
+
+                <Button Grid.Column="1"
+                        Text="🌐"
+                        FontSize="20"
+                        BackgroundColor="Transparent"
+                        TextColor="White"
+                        Clicked="OnLanguageClicked"/>
+
+                <Button Grid.Column="2"
+                        Text="⚙️"
+                        FontSize="20"
+                        BackgroundColor="Transparent"
+                        TextColor="White"
+                        Clicked="OnSettingsClicked"/>
+            </Grid>
+        </Border>
+
+        <!-- Main Content -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20" Spacing="20">
+
+                <!-- User Info -->
+                <Border BackgroundColor="White"
+                        Stroke="{StaticResource Gray200}"
+                        StrokeThickness="1"
+                        Padding="15"
+                        IsVisible="{Binding CurrentUser, Converter={StaticResource IsNotNullConverter}}">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Label Text="👤" 
+                               FontSize="32"
+                               VerticalOptions="Center"/>
+                        <VerticalStackLayout Grid.Column="1" 
+                                           Padding="10,0"
+                                           VerticalOptions="Center">
+                            <Label Text="{Binding CurrentUser.FullName}"
+                                   FontSize="18"
+                                   FontAttributes="Bold"/>
+                            <Label Text="{Binding CurrentUser.Role}"
+                                   FontSize="14"
+                                   TextColor="{StaticResource Gray600}"/>
+                        </VerticalStackLayout>
+                        <Button Grid.Column="2"
+                                Text="Đăng xuất"
+                                Command="{Binding LogoutCommand}"
+                                BackgroundColor="{StaticResource Danger}"/>
+                    </Grid>
+                </Border>
+
+                <!-- Map View Placeholder -->
+                <Border BackgroundColor="White"
+                        Stroke="{StaticResource Gray200}"
+                        StrokeThickness="1"
+                        HeightRequest="250">
+                    <Grid>
+                        <Label Text="🗺️ BẢN ĐỒ"
+                               FontSize="48"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               TextColor="{StaticResource Gray300}"/>
+                        <Label Text="Xem vị trí các điểm du lịch"
+                               FontSize="14"
+                               HorizontalOptions="Center"
+                               VerticalOptions="End"
+                               Margin="0,0,0,20"
+                               TextColor="{StaticResource Gray500}"/>
+                    </Grid>
+                </Border>
+
+                <!-- Monitoring Control -->
+                <Border BackgroundColor="{StaticResource Secondary}"
+                        Padding="15">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Theo dõi vị trí"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   TextColor="White"/>
+                            <Label Text="Tự động phát thuyết minh khi đến gần điểm"
+                                   FontSize="12"
+                                   TextColor="White"
+                                   Opacity="0.8"/>
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding IsMonitoring}"
+                                Toggled="OnMonitoringToggled"
+                                VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Language Selection -->
+                <Border BackgroundColor="White"
+                        Stroke="{StaticResource Gray200}"
+                        StrokeThickness="1"
+                        Padding="15">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <Label Text="🌐 Ngôn ngữ:"
+                               FontSize="16"
+                               VerticalOptions="Center"/>
+                        <HorizontalStackLayout Grid.Column="1" 
+                                             Spacing="10"
+                                             HorizontalOptions="End">
+                            <Button Text="Tiếng Việt"
+                                    Command="{Binding ChangeLanguageCommand}"
+                                    CommandParameter="vi"
+                                    BackgroundColor="{Binding SelectedLanguage, Converter={StaticResource LanguageToColorConverter}, ConverterParameter=vi}"/>
+                            <Button Text="English"
+                                    Command="{Binding ChangeLanguageCommand}"
+                                    CommandParameter="en"
+                                    BackgroundColor="{Binding SelectedLanguage, Converter={StaticResource LanguageToColorConverter}, ConverterParameter=en}"/>
+                        </HorizontalStackLayout>
+                    </Grid>
+                </Border>
+
+                <!-- Nearby POIs Header -->
+                <Label Text="📍 Điểm thuyết minh gần bạn"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       TextColor="White"
+                       Margin="0,10,0,0"/>
+
+                <!-- POI List -->
+                <CollectionView ItemsSource="{Binding NearbyPOIs}"
+                                SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:PointOfInterest">
+                            <Border BackgroundColor="White"
+                                    Stroke="{StaticResource Gray200}"
+                                    StrokeThickness="1"
+                                    Margin="0,0,0,15"
+                                    Padding="0">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MainViewModel}}, Path=SelectPOICommand}"
+                                                        CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+
+                                <Grid RowDefinitions="Auto,*,Auto" Padding="15">
+                                    <!-- POI Icon & Name -->
+                                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
+                                        <Label Text="📍" 
+                                               FontSize="28"
+                                               VerticalOptions="Center"/>
+                                        <VerticalStackLayout Grid.Column="1" 
+                                                           Padding="10,0">
+                                            <Label Text="{Binding Name}"
+                                                   FontSize="18"
+                                                   FontAttributes="Bold"/>
+                                            <Label Text="{Binding Category}"
+                                                   FontSize="12"
+                                                   TextColor="{StaticResource Gray600}"/>
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="2"
+                                               Text="▶️"
+                                               FontSize="24"
+                                               VerticalOptions="Center"/>
+                                    </Grid>
+
+                                    <!-- Description -->
+                                    <Label Grid.Row="1"
+                                           Text="{Binding Description}"
+                                           FontSize="14"
+                                           TextColor="{StaticResource Gray700}"
+                                           LineBreakMode="WordWrap"
+                                           MaxLines="3"
+                                           Margin="0,10"/>
+
+                                    <!-- Actions -->
+                                    <Grid Grid.Row="2" ColumnDefinitions="*,*">
+                                        <Button Text="🎧 Nghe thuyết minh"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MainViewModel}}, Path=SelectPOICommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="{StaticResource Primary}"
+                                                TextColor="White"
+                                                Margin="0,0,5,0"/>
+                                        <Button Grid.Column="1"
+                                                Text="🧭 Chỉ đường"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MainViewModel}}, Path=NavigateToPOICommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="{StaticResource Secondary}"
+                                                TextColor="White"
+                                                Margin="5,0,0,0"/>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout HorizontalOptions="Center"
+                                           VerticalOptions="Center"
+                                           Padding="50">
+                            <Label Text="🔍"
+                                   FontSize="48"
+                                   HorizontalOptions="Center"/>
+                            <Label Text="Không tìm thấy điểm thuyết minh gần bạn"
+                                   FontSize="16"
+                                   HorizontalOptions="Center"
+                                   TextColor="White"/>
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Bottom Bar -->
+        <Border Grid.Row="2"
+                BackgroundColor="White"
+                Padding="15,10">
+            <Grid ColumnDefinitions="*,*,*">
+                <Button Text="🏠 Trang chủ"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource Primary}"/>
+                <Button Grid.Column="1"
+                        Text="🗺️ Bản đồ"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource Gray600}"/>
+                <Button Grid.Column="2"
+                        Text="📊 Lịch sử"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource Gray600}"/>
+            </Grid>
+        </Border>
+
+    </Grid>
+</ContentPage>

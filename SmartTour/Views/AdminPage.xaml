@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<TabbedPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+            xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+            xmlns:viewmodels="clr-namespace:SmartTour.ViewModels"
+            xmlns:models="clr-namespace:SmartTour.Models"
+            x:Class="SmartTour.Views.AdminPage"
+            x:DataType="viewmodels:AdminViewModel"
+            Title="SmartTour - Quản Trị Hệ Thống">
+
+    <ContentPage Title="📍 Quản lý điểm">
+        <Grid RowDefinitions="Auto,Auto,*">
+            <Border Grid.Row="0"
+                    BackgroundColor="{StaticResource Primary}"
+                    Padding="20,15">
+                <Label Text="📍 QUẢN LÝ ĐIỂM"
+                       FontSize="24"
+                       FontAttributes="Bold"
+                       TextColor="White"
+                       VerticalOptions="Center"/>
+            </Border>
+
+            <Border Grid.Row="1"
+                    BackgroundColor="{StaticResource Gray100}"
+                    Padding="15,10">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <Label Text="Danh sách điểm thuyết minh"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"/>
+                    <Button Grid.Column="1"
+                            Text="➕ Thêm mới"
+                            Command="{Binding AddPOICommand}"
+                            BackgroundColor="{StaticResource Primary}"
+                            Margin="0,0,10,0"/>
+                    <Button Grid.Column="2"
+                            Text="🔄 Tải lại"
+                            Command="{Binding LoadPOIsCommand}"
+                            BackgroundColor="{StaticResource Secondary}"/>
+                </Grid>
+            </Border>
+
+            <CollectionView Grid.Row="2"
+                            ItemsSource="{Binding AllPOIs}"
+                            SelectionMode="None"
+                            Margin="10">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:PointOfInterest">
+                        <Border BackgroundColor="White"
+                                Stroke="{StaticResource Gray300}"
+                                StrokeThickness="1"
+                                Margin="0,5"
+                                Padding="15">
+                            <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding Name}"
+                                       FontSize="18"
+                                       FontAttributes="Bold"/>
+                                <Switch Grid.Row="0" Grid.Column="1"
+                                        IsToggled="{Binding IsActive}"
+                                        VerticalOptions="Center"/>
+
+                                <Grid Grid.Row="1" Grid.ColumnSpan="2"
+                                      ColumnDefinitions="Auto,*"
+                                      RowDefinitions="Auto,Auto,Auto"
+                                      Margin="0,10">
+                                    <Label Grid.Row="0" Grid.Column="0"
+                                           Text="Loại: "
+                                           FontAttributes="Bold"/>
+                                    <Label Grid.Row="0" Grid.Column="1"
+                                           Text="{Binding Category}"/>
+
+                                    <Label Grid.Row="1" Grid.Column="0"
+                                           Text="Tọa độ: "
+                                           FontAttributes="Bold"/>
+                                    <Label Grid.Row="1" Grid.Column="1">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{Binding Latitude, StringFormat='{0:F6}'}"/>
+                                                <Span Text=", "/>
+                                                <Span Text="{Binding Longitude, StringFormat='{0:F6}'}"/>
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+
+                                    <Label Grid.Row="2" Grid.Column="0"
+                                           Text="Bán kính: "
+                                           FontAttributes="Bold"/>
+                                    <Label Grid.Row="2" Grid.Column="1"
+                                           Text="{Binding ActivationRadius, StringFormat='{0}m'}"/>
+                                </Grid>
+
+                                <Label Grid.Row="2" Grid.ColumnSpan="2"
+                                       Text="{Binding Description}"
+                                       FontSize="14"
+                                       TextColor="{StaticResource Gray600}"
+                                       LineBreakMode="WordWrap"
+                                       MaxLines="2"
+                                       Margin="0,5"/>
+
+                                <Grid Grid.Row="3" Grid.ColumnSpan="2"
+                                      ColumnDefinitions="*,*,*,*"
+                                      Margin="0,10,0,0">
+                                    <Button Grid.Column="0"
+                                            Text="✏️ Sửa"
+                                            FontSize="12"
+                                            Margin="0,0,2,0"/>
+                                    <Button Grid.Column="1"
+                                            Text="🖼️ Ảnh"
+                                            FontSize="12"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:AdminViewModel}}, Path=UploadImageCommand}"
+                                            CommandParameter="{Binding .}"
+                                            Margin="2,0"/>
+                                    <Button Grid.Column="2"
+                                            Text="🎵 Audio"
+                                            FontSize="12"
+                                            Margin="2,0"/>
+                                    <Button Grid.Column="3"
+                                            Text="🗑️ Xóa"
+                                            FontSize="12"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:AdminViewModel}}, Path=DeletePOICommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="{StaticResource Danger}"
+                                            Margin="2,0,0,0"/>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       Padding="50">
+                        <Label Text="📍"
+                               FontSize="48"
+                               HorizontalOptions="Center"/>
+                        <Label Text="Chưa có điểm thuyết minh nào"
+                               FontSize="16"
+                               HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+            </CollectionView>
+        </Grid>
+    </ContentPage>
+
+    <ContentPage Title="👤 Quản lý người dùng">
+        <Grid RowDefinitions="Auto,Auto,*">
+            <Border Grid.Row="0"
+                    BackgroundColor="{StaticResource Primary}"
+                    Padding="20,15">
+                <Label Text="👤 QUẢN LÝ NGƯỜI DÙNG"
+                       FontSize="24"
+                       FontAttributes="Bold"
+                       TextColor="White"
+                       VerticalOptions="Center"/>
+            </Border>
+
+            <Border Grid.Row="1"
+                    BackgroundColor="{StaticResource Gray100}"
+                    Padding="15,10">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <Label Text="Danh sách người dùng"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"/>
+                    <Button Grid.Column="1"
+                            Text="➕ Thêm mới"
+                            Command="{Binding AddUserCommand}"
+                            BackgroundColor="{StaticResource Primary}"
+                            Margin="0,0,10,0"/>
+                    <Button Grid.Column="2"
+                            Text="🔄 Tải lại"
+                            Command="{Binding LoadUsersCommand}"
+                            BackgroundColor="{StaticResource Secondary}"/>
+                </Grid>
+            </Border>
+
+            <CollectionView Grid.Row="2"
+                            ItemsSource="{Binding AllUsers}"
+                            SelectionMode="None"
+                            Margin="10">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:User">
+                        <Border BackgroundColor="White"
+                                Stroke="{StaticResource Gray300}"
+                                StrokeThickness="1"
+                                Margin="0,5"
+                                Padding="15">
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*,Auto">
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Grid.RowSpan="2"
+                                       Text="👤"
+                                       FontSize="40"
+                                       VerticalOptions="Center"
+                                       Margin="0,0,15,0"/>
+
+                                <VerticalStackLayout Grid.Row="0" Grid.Column="1">
+                                    <Label Text="{Binding FullName}"
+                                           FontSize="18"
+                                           FontAttributes="Bold"/>
+                                    <Label Text="{Binding Email}"
+                                           FontSize="14"
+                                           TextColor="{StaticResource Gray600}"/>
+                                </VerticalStackLayout>
+
+                                <Switch Grid.Row="0" Grid.Column="2"
+                                        IsToggled="{Binding IsActive}"
+                                        VerticalOptions="Center"/>
+
+                                <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                                      ColumnDefinitions="Auto,*,Auto,*"
+                                      Margin="0,10">
+                                    <Label Grid.Column="0"
+                                           Text="Quyền: "
+                                           FontAttributes="Bold"/>
+                                    <Label Grid.Column="1"
+                                           Text="{Binding Role}"/>
+                                    <Label Grid.Column="2"
+                                           Text="Ngôn ngữ: "
+                                           FontAttributes="Bold"
+                                           Margin="20,0,0,0"/>
+                                    <Label Grid.Column="3"
+                                           Text="{Binding PreferredLanguage}"/>
+                                </Grid>
+
+                                <Grid Grid.Row="2" Grid.ColumnSpan="3"
+                                      ColumnDefinitions="*,*"
+                                      Margin="0,10,0,0">
+                                    <Button Grid.Column="0"
+                                            Text="✏️ Sửa thông tin"
+                                            Margin="0,0,5,0"/>
+                                    <Button Grid.Column="1"
+                                            Text="🗑️ Xóa"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:AdminViewModel}}, Path=DeleteUserCommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="{StaticResource Danger}"
+                                            Margin="5,0,0,0"/>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       Padding="50">
+                        <Label Text="👤"
+                               FontSize="48"
+                               HorizontalOptions="Center"/>
+                        <Label Text="Chưa có người dùng nào"
+                               FontSize="16"
+                               HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+            </CollectionView>
+        </Grid>
+    </ContentPage>
+
+    <ContentPage Title="📊 Thống kê">
+        <Grid RowDefinitions="Auto,*" Padding="15">
+            <Border Grid.Row="0"
+                    BackgroundColor="{StaticResource Primary}"
+                    Padding="20,15"
+                    Margin="0,0,0,15">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="📊 THỐNG KÊ"
+                           FontSize="24"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           VerticalOptions="Center"/>
+                    <Button Grid.Column="1"
+                            Text="📊 Xuất báo cáo"
+                            Command="{Binding ExportReportCommand}"
+                            BackgroundColor="{StaticResource Success}"
+                            TextColor="White"/>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" RowDefinitions="Auto,*">
+                <Grid Grid.Row="0"
+                      ColumnDefinitions="*,Auto"
+                      Margin="0,0,0,15">
+                    <Label Text="Báo cáo thống kê (7 ngày gần nhất)"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"/>
+                    <Button Grid.Column="1"
+                            Text="🔄 Tải lại"
+                            Command="{Binding LoadStatisticsCommand}"
+                            BackgroundColor="{StaticResource Secondary}"/>
+                </Grid>
+
+                <ScrollView Grid.Row="1">
+                    <Border BackgroundColor="White"
+                            Stroke="{StaticResource Gray300}"
+                            StrokeThickness="1"
+                            Padding="15">
+                        <Label Text="{Binding StatisticsReport}"
+                               FontFamily="Courier"
+                               FontSize="14"
+                               LineBreakMode="WordWrap"/>
+                    </Border>
+                </ScrollView>
+            </Grid>
+        </Grid>
+    </ContentPage>
+
+</TabbedPage>
