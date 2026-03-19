@@ -1,3 +1,5 @@
+
+
 export default function POIPage() {
   const handleSearch = (e) => {
     console.log("search:", e.target.value);

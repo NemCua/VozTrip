@@ -1,10 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "QyDBzOiPhb4=",
+  "dgSpecHash": "ucDKXRxR0EI=",
   "success": true,
   "projectFilePath": "/Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/app_thuyet_minh_server.csproj",
   "expectedPackageFiles": [
+    "/Users/nguyenquochuy/.nuget/packages/bcrypt.net-next/4.1.0/bcrypt.net-next.4.1.0.nupkg.sha512",
     "/Users/nguyenquochuy/.nuget/packages/microsoft.aspnetcore.authentication.jwtbearer/9.0.0/microsoft.aspnetcore.authentication.jwtbearer.9.0.0.nupkg.sha512",
+    "/Users/nguyenquochuy/.nuget/packages/microsoft.extensions.apidescription.server/9.0.0/microsoft.extensions.apidescription.server.9.0.0.nupkg.sha512",
     "/Users/nguyenquochuy/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/9.0.0/microsoft.extensions.dependencyinjection.abstractions.9.0.0.nupkg.sha512",
     "/Users/nguyenquochuy/.nuget/packages/microsoft.extensions.logging.abstractions/9.0.0/microsoft.extensions.logging.abstractions.9.0.0.nupkg.sha512",
     "/Users/nguyenquochuy/.nuget/packages/microsoft.identitymodel.abstractions/8.15.0/microsoft.identitymodel.abstractions.8.15.0.nupkg.sha512",
@@ -13,8 +15,14 @@
     "/Users/nguyenquochuy/.nuget/packages/microsoft.identitymodel.protocols/8.0.1/microsoft.identitymodel.protocols.8.0.1.nupkg.sha512",
     "/Users/nguyenquochuy/.nuget/packages/microsoft.identitymodel.protocols.openidconnect/8.0.1/microsoft.identitymodel.protocols.openidconnect.8.0.1.nupkg.sha512",
     "/Users/nguyenquochuy/.nuget/packages/microsoft.identitymodel.tokens/8.15.0/microsoft.identitymodel.tokens.8.15.0.nupkg.sha512",
+    "/Users/nguyenquochuy/.nuget/packages/microsoft.openapi/2.4.1/microsoft.openapi.2.4.1.nupkg.sha512",
     "/Users/nguyenquochuy/.nuget/packages/npgsql/10.0.1/npgsql.10.0.1.nupkg.sha512",
-    "/Users/nguyenquochuy/.nuget/packages/system.identitymodel.tokens.jwt/8.15.0/system.identitymodel.tokens.jwt.8.15.0.nupkg.sha512"
+    "/Users/nguyenquochuy/.nuget/packages/swashbuckle.aspnetcore/10.1.2/swashbuckle.aspnetcore.10.1.2.nupkg.sha512",
+    "/Users/nguyenquochuy/.nuget/packages/swashbuckle.aspnetcore.swagger/10.1.2/swashbuckle.aspnetcore.swagger.10.1.2.nupkg.sha512",
+    "/Users/nguyenquochuy/.nuget/packages/swashbuckle.aspnetcore.swaggergen/10.1.2/swashbuckle.aspnetcore.swaggergen.10.1.2.nupkg.sha512",
+    "/Users/nguyenquochuy/.nuget/packages/swashbuckle.aspnetcore.swaggerui/10.1.2/swashbuckle.aspnetcore.swaggerui.10.1.2.nupkg.sha512",
+    "/Users/nguyenquochuy/.nuget/packages/system.identitymodel.tokens.jwt/8.15.0/system.identitymodel.tokens.jwt.8.15.0.nupkg.sha512",
+    "/Users/nguyenquochuy/.nuget/packages/system.text.json/8.0.5/system.text.json.8.0.5.nupkg.sha512"
   ],
   "logs": []
 }

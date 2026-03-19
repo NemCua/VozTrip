@@ -37,3 +37,9 @@
 /Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 /Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/Microsoft.IdentityModel.Tokens.dll
 /Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/System.IdentityModel.Tokens.Jwt.dll
+/Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/Microsoft.OpenApi.dll
+/Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/Swashbuckle.AspNetCore.Swagger.dll
+/Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerGen.dll
+/Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerUI.dll
+/Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/obj/Debug/net9.0/app_thuyet_minh_server.MvcApplicationPartsAssemblyInfo.cs
+/Users/nguyenquochuy/root_app_thuyet_minh/app_thuyet_minh_server/bin/Debug/net9.0/BCrypt.Net-Next.dll

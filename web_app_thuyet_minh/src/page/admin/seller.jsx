@@ -1,3 +1,4 @@
+
 export default function SellerPage() {
   const handleSearch = (e) => {
     console.log("search:", e.target.value);
