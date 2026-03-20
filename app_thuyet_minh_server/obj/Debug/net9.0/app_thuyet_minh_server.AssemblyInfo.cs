@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("app_thuyet_minh_server")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4a76efed9b4b942e107279ec93d425e42151920c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c3a94ca8c02862994e0f89329cc6e18fa4baa18e")]
 [assembly: System.Reflection.AssemblyProductAttribute("app_thuyet_minh_server")]
 [assembly: System.Reflection.AssemblyTitleAttribute("app_thuyet_minh_server")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

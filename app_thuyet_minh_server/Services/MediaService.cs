@@ -230,7 +230,7 @@ public class MediaService
         );
         cmd.Parameters.AddWithValue("poi_id", poiId);
 
-        // trả về số bản ghi đã xóa
+        
         return await cmd.ExecuteNonQueryAsync();
     }
 

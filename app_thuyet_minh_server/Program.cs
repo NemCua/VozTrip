@@ -42,7 +42,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         )
     };
 
-    // 🔥 Thêm cái này vào — đọc token từ Cookie cho web app
+    
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
