@@ -1,0 +1,26 @@
+# .NET build outputs
+bin/
+obj/
+
+# Secrets & local config
+appsettings.Development.json
+appsettings.*.local.json
+*.env
+.env
+.env.local
+.env*.local
+
+# Node / Expo
+node_modules/
+.next/
+.expo/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.user

@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tourism Guide App - Project Spec</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0f0f0f;
+    --bg2: #161616;
+    --bg3: #1e1e1e;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --muted: #666;
+    --accent: #4ade80;
+    --accent2: #60a5fa;
+    --accent3: #f59e0b;
+    --accent4: #f472b6;
+    --danger: #f87171;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    padding: 40px 24px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 48px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  h2 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 48px 0 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h3 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    margin: 24px 0 10px;
+  }
+
+  p {
+    color: #aaa;
+    margin-bottom: 10px;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin: 2px 2px 2px 0;
+  }
+
+  .tag-green  { background: #052e16; color: var(--accent); border: 1px solid #166534; }
+  .tag-blue   { background: #0c1a3a; color: var(--accent2); border: 1px solid #1d4ed8; }
+  .tag-amber  { background: #1c1207; color: var(--accent3); border: 1px solid #92400e; }
+  .tag-pink   { background: #2d0a1e; color: var(--accent4); border: 1px solid #9d174d; }
+  .tag-red    { background: #2d0a0a; color: var(--danger); border: 1px solid #991b1b; }
+  .tag-gray   { background: #1a1a1a; color: #888; border: 1px solid #333; }
+
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .tech-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .tech-card-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .tech-card-title {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .tech-card p {
+    font-size: 12px;
+    color: #777;
+    margin: 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+
+  th {
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #1a1a1a;
+    color: #bbb;
+    vertical-align: top;
+  }
+
+  td:first-child {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent2);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .sql-block {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: 6px;
+    padding: 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    overflow-x: auto;
+    margin-bottom: 16px;
+    white-space: pre;
+  }
+
+  .kw  { color: #c084fc; }
+  .ty  { color: var(--accent2); }
+  .cm  { color: #4a4a4a; }
+  .st  { color: var(--accent); }
+  .nm  { color: var(--accent3); }
+
+  .flow-section {
+    margin-bottom: 32px;
+  }
+
+  .flow-role {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  .role-guest   { background: #052e16; color: var(--accent); border: 1px solid #166534; }
+  .role-seller  { background: #0c1a3a; color: var(--accent2); border: 1px solid #1d4ed8; }
+  .role-admin   { background: #1c1207; color: var(--accent3); border: 1px solid #92400e; }
+
+  .crud-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .crud-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+
+  .crud-entity {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .crud-ops {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+
+  .op {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  .op-c { background: #052e16; color: var(--accent); }
+  .op-r { background: #0c1a3a; color: var(--accent2); }
+  .op-u { background: #1c1207; color: var(--accent3); }
+  .op-d { background: #2d0a0a; color: var(--danger); }
+
+  .crud-note {
+    font-size: 11px;
+    color: #555;
+    line-height: 1.5;
+  }
+
+  .flow-steps {
+    counter-reset: step;
+    list-style: none;
+    padding: 0;
+  }
+
+  .flow-steps li {
+    counter-increment: step;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    padding: 10px 14px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .flow-steps li::before {
+    content: counter(step, decimal-leading-zero);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    min-width: 24px;
+    padding-top: 1px;
+  }
+
+  .step-main {
+    flex: 1;
+  }
+
+  .step-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .step-detail {
+    font-size: 12px;
+    color: #555;
+    line-height: 1.5;
+  }
+
+  .step-tables {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+
+  .note-box {
+    background: #0c1a0c;
+    border: 1px solid #166534;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #86efac;
+    margin-bottom: 16px;
+  }
+
+  .warn-box {
+    background: #1c1207;
+    border: 1px solid #92400e;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #fcd34d;
+    margin-bottom: 16px;
+  }
+
+  .lib-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  .lib-row:last-child { border-bottom: none; }
+
+  .lib-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--accent2);
+    min-width: 200px;
+  }
+
+  .lib-desc {
+    font-size: 12px;
+    color: #666;
+  }
+</style>
+</head>
+<body>
+
+<h1>tourism guide app</h1>
+<div class="subtitle">// project specification — full stack overview</div>
+
+<!-- ===================== TONG QUAN ===================== -->
+<h2>01 — tong quan he thong</h2>
+
+<div class="tech-grid">
+  <div class="tech-card">
+    <div class="tech-card-label">Mobile — Du khach</div>
+    <div class="tech-card-title" style="color: var(--accent);">Expo React Native</div>
+    <p>App cai tren dien thoai. Khong can dang nhap. GPS tu dong phat audio khi den gan POI.</p>
+  </div>
+  <div class="tech-card">
+    <div class="tech-card-label">Web — Seller & Admin</div>
+    <div class="tech-card-title" style="color: var(--accent2);">Next.js</div>
+    <p>Dashboard quan ly gian hang, noi dung, nguoi dung. Dang nhap bang tai khoan.</p>
+  </div>
+  <div class="tech-card">
+    <div class="tech-card-label">Backend — API</div>
+    <div class="tech-card-title" style="color: var(--accent3);">.NET Minimal API</div>
+    <p>REST API trung tam. Xu ly logic, phan quyen, giao tiep database.</p>
+  </div>
+  <div class="tech-card">
+    <div class="tech-card-label">Database</div>
+    <div class="tech-card-title" style="color: var(--accent4);">PostgreSQL + EF Core</div>
+    <p>PostgreSQL tren Neon (cloud). EF Core lam ORM, code-first migration. Media luu tren Cloudinary, chi luu URL + public_id vao DB.</p>
+  </div>
+</div>
+
+<!-- ===================== DATABASE ===================== -->
+<h2>02 — thiet ke database</h2>
+
+<div class="note-box">
+  Cac bang da duoc toi gian hoa cho pham vi do an: bo VisitLogs.DistanceAtTrigger, GuestSessions.DeviceInfo, GuestSessions.LastSeenAt. Gop PoiContents + PoiAudios thanh PoiLocalizations. Tat ca ID dung TEXT (UUID) thay vi so tu tang. Database: PostgreSQL tren Neon. Media: Cloudinary (luu ca URL va PublicId de xoa duoc).
+</div>
+
+<div class="sql-block"><span class="cm">-- Quan tri nguoi dung</span>
+<span class="kw">CREATE TABLE</span> <span class="nm">users</span> (
+    user_id      <span class="ty">TEXT</span> <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid()::<span class="ty">TEXT</span>,
+    username     <span class="ty">VARCHAR</span>(100) <span class="kw">UNIQUE NOT NULL</span>,
+    password_hash <span class="ty">VARCHAR</span>(255) <span class="kw">NOT NULL</span>,
+    role         <span class="ty">VARCHAR</span>(20)  <span class="kw">NOT NULL</span>,   <span class="cm">-- 'admin' | 'seller'</span>
+    full_name    <span class="ty">VARCHAR</span>(200),
+    email        <span class="ty">VARCHAR</span>(200),
+    is_active    <span class="ty">BOOLEAN</span> <span class="kw">DEFAULT</span> <span class="nm">TRUE</span>,
+    created_at   <span class="ty">TIMESTAMPTZ</span> <span class="kw">DEFAULT</span> NOW()
+);
+
+<span class="cm">-- Thong tin rieng cua seller</span>
+<span class="kw">CREATE TABLE</span> <span class="nm">sellers</span> (
+    seller_id    <span class="ty">TEXT</span> <span class="kw">PRIMARY KEY REFERENCES</span> users(user_id),
+    shop_name    <span class="ty">VARCHAR</span>(200) <span class="kw">NOT NULL</span>,
+    shop_logo    <span class="ty">VARCHAR</span>(500),
+    contact_phone <span class="ty">VARCHAR</span>(20),
+    description  <span class="ty">TEXT</span>,
+    approved_at  <span class="ty">TIMESTAMPTZ</span>,
+    approved_by  <span class="ty">TEXT</span> <span class="kw">REFERENCES</span> users(user_id)
+);
+
+<span class="cm">-- Khu vuc / Khu trung bay</span>
+<span class="kw">CREATE TABLE</span> <span class="nm">zones</span> (
+    zone_id     <span class="ty">TEXT</span> <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid()::<span class="ty">TEXT</span>,
+    zone_name   <span class="ty">VARCHAR</span>(100) <span class="kw">NOT NULL</span>,
+    description <span class="ty">TEXT</span>
+);
+
+<span class="cm">-- Diem tham quan / Gian hang</span>
+<span class="kw">CREATE TABLE</span> <span class="nm">pois</span> (
+    poi_id         <span class="ty">TEXT</span> <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid()::<span class="ty">TEXT</span>,
+    seller_id      <span class="ty">TEXT</span> <span class="kw">NOT NULL REFERENCES</span> sellers(seller_id),
+    zone_id        <span class="ty">TEXT</span> <span class="kw">REFERENCES</span> zones(zone_id),
+    poi_name       <span class="ty">VARCHAR</span>(200) <span class="kw">NOT NULL</span>,
+    latitude       <span class="ty">DOUBLE PRECISION</span> <span class="kw">NOT NULL</span>,
+    longitude      <span class="ty">DOUBLE PRECISION</span> <span class="kw">NOT NULL</span>,
+    trigger_radius <span class="ty">DOUBLE PRECISION</span> <span class="kw">DEFAULT</span> <span class="nm">10.0</span>,  <span class="cm">-- met</span>
+    is_active      <span class="ty">BOOLEAN</span> <span class="kw">DEFAULT</span> <span class="nm">TRUE</span>,
+    created_at     <span class="ty">TIMESTAMPTZ</span> <span class="kw">DEFAULT</span> NOW()
+);
+
+<span class="cm">-- Ngon ngu ho tro</span>
+<span class="kw">CREATE TABLE</span> <span class="nm">languages</span> (
+    language_id   <span class="ty">TEXT</span> <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid()::<span class="ty">TEXT</span>,
+    language_code <span class="ty">VARCHAR</span>(10) <span class="kw">UNIQUE NOT NULL</span>,  <span class="cm">-- 'en', 'zh', 'ko', 'ja'</span>
+    language_name <span class="ty">VARCHAR</span>(100),
+    is_active     <span class="ty">BOOLEAN</span> <span class="kw">DEFAULT</span> <span class="nm">TRUE</span>
+);
+
+<span class="cm">-- Noi dung + audio theo ngon ngu (gop PoiContents va PoiAudios)</span>
+<span class="kw">CREATE TABLE</span> <span class="nm">poi_localizations</span> (
+    localization_id <span class="ty">TEXT</span> <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid()::<span class="ty">TEXT</span>,
+    poi_id          <span class="ty">TEXT</span> <span class="kw">NOT NULL REFERENCES</span> pois(poi_id) <span class="kw">ON DELETE CASCADE</span>,
+    language_id     <span class="ty">TEXT</span> <span class="kw">NOT NULL REFERENCES</span> languages(language_id),
+    title           <span class="ty">VARCHAR</span>(200),
+    description     <span class="ty">TEXT</span>,
+    audio_url       <span class="ty">VARCHAR</span>(500),   <span class="cm">-- Cloudinary URL</span>
+    audio_public_id <span class="ty">VARCHAR</span>(200),   <span class="cm">-- Cloudinary public_id de xoa</span>
+    audio_duration  <span class="ty">INTEGER</span>,        <span class="cm">-- giay</span>
+    <span class="kw">UNIQUE</span> (poi_id, language_id)
+);
+
+<span class="cm">-- Anh va video cua POI (luu ca public_id cua Cloudinary de xoa duoc)</span>
+<span class="kw">CREATE TABLE</span> <span class="nm">poi_media</span> (
+    media_id   <span class="ty">TEXT</span> <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid()::<span class="ty">TEXT</span>,
+    poi_id     <span class="ty">TEXT</span> <span class="kw">NOT NULL REFERENCES</span> pois(poi_id) <span class="kw">ON DELETE CASCADE</span>,
+    media_type <span class="ty">VARCHAR</span>(20) <span class="kw">NOT NULL</span>,   <span class="cm">-- 'image' | 'video'</span>
+    media_url  <span class="ty">VARCHAR</span>(500) <span class="kw">NOT NULL</span>,  <span class="cm">-- Cloudinary URL</span>
+    public_id  <span class="ty">VARCHAR</span>(200) <span class="kw">NOT NULL</span>,  <span class="cm">-- Cloudinary public_id de xoa</span>
+    sort_order <span class="ty">INTEGER</span> <span class="kw">DEFAULT</span> <span class="nm">0</span>
+);
+
+<span class="cm">-- Cau hoi thuong gap</span>
+<span class="kw">CREATE TABLE</span> <span class="nm">questions</span> (
+    question_id   <span class="ty">TEXT</span> <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid()::<span class="ty">TEXT</span>,
+    poi_id        <span class="ty">TEXT</span> <span class="kw">NOT NULL REFERENCES</span> pois(poi_id) <span class="kw">ON DELETE CASCADE</span>,
+    language_id   <span class="ty">TEXT</span> <span class="kw">NOT NULL REFERENCES</span> languages(language_id),
+    question_text <span class="ty">VARCHAR</span>(500) <span class="kw">NOT NULL</span>,
+    sort_order    <span class="ty">INTEGER</span> <span class="kw">DEFAULT</span> <span class="nm">0</span>,
+    is_active     <span class="ty">BOOLEAN</span> <span class="kw">DEFAULT</span> <span class="nm">TRUE</span>
+);
+
+<span class="cm">-- Cau tra loi (giu them poi_id de query nhanh)</span>
+<span class="kw">CREATE TABLE</span> <span class="nm">answers</span> (
+    answer_id   <span class="ty">TEXT</span> <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid()::<span class="ty">TEXT</span>,
+    question_id <span class="ty">TEXT</span> <span class="kw">NOT NULL REFERENCES</span> questions(question_id) <span class="kw">ON DELETE CASCADE</span>,
+    poi_id      <span class="ty">TEXT</span> <span class="kw">NOT NULL REFERENCES</span> pois(poi_id),
+    language_id <span class="ty">TEXT</span> <span class="kw">NOT NULL REFERENCES</span> languages(language_id),
+    answer_text <span class="ty">TEXT</span> <span class="kw">NOT NULL</span>,
+    audio_url   <span class="ty">VARCHAR</span>(500),   <span class="cm">-- Cloudinary URL</span>
+    audio_public_id <span class="ty">VARCHAR</span>(200) <span class="cm">-- Cloudinary public_id de xoa</span>
+);
+
+<span class="cm">-- Phien khach (khong can dang nhap)</span>
+<span class="kw">CREATE TABLE</span> <span class="nm">guest_sessions</span> (
+    session_id  <span class="ty">TEXT</span> <span class="kw">PRIMARY KEY</span>,   <span class="cm">-- UUID tu app sinh ra</span>
+    language_id <span class="ty">TEXT</span> <span class="kw">REFERENCES</span> languages(language_id),
+    started_at  <span class="ty">TIMESTAMPTZ</span> <span class="kw">DEFAULT</span> NOW()
+);
+
+<span class="cm">-- Lich su tham quan</span>
+<span class="kw">CREATE TABLE</span> <span class="nm">visit_logs</span> (
+    log_id       <span class="ty">TEXT</span> <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid()::<span class="ty">TEXT</span>,
+    session_id   <span class="ty">TEXT</span> <span class="kw">REFERENCES</span> guest_sessions(session_id),
+    poi_id       <span class="ty">TEXT</span> <span class="kw">REFERENCES</span> pois(poi_id),
+    triggered_at <span class="ty">TIMESTAMPTZ</span> <span class="kw">DEFAULT</span> NOW()
+);</div>
+
+<!-- ===================== THU VIEN ===================== -->
+<h2>03 — thu vien su dung</h2>
+
+<h3 style="color: var(--accent); margin-top: 16px;">Expo React Native — app du khach</h3>
+<div class="lib-row">
+  <span class="lib-name">react-native-maps</span>
+  <span class="lib-desc">Hien thi ban do, gim POI, vong tron TriggerRadius. Dung Google Maps tren Android.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">expo-location</span>
+  <span class="lib-desc">Lay toa do GPS lien tuc, tinh khoang cach den POI bang cong thuc Haversine.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">expo-av</span>
+  <span class="lib-desc">Phat file audio mp3 tu URL khi trigger, hien thi progress bar.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">i18next + react-i18next</span>
+  <span class="lib-desc">Dich giao dien app (nhan, tieu de, thong bao) theo ngon ngu khach chon.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">@react-native-async-storage</span>
+  <span class="lib-desc">Luu SessionId va LanguageId xuong local, giu nguyen khi tat app.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">axios</span>
+  <span class="lib-desc">Goi REST API toi .NET backend.</span>
+</div>
+
+<h3 style="color: var(--accent2); margin-top: 24px;">Next.js — web seller & admin</h3>
+<div class="lib-row">
+  <span class="lib-name">next-auth</span>
+  <span class="lib-desc">Xu ly dang nhap, quan ly session, phan quyen admin / seller.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">axios / fetch</span>
+  <span class="lib-desc">Goi API .NET tu server component va client component.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">react-hook-form</span>
+  <span class="lib-desc">Xu ly form tao/sua POI, noi dung, nguoi dung.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">@tanstack/react-query</span>
+  <span class="lib-desc">Cache va fetch du lieu tu API, tu dong refresh khi co thay doi.</span>
+</div>
+
+<h3 style="color: var(--accent3); margin-top: 24px;">.NET Minimal API — backend</h3>
+<div class="lib-row">
+  <span class="lib-name">Npgsql.EntityFrameworkCore.PostgreSQL</span>
+  <span class="lib-desc">ORM chinh cho PostgreSQL tren Neon, code-first, tu dong tao bang bang migration.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">Microsoft.EntityFrameworkCore.Tools</span>
+  <span class="lib-desc">CLI de chay migration: dotnet ef migrations add, dotnet ef database update.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">Microsoft.AspNetCore.Authentication.JwtBearer</span>
+  <span class="lib-desc">Phan quyen API bang JWT token, phan biet admin / seller / guest.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">BCrypt.Net-Next</span>
+  <span class="lib-desc">Ma hoa password truoc khi luu vao password_hash.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">CloudinaryDotNet</span>
+  <span class="lib-desc">Upload anh/audio len Cloudinary, nhan ve URL va public_id de luu vao DB. Dung public_id khi can xoa file.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">Swashbuckle.AspNetCore</span>
+  <span class="lib-desc">Swagger UI de test API trong qua trinh phat trien.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">LibreTranslate (self-hosted / API)</span>
+  <span class="lib-desc">Dich tu dong noi dung PoiLocalizations sang cac ngon ngu chua co. Backend goi HTTP den LibreTranslate, luu ket qua va danh dau is_auto_translated = true de phan biet voi noi dung seller tu viet.</span>
+</div>
+
+<!-- ===================== LUONG CHUC NANG ===================== -->
+<h2>04 — luong chuc nang du khach</h2>
+
+<div class="flow-section">
+  <div class="flow-role role-guest">guest — expo react native</div>
+  <ul class="flow-steps">
+    <li>
+      <div class="step-main">
+        <div class="step-title">Mo app lan dau</div>
+        <div class="step-detail">App tu sinh GUID lam SessionId, luu vao AsyncStorage. Khong can dang nhap.</div>
+        <div class="step-tables">
+          <span class="tag tag-gray">GuestSessions.SessionId</span>
+          <span class="tag tag-gray">GuestSessions.StartedAt</span>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="step-main">
+        <div class="step-title">Chon ngon ngu</div>
+        <div class="step-detail">Hien thi danh sach ngon ngu IsActive = 1. Khach chon, luu LanguageId vao AsyncStorage va GuestSessions.</div>
+        <div class="step-tables">
+          <span class="tag tag-blue">Languages</span>
+          <span class="tag tag-gray">GuestSessions.LanguageId</span>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="step-main">
+        <div class="step-title">Xem ban do, thay cac gian hang</div>
+        <div class="step-detail">App load tat ca POIs IsActive = 1, hien thi ghim tren ban do. Moi ghim co ten PoiName. Vong tron mo ben ngoai the hien TriggerRadius.</div>
+        <div class="step-tables">
+          <span class="tag tag-pink">POIs.Latitude / Longitude</span>
+          <span class="tag tag-pink">POIs.PoiName</span>
+          <span class="tag tag-pink">POIs.TriggerRadius</span>
+          <span class="tag tag-pink">POIs.IsActive</span>
+          <span class="tag tag-gray">Zones.ZoneName</span>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="step-main">
+        <div class="step-title">Di chuyen, GPS phat hien vao vung POI</div>
+        <div class="step-detail">expo-location theo doi vi tri lien tuc. Khi khoang cach < TriggerRadius, app tu dong phat audio thuyet minh. Ghi vao VisitLogs.</div>
+        <div class="step-tables">
+          <span class="tag tag-pink">POIs.TriggerRadius</span>
+          <span class="tag tag-amber">PoiLocalizations.AudioUrl</span>
+          <span class="tag tag-amber">PoiLocalizations.AudioDuration</span>
+          <span class="tag tag-amber">PoiLocalizations.LanguageId</span>
+          <span class="tag tag-gray">VisitLogs</span>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="step-main">
+        <div class="step-title">Bam vao ghim, xem chi tiet gian hang</div>
+        <div class="step-detail">Hien thi gallery anh/video tu PoiMedia. Hien thi tieu de va doan van gioi thieu tu PoiLocalizations theo LanguageId dang chon.</div>
+        <div class="step-tables">
+          <span class="tag tag-green">PoiMedia.MediaUrl</span>
+          <span class="tag tag-green">PoiMedia.MediaType</span>
+          <span class="tag tag-amber">PoiLocalizations.Title</span>
+          <span class="tag tag-amber">PoiLocalizations.Description</span>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="step-main">
+        <div class="step-title">Mo khung chat, hoi ve gian hang</div>
+        <div class="step-detail">Hien thi danh sach Questions theo PoiId + LanguageId + IsActive = 1. Khach bam cau hoi, app tra ve AnswerText va phat AudioUrl neu co.</div>
+        <div class="step-tables">
+          <span class="tag tag-pink">Questions.QuestionText</span>
+          <span class="tag tag-pink">Questions.IsActive</span>
+          <span class="tag tag-pink">Answers.AnswerText</span>
+          <span class="tag tag-pink">Answers.AudioUrl</span>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="step-main">
+        <div class="step-title">Doi ngon ngu giua chung</div>
+        <div class="step-detail">Vao Settings, chon ngon ngu khac. Cap nhat LanguageId trong AsyncStorage va GuestSessions. Toan bo noi dung doi theo lap tuc.</div>
+        <div class="step-tables">
+          <span class="tag tag-blue">Languages</span>
+          <span class="tag tag-gray">GuestSessions.LanguageId</span>
+        </div>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<!-- ===================== SELLER ===================== -->
+<h2>05 — chuc nang seller</h2>
+
+<div class="flow-section">
+  <div class="flow-role role-seller">seller — next.js dashboard</div>
+
+  <div class="warn-box">
+    Seller chi thao tac duoc tren du lieu cua chinh minh. Moi query o backend phai filter SellerId = currentUser.SellerId.
+  </div>
+
+  <div class="crud-grid">
+    <div class="crud-card">
+      <div class="crud-entity">Account / Profile</div>
+      <div class="crud-ops">
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+      </div>
+      <div class="crud-note">Xem va sua thong tin shop: ShopName, ShopLogo, ContactPhone, Description. Khong tu xoa duoc tai khoan.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">POIs</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+        <span class="op op-d">DELETE</span>
+      </div>
+      <div class="crud-note">Tao moi gian hang voi ten, toa do GPS, ban kinh trigger, khu vuc. Bat/tat IsActive de hien/an tren app.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">PoiLocalizations</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+        <span class="op op-d">DELETE</span>
+      </div>
+      <div class="crud-note">Them noi dung text gioi thieu va upload file audio .mp3 cho tung ngon ngu. Moi POI co the co nhieu ngon ngu.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">PoiMedia</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+        <span class="op op-r">READ</span>
+        <span class="op op-d">DELETE</span>
+      </div>
+      <div class="crud-note">Upload anh va video cho gian hang. Sap xep thu tu hien thi bang SortOrder.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">Questions</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+        <span class="op op-d">DELETE</span>
+      </div>
+      <div class="crud-note">Them cau hoi thuong gap cho tung ngon ngu. Bat/tat IsActive, sap xep SortOrder.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">Answers</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+        <span class="op op-d">DELETE</span>
+      </div>
+      <div class="crud-note">Viet noi dung tra loi va upload audio cho tung cau hoi. Moi cau hoi co dung 1 cau tra loi.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ADMIN ===================== -->
+<h2>06 — chuc nang admin</h2>
+
+<div class="flow-section">
+  <div class="flow-role role-admin">admin — next.js dashboard</div>
+
+  <div class="note-box">
+    Admin thay duoc toan bo du lieu, khong bi gioi han boi SellerId. Co them quyen duyet seller va khoa tai khoan.
+  </div>
+
+  <div class="crud-grid">
+    <div class="crud-card">
+      <div class="crud-entity">Users</div>
+      <div class="crud-ops">
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+        <span class="op op-d">DELETE</span>
+      </div>
+      <div class="crud-note">Xem danh sach, sua thong tin, bat/tat is_active de khoa tai khoan. Viec tao user duoc xu ly qua /register hoac tao seller truc tiep.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">Sellers — tao & duyet</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+      </div>
+      <div class="crud-note">Admin tu tao seller moi (POST /admin/sellers), hoac duyet seller tu dang ky (PUT /admin/sellers/{id}/approve). Seller chua duoc duyet thi khong dang nhap duoc.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">Zones</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+        <span class="op op-d">DELETE</span>
+      </div>
+      <div class="crud-note">Quan ly cac khu vuc trung bay. Seller se chon Zone khi tao POI.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">Languages</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+      </div>
+      <div class="crud-note">Them ngon ngu moi, bat/tat IsActive. Ngon ngu IsActive = 0 bi an khoi app va dashboard.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">POIs — toan bo</div>
+      <div class="crud-ops">
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+        <span class="op op-d">DELETE</span>
+      </div>
+      <div class="crud-note">Xem tat ca POI cua moi seller. Co the an/xoa POI vi pham. Khong tao thay seller.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">VisitLogs — thong ke</div>
+      <div class="crud-ops">
+        <span class="op op-r">READ</span>
+      </div>
+      <div class="crud-note">Xem bao cao: POI nao duoc ghe nhieu nhat, gio cao diem, so luot truy cap theo ngay.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== API ENDPOINTS ===================== -->
+<h2>07 — api endpoints chinh</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Endpoint</th>
+      <th>Ai dung</th>
+      <th>Mo ta</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>POST</td><td>/api/auth/login</td><td><span class="tag tag-blue">seller</span><span class="tag tag-amber">admin</span></td><td>Dang nhap, tra ve JWT token</td></tr>
+    <tr><td>POST</td><td>/api/auth/register</td><td><span class="tag tag-blue">seller</span></td><td>Seller tu dang ky tai khoan, cho admin duyet</td></tr>
+    <tr><td>GET</td><td>/api/pois</td><td><span class="tag tag-green">guest</span></td><td>Lay tat ca POIs IsActive = true cung Latitude/Longitude</td></tr>
+    <tr><td>GET</td><td>/api/pois/{id}</td><td><span class="tag tag-green">guest</span></td><td>Chi tiet POI: media, localization theo languageId</td></tr>
+    <tr><td>GET</td><td>/api/pois/{id}/questions</td><td><span class="tag tag-green">guest</span></td><td>Danh sach cau hoi theo PoiId + languageId</td></tr>
+    <tr><td>GET</td><td>/api/questions/{id}/answer</td><td><span class="tag tag-green">guest</span></td><td>Lay cau tra loi khi khach bam cau hoi</td></tr>
+    <tr><td>POST</td><td>/api/sessions</td><td><span class="tag tag-green">guest</span></td><td>Tao GuestSession moi khi mo app</td></tr>
+    <tr><td>POST</td><td>/api/visitlogs</td><td><span class="tag tag-green">guest</span></td><td>Ghi lai khi khach trigger POI</td></tr>
+    <tr><td>GET</td><td>/api/languages</td><td><span class="tag tag-green">guest</span></td><td>Lay danh sach ngon ngu IsActive = 1</td></tr>
+    <tr><td>GET</td><td>/api/seller/pois</td><td><span class="tag tag-blue">seller</span></td><td>Lay POI cua chinh seller dang nhap</td></tr>
+    <tr><td>POST</td><td>/api/seller/pois</td><td><span class="tag tag-blue">seller</span></td><td>Tao POI moi</td></tr>
+    <tr><td>PUT</td><td>/api/seller/pois/{id}</td><td><span class="tag tag-blue">seller</span></td><td>Sua thong tin POI</td></tr>
+    <tr><td>DELETE</td><td>/api/seller/pois/{id}</td><td><span class="tag tag-blue">seller</span></td><td>Xoa POI</td></tr>
+    <tr><td>POST</td><td>/api/seller/pois/{id}/localizations</td><td><span class="tag tag-blue">seller</span></td><td>Them noi dung text + audio cho ngon ngu</td></tr>
+    <tr><td>POST</td><td>/api/seller/pois/{id}/media</td><td><span class="tag tag-blue">seller</span></td><td>Upload anh / video</td></tr>
+    <tr><td>GET</td><td>/api/admin/sellers</td><td><span class="tag tag-amber">admin</span></td><td>Danh sach tat ca seller + trang thai duyet</td></tr>
+    <tr><td>POST</td><td>/api/admin/sellers</td><td><span class="tag tag-amber">admin</span></td><td>Admin tu tao tai khoan seller moi</td></tr>
+    <tr><td>PUT</td><td>/api/admin/sellers/{id}/approve</td><td><span class="tag tag-amber">admin</span></td><td>Duyet seller tu dang ky</td></tr>
+    <tr><td>GET</td><td>/api/admin/users</td><td><span class="tag tag-amber">admin</span></td><td>Quan ly tat ca tai khoan</td></tr>
+    <tr><td>PUT</td><td>/api/admin/users/{id}/toggle</td><td><span class="tag tag-amber">admin</span></td><td>Khoa / mo khoa tai khoan</td></tr>
+    <tr><td>GET</td><td>/api/admin/stats</td><td><span class="tag tag-amber">admin</span></td><td>Thong ke luot tham quan tu VisitLogs</td></tr>
+    <tr><td>CRUD</td><td>/api/admin/zones</td><td><span class="tag tag-amber">admin</span></td><td>Quan ly khu vuc</td></tr>
+    <tr><td>CRUD</td><td>/api/admin/languages</td><td><span class="tag tag-amber">admin</span></td><td>Quan ly ngon ngu ho tro</td></tr>
+  </tbody>
+</table>
+
+<!-- ===================== CAU TRUC THU MUC ===================== -->
+<h2>08 — cau truc thu muc</h2>
+
+<div class="sql-block"><span class="cm">// Backend — .NET Minimal API</span>
+TourismApi/
+├── Models/
+│   ├── User.cs
+│   ├── Seller.cs
+│   ├── Zone.cs
+│   ├── Poi.cs
+│   ├── Language.cs
+│   ├── PoiLocalization.cs
+│   ├── PoiMedia.cs
+│   ├── Question.cs
+│   ├── Answer.cs
+│   ├── GuestSession.cs
+│   └── VisitLog.cs
+├── Services/
+│   ├── AppDbContext.cs
+│   ├── PoiService.cs
+│   ├── AuthService.cs
+│   ├── SellerService.cs
+│   ├── AdminService.cs
+│   └── CloudinaryService.cs
+├── Routes/
+│   ├── AuthRoutes.cs
+│   ├── GuestRoutes.cs
+│   ├── SellerRoutes.cs
+│   └── AdminRoutes.cs
+└── Program.cs
+
+<span class="cm">// Frontend Web — Next.js</span>
+tourism-web/
+├── app/
+│   ├── login/
+│   ├── seller/
+│   │   ├── pois/
+│   │   ├── localizations/
+│   │   └── media/
+│   └── admin/
+│       ├── sellers/
+│       ├── users/
+│       ├── zones/
+│       ├── languages/
+│       └── stats/
+└── components/
+
+<span class="cm">// Mobile — Expo React Native</span>
+tourism-app/
+├── screens/
+│   ├── LanguageSelectScreen.tsx
+│   ├── MapScreen.tsx
+│   ├── PoiDetailScreen.tsx
+│   └── ChatScreen.tsx
+├── services/
+│   ├── api.ts
+│   ├── location.ts
+│   └── audio.ts
+└── i18n/
+    ├── en.json
+    ├── zh.json
+    ├── ko.json
+    └── ja.json</div>
+
+</body>
+</html>
