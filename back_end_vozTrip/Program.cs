@@ -42,6 +42,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// Cloudinary
+builder.Services.AddSingleton<CloudinaryService>();
+
+// LibreTranslate
+builder.Services.AddHttpClient<LibreTranslateService>();
+
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -55,10 +61,11 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Seed admin mặc định nếu chưa có
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    // Seed admin
     if (!db.Users.Any(u => u.Role == "admin"))
     {
         db.Users.Add(new User
@@ -70,6 +77,22 @@ using (var scope = app.Services.CreateScope())
         });
         db.SaveChanges();
     }
+
+    // Seed languages
+    var defaultLanguages = new[]
+    {
+        new Language { LanguageCode = "vi", LanguageName = "Tiếng Việt" },
+        new Language { LanguageCode = "en", LanguageName = "English" },
+        new Language { LanguageCode = "zh", LanguageName = "中文" },
+        new Language { LanguageCode = "ko", LanguageName = "한국어" },
+        new Language { LanguageCode = "ja", LanguageName = "日本語" },
+    };
+    foreach (var lang in defaultLanguages)
+    {
+        if (!db.Languages.Any(l => l.LanguageCode == lang.LanguageCode))
+            db.Languages.Add(lang);
+    }
+    db.SaveChanges();
 }
 
 AuthRoutes.Map(app);

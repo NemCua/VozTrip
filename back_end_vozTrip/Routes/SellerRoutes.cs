@@ -132,18 +132,121 @@ public static class SellerRoutes
             return Results.Ok();
         });
 
+        // POST /api/seller/pois/{id}/localizations/{languageId}/audio — upload audio lên Cloudinary
+        group.MapPost("/pois/{id}/localizations/{languageId}/audio", async (
+            string id, string languageId, IFormFile file,
+            AppDbContext db, HttpContext ctx, CloudinaryService cloudinary) =>
+        {
+            var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var ownsPoi = await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId);
+            if (!ownsPoi) return Results.NotFound();
+
+            var contentType = file.ContentType.ToLower();
+            if (!contentType.StartsWith("audio/"))
+                return Results.BadRequest(new { message = "Chỉ chấp nhận file audio" });
+
+            // Xóa audio cũ nếu có
+            var existing = await db.PoiLocalizations
+                .FirstOrDefaultAsync(l => l.PoiId == id && l.LanguageId == languageId);
+            if (existing?.AudioPublicId != null)
+                await cloudinary.DeleteAsync(existing.AudioPublicId);
+
+            var uploaded = await cloudinary.UploadAudioAsync(file, sellerId);
+
+            if (existing is null)
+            {
+                existing = new back_end_vozTrip.Models.PoiLocalization { PoiId = id, LanguageId = languageId };
+                db.PoiLocalizations.Add(existing);
+            }
+            existing.AudioUrl      = uploaded.Url;
+            existing.AudioPublicId = uploaded.PublicId;
+
+            await db.SaveChangesAsync();
+            return Results.Ok(new { audioUrl = uploaded.Url });
+        }).DisableAntiforgery();
+
         // DELETE /api/seller/pois/{id}/localizations/{languageId}
         group.MapDelete("/pois/{id}/localizations/{languageId}", async (
-            string id, string languageId, AppDbContext db, HttpContext ctx) =>
+            string id, string languageId, AppDbContext db, HttpContext ctx, CloudinaryService cloudinary) =>
         {
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var loc = await db.PoiLocalizations
                 .Include(l => l.Poi)
                 .FirstOrDefaultAsync(l => l.PoiId == id && l.LanguageId == languageId && l.Poi.SellerId == sellerId);
             if (loc is null) return Results.NotFound();
+
+            if (!string.IsNullOrEmpty(loc.AudioPublicId))
+                await cloudinary.DeleteAsync(loc.AudioPublicId);
+
             db.PoiLocalizations.Remove(loc);
             await db.SaveChangesAsync();
             return Results.Ok();
+        });
+
+        // POST /api/seller/pois/{id}/localizations/translate
+        // Tự động dịch từ 1 ngôn ngữ gốc sang tất cả ngôn ngữ còn thiếu
+        group.MapPost("/pois/{id}/localizations/translate", async (
+            string id, TranslateRequest req,
+            AppDbContext db, HttpContext ctx, LibreTranslateService translator) =>
+        {
+            var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var poi = await db.Pois
+                .Include(p => p.Localizations)
+                .FirstOrDefaultAsync(p => p.PoiId == id && p.SellerId == sellerId);
+            if (poi is null) return Results.NotFound();
+
+            // Lấy localization gốc (nguồn dịch)
+            var source = poi.Localizations.FirstOrDefault(l => l.LanguageId == req.SourceLanguageId);
+            if (source is null)
+                return Results.BadRequest(new { message = "Chưa có nội dung ở ngôn ngữ nguồn" });
+
+            if (string.IsNullOrWhiteSpace(source.Title) && string.IsNullOrWhiteSpace(source.Description))
+                return Results.BadRequest(new { message = "Nội dung nguồn trống, không có gì để dịch" });
+
+            // Lấy tất cả ngôn ngữ active, loại trừ ngôn ngữ nguồn và những ngôn ngữ đã có nội dung (không auto-translated)
+            var allLanguages = await db.Languages
+                .Where(l => l.IsActive && l.LanguageId != req.SourceLanguageId)
+                .ToListAsync();
+
+            var existingIds = poi.Localizations
+                .Where(l => l.LanguageId != req.SourceLanguageId && !l.IsAutoTranslated)
+                .Select(l => l.LanguageId)
+                .ToHashSet();
+
+            var targetLanguages = allLanguages.Where(l => !existingIds.Contains(l.LanguageId)).ToList();
+            if (targetLanguages.Count == 0)
+                return Results.Ok(new { message = "Tất cả ngôn ngữ đã có nội dung", translated = 0 });
+
+            // Lấy language code của nguồn
+            var sourceLang = await db.Languages.FindAsync(req.SourceLanguageId);
+            if (sourceLang is null) return Results.BadRequest(new { message = "Ngôn ngữ nguồn không hợp lệ" });
+
+            // Dịch song song
+            var targetCodes = targetLanguages.Select(l => l.LanguageCode).ToList();
+            var translations = await translator.TranslateToManyAsync(
+                source.Title, source.Description, sourceLang.LanguageCode, targetCodes);
+
+            int count = 0;
+            foreach (var lang in targetLanguages)
+            {
+                if (!translations.TryGetValue(lang.LanguageCode, out var t)) continue;
+                if (t.Title is null && t.Description is null) continue;
+
+                var existing = poi.Localizations.FirstOrDefault(l => l.LanguageId == lang.LanguageId);
+                if (existing is null)
+                {
+                    existing = new PoiLocalization { PoiId = id, LanguageId = lang.LanguageId };
+                    db.PoiLocalizations.Add(existing);
+                    poi.Localizations.Add(existing);
+                }
+                existing.Title            = t.Title ?? existing.Title;
+                existing.Description      = t.Description ?? existing.Description;
+                existing.IsAutoTranslated = true;
+                count++;
+            }
+
+            await db.SaveChangesAsync();
+            return Results.Ok(new { message = $"Đã dịch sang {count} ngôn ngữ", translated = count });
         });
 
         // ─── MEDIA ───────────────────────────────────────────
@@ -182,14 +285,66 @@ public static class SellerRoutes
             return Results.Ok(new { media.MediaId });
         });
 
+        // POST /api/seller/pois/{id}/media/upload — upload ảnh hoặc video lên Cloudinary
+        group.MapPost("/pois/{id}/media/upload", async (
+            string id, IFormFile file, AppDbContext db, HttpContext ctx, CloudinaryService cloudinary) =>
+        {
+            var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var ownsPoi = await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId);
+            if (!ownsPoi) return Results.NotFound();
+
+            var contentType = file.ContentType.ToLower();
+            UploadResult uploaded;
+            string mediaType;
+
+            if (contentType.StartsWith("video/"))
+            {
+                uploaded = await cloudinary.UploadVideoAsync(file, sellerId);
+                mediaType = "video";
+            }
+            else if (contentType.StartsWith("image/"))
+            {
+                uploaded = await cloudinary.UploadImageAsync(file, sellerId);
+                mediaType = "image";
+            }
+            else
+            {
+                return Results.BadRequest(new { message = "Chỉ chấp nhận ảnh hoặc video" });
+            }
+
+            var sortOrder = await db.PoiMedia.CountAsync(m => m.PoiId == id);
+            var media = new PoiMedia
+            {
+                PoiId     = id,
+                MediaType = mediaType,
+                MediaUrl  = uploaded.Url,
+                PublicId  = uploaded.PublicId,
+                SortOrder = sortOrder
+            };
+            db.PoiMedia.Add(media);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { media.MediaId, media.MediaUrl, media.MediaType });
+        }).DisableAntiforgery();
+
         // DELETE /api/seller/media/{mediaId}
-        group.MapDelete("/media/{mediaId}", async (string mediaId, AppDbContext db, HttpContext ctx) =>
+        group.MapDelete("/media/{mediaId}", async (
+            string mediaId, AppDbContext db, HttpContext ctx, CloudinaryService cloudinary) =>
         {
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var media = await db.PoiMedia
                 .Include(m => m.Poi)
                 .FirstOrDefaultAsync(m => m.MediaId == mediaId && m.Poi.SellerId == sellerId);
             if (media is null) return Results.NotFound();
+
+            if (!string.IsNullOrEmpty(media.PublicId))
+            {
+                var resourceType = media.MediaType == "video"
+                    ? CloudinaryDotNet.Actions.ResourceType.Video
+                    : CloudinaryDotNet.Actions.ResourceType.Image;
+                await cloudinary.DeleteAsync(media.PublicId, resourceType);
+            }
+
             db.PoiMedia.Remove(media);
             await db.SaveChangesAsync();
             return Results.Ok();
@@ -328,3 +483,5 @@ record UpsertAnswerRequest(
     string? AudioUrl,
     string? AudioPublicId
 );
+
+record TranslateRequest(string SourceLanguageId);

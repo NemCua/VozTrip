@@ -507,7 +507,11 @@
 </div>
 <div class="lib-row">
   <span class="lib-name">expo-av</span>
-  <span class="lib-desc">Phat file audio mp3 tu URL khi trigger, hien thi progress bar.</span>
+  <span class="lib-desc">Phat file audio mp3/m4a tu Cloudinary URL khi co san (seller da upload). Hien thi progress bar va thoi luong.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">expo-speech</span>
+  <span class="lib-desc">Text-to-Speech fallback: neu POI chua co audio file, app tu doc noi dung bang giong may theo ngon ngu khach dang chon. Ket hop voi LibreTranslate: seller chi can viet tieng Viet, khach nuoc ngoai van nghe duoc bang ngon ngu cua ho. Chien luoc Hybrid: uu tien AudioUrl neu co, fallback sang TTS neu khong.</span>
 </div>
 <div class="lib-row">
   <span class="lib-name">i18next + react-i18next</span>
@@ -588,71 +592,67 @@
     </li>
     <li>
       <div class="step-main">
-        <div class="step-title">Chon ngon ngu</div>
-        <div class="step-detail">Hien thi danh sach ngon ngu IsActive = 1. Khach chon, luu LanguageId vao AsyncStorage va GuestSessions.</div>
+        <div class="step-title">Lan dau mo app — chon ngon ngu (LanguagePickerScreen)</div>
+        <div class="step-detail">App kiem tra AsyncStorage xem da co languageCode chua. Neu chua co, hien LanguagePickerScreen voi 5 ngon ngu tinh (vi/en/zh/ko/ja) — khong phu thuoc API de tranh loi khi chua ket noi. Khach chon, luu languageCode + tao SessionId (UUID tu sinh) vao AsyncStorage, POST /api/sessions, chuyen sang HomeScreen. Nhung lan sau mo lai, bo qua buoc nay.</div>
         <div class="step-tables">
-          <span class="tag tag-blue">Languages</span>
-          <span class="tag tag-gray">GuestSessions.LanguageId</span>
+          <span class="tag tag-blue">Languages (static fallback)</span>
+          <span class="tag tag-gray">AsyncStorage: languageCode, sessionId</span>
+          <span class="tag tag-gray">POST /api/sessions</span>
         </div>
       </div>
     </li>
     <li>
       <div class="step-main">
-        <div class="step-title">Xem ban do, thay cac gian hang</div>
-        <div class="step-detail">App load tat ca POIs IsActive = 1, hien thi ghim tren ban do. Moi ghim co ten PoiName. Vong tron mo ben ngoai the hien TriggerRadius.</div>
+        <div class="step-title">Xem danh sach POI — HomeScreen</div>
+        <div class="step-detail">GET /api/pois tra ve danh sach POI IsActive=true. Hien thi dang list doc, moi card co: ten POI, shop name, trigger radius, chip GPS trigger. Co o tim kiem loc client-side. Moi card co nut play nho de nghe preview audio tai cho (khong can phai den vi tri thuc te) — dung Hybrid Audio: neu co AudioUrl thi phat bang expo-av, neu khong co thi TTS doc PoiName bang expo-speech.</div>
         <div class="step-tables">
-          <span class="tag tag-pink">POIs.Latitude / Longitude</span>
-          <span class="tag tag-pink">POIs.PoiName</span>
-          <span class="tag tag-pink">POIs.TriggerRadius</span>
-          <span class="tag tag-pink">POIs.IsActive</span>
-          <span class="tag tag-gray">Zones.ZoneName</span>
+          <span class="tag tag-pink">GET /api/pois</span>
+          <span class="tag tag-amber">PoiLocalizations.AudioUrl (neu co)</span>
+          <span class="tag tag-pink">POIs.PoiName (TTS fallback)</span>
         </div>
       </div>
     </li>
     <li>
       <div class="step-main">
-        <div class="step-title">Di chuyen, GPS phat hien vao vung POI</div>
-        <div class="step-detail">expo-location theo doi vi tri lien tuc. Khi khoang cach < TriggerRadius, app tu dong phat audio thuyet minh. Ghi vao VisitLogs.</div>
+        <div class="step-title">GPS trigger — banner thong bao + tu dong phat audio</div>
+        <div class="step-detail">useGPS hook chay ngam voi expo-location (watchPositionAsync, accuracy=High, distanceInterval=5m). Moi cap nhat vi tri tinh khoang cach Haversine den tung POI. Neu distance &lt; TriggerRadius va POI chua duoc trigger trong session nay: hien banner noi phia duoi man hinh ("Ban dang o gan [ten POI]"), tu dong phat audio theo Hybrid strategy, POST /api/visitlogs. Banner tu an sau 8 giay. Bam nut "Xem" tren banner de chuyen sang POIDetailScreen. Moi POI chi trigger 1 lan / session (luu Set<poiId> trong bo nho).</div>
         <div class="step-tables">
           <span class="tag tag-pink">POIs.TriggerRadius</span>
           <span class="tag tag-amber">PoiLocalizations.AudioUrl</span>
-          <span class="tag tag-amber">PoiLocalizations.AudioDuration</span>
           <span class="tag tag-amber">PoiLocalizations.LanguageId</span>
-          <span class="tag tag-gray">VisitLogs</span>
+          <span class="tag tag-gray">POST /api/visitlogs</span>
         </div>
       </div>
     </li>
     <li>
       <div class="step-main">
-        <div class="step-title">Bam vao ghim, xem chi tiet gian hang</div>
-        <div class="step-detail">Hien thi gallery anh/video tu PoiMedia. Hien thi tieu de va doan van gioi thieu tu PoiLocalizations theo LanguageId dang chon.</div>
+        <div class="step-title">Xem chi tiet POI — POIDetailScreen</div>
+        <div class="step-detail">GET /api/pois/{id}?languageId=... tra ve media + localizations. Media: neu chi co 1 anh thi hien fullwidth hero; neu nhieu anh/video thi hien thumbnail strip ngang 64x64 ngay duoi hero, tap de doi anh chinh, badge "1/n" goc duoi phai. Language selector: pills VI/EN/ZH/KO/JA, ngon ngu nao chua co noi dung hien icon mic nho (danh dau se dung TTS). Audio player hybrid: nut play/pause, waveform decorative, badge phan biet "Audio goc" vs "Text-to-Speech". Section Gioi thieu hien description theo ngon ngu. POST /api/visitlogs khi vao man hinh.</div>
         <div class="step-tables">
-          <span class="tag tag-green">PoiMedia.MediaUrl</span>
-          <span class="tag tag-green">PoiMedia.MediaType</span>
-          <span class="tag tag-amber">PoiLocalizations.Title</span>
-          <span class="tag tag-amber">PoiLocalizations.Description</span>
+          <span class="tag tag-green">PoiMedia.MediaUrl / MediaType / SortOrder</span>
+          <span class="tag tag-amber">PoiLocalizations.Title / Description / AudioUrl</span>
+          <span class="tag tag-gray">POST /api/visitlogs</span>
         </div>
       </div>
     </li>
     <li>
       <div class="step-main">
-        <div class="step-title">Mo khung chat, hoi ve gian hang</div>
-        <div class="step-detail">Hien thi danh sach Questions theo PoiId + LanguageId + IsActive = 1. Khach bam cau hoi, app tra ve AnswerText va phat AudioUrl neu co.</div>
+        <div class="step-title">Hoi &amp; Dap (Q&amp;A accordion)</div>
+        <div class="step-detail">GET /api/pois/{id}/questions?languageId=... Hien danh sach cau hoi dang accordion. Bam cau hoi de mo cau tra loi. Moi cau tra loi co nut nghe: neu Answer.AudioUrl co -> expo-av; neu khong -> expo-speech doc AnswerText (TTS). Badge phan biet "Nghe cau tra loi" vs "Doc (TTS)".</div>
         <div class="step-tables">
-          <span class="tag tag-pink">Questions.QuestionText</span>
-          <span class="tag tag-pink">Questions.IsActive</span>
-          <span class="tag tag-pink">Answers.AnswerText</span>
-          <span class="tag tag-pink">Answers.AudioUrl</span>
+          <span class="tag tag-pink">Questions.QuestionText / IsActive</span>
+          <span class="tag tag-pink">Answers.AnswerText / AudioUrl</span>
         </div>
       </div>
     </li>
     <li>
       <div class="step-main">
-        <div class="step-title">Doi ngon ngu giua chung</div>
-        <div class="step-detail">Vao Settings, chon ngon ngu khac. Cap nhat LanguageId trong AsyncStorage va GuestSessions. Toan bo noi dung doi theo lap tuc.</div>
+        <div class="step-title">Doi ngon ngu</div>
+        <div class="step-detail">Bam icon language tren HomeScreen header de quay lai LanguagePickerScreen. Cap nhat languageCode trong AsyncStorage va POST /api/sessions. Toan bo noi dung doi theo lap tuc khi quay lai HomeScreen.</div>
         <div class="step-tables">
           <span class="tag tag-blue">Languages</span>
-          <span class="tag tag-gray">GuestSessions.LanguageId</span>
+          <span class="tag tag-gray">AsyncStorage: languageCode</span>
+          <span class="tag tag-gray">POST /api/sessions</span>
         </div>
       </div>
     </li>
