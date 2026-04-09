@@ -5,7 +5,11 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 const navItems = [
+  { href: "/admin/dashboard", label: "Dashboard" },
   { href: "/admin/sellers", label: "Sellers" },
+  { href: "/admin/pois", label: "All POIs" },
+  { href: "/admin/zones", label: "Zones" },
+  { href: "/admin/languages", label: "Languages" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -30,8 +34,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               href={item.href}
               className="flex items-center px-3 py-2 text-xs tracking-widest uppercase rounded-sm transition-all"
               style={{
-                backgroundColor: pathname === item.href ? "#c8a96e" : "transparent",
-                color: pathname === item.href ? "#2c2416" : "#b09878",
+                backgroundColor: pathname.startsWith(item.href) ? "#c8a96e" : "transparent",
+                color: pathname.startsWith(item.href) ? "#2c2416" : "#b09878",
               }}
             >
               {item.label}
