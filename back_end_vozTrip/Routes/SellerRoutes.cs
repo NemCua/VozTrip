@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using back_end_vozTrip.Config;
 using back_end_vozTrip.Models;
 using back_end_vozTrip.Services;
 
@@ -12,32 +13,144 @@ public static class SellerRoutes
         var group = app.MapGroup("/api/seller").RequireAuthorization(policy =>
             policy.RequireRole("seller"));
 
-        // ─── POI ────────────────────────────────────────────
+        // ─── PROFILE ─────────────────────────────────────────────────────────
 
-        // GET /api/seller/pois
+        // GET /api/seller/profile — F08
+        group.MapGet("/profile", async (AppDbContext db, HttpContext ctx) =>
+        {
+            var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var seller   = await db.Sellers.Include(s => s.User).FirstOrDefaultAsync(s => s.SellerId == sellerId);
+            if (seller is null) return Results.NotFound();
+            var poiCount = await db.Pois.CountAsync(p => p.SellerId == sellerId);
+            return Results.Ok(new
+            {
+                shopName       = seller.ShopName,
+                plan           = seller.Plan,
+                planUpgradedAt = seller.PlanUpgradedAt,
+                poiCount,
+                poiLimit       = seller.Plan == "vip" ? (int?)null : 1,
+            });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.Profile.Enabled);
+
+        // ─── VIP UPGRADE ─────────────────────────────────────────────────────
+
+        // POST /api/seller/upgrade — F09
+        group.MapPost("/upgrade", async (UpgradeRequest req, AppDbContext db, HttpContext ctx, FeaturesConfig features) =>
+        {
+            var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var seller   = await db.Sellers.FindAsync(sellerId);
+            if (seller is null) return Results.NotFound();
+            if (seller.Plan == "vip")
+                return Results.BadRequest(new { message = "Bạn đã là VIP rồi." });
+
+            // Sub-flag: mock payment validation
+            if (features.Features.Seller.VipUpgrade.MockPayment.Enabled)
+            {
+                if (req.CardNumber is null || req.CardNumber.Replace(" ", "").Length != 16)
+                    return Results.BadRequest(new { message = "Số thẻ không hợp lệ." });
+            }
+
+            seller.Plan           = "vip";
+            seller.PlanUpgradedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+            return Results.Ok(new { message = "Nâng cấp VIP thành công!", plan = "vip" });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.VipUpgrade.Enabled);
+
+        // ─── DASHBOARD ───────────────────────────────────────────────────────
+
+        // GET /api/seller/stats — F10
+        group.MapGet("/stats", async (AppDbContext db, HttpContext ctx, FeaturesConfig features) =>
+        {
+            var sellerId   = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var totalPois  = await db.Pois.CountAsync(p => p.SellerId == sellerId);
+            var activePois = await db.Pois.CountAsync(p => p.SellerId == sellerId && p.IsActive);
+
+            int?  totalVisits  = null;
+            int?  visitsToday  = null;
+            object? topPois    = null;
+            object? visitsByDay = null;
+
+            if (features.Features.Seller.Dashboard.TotalVisits.Enabled)
+            {
+                totalVisits = await db.VisitLogs
+                    .Where(v => v.Poi != null && v.Poi.SellerId == sellerId).CountAsync();
+                visitsToday = await db.VisitLogs
+                    .Where(v => v.Poi != null && v.Poi.SellerId == sellerId
+                             && v.TriggeredAt.Date == DateTime.UtcNow.Date).CountAsync();
+            }
+
+            if (features.Features.Seller.Dashboard.Top5Pois.Enabled)
+            {
+                topPois = await db.VisitLogs
+                    .Where(v => v.PoiId != null && v.Poi != null && v.Poi.SellerId == sellerId)
+                    .GroupBy(v => v.PoiId)
+                    .Select(g => new { poiId = g.Key, count = g.Count() })
+                    .OrderByDescending(x => x.count).Take(5)
+                    .Join(db.Pois, x => x.poiId, p => p.PoiId,
+                        (x, p) => new { p.PoiId, p.PoiName, x.count })
+                    .ToListAsync();
+            }
+
+            if (features.Features.Seller.Dashboard.VisitChart7Days.Enabled)
+            {
+                var since = DateTime.UtcNow.Date.AddDays(-6);
+                visitsByDay = await db.VisitLogs
+                    .Where(v => v.Poi != null && v.Poi.SellerId == sellerId && v.TriggeredAt >= since)
+                    .GroupBy(v => v.TriggeredAt.Date)
+                    .Select(g => new { date = g.Key, count = g.Count() })
+                    .OrderBy(x => x.date).ToListAsync();
+            }
+
+            return Results.Ok(new { totalPois, activePois, totalVisits, visitsToday, topPois, visitsByDay });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.Dashboard.Enabled);
+
+        // ─── POI MANAGEMENT ──────────────────────────────────────────────────
+
+        // GET /api/seller/pois — F11
         group.MapGet("/pois", async (AppDbContext db, HttpContext ctx) =>
         {
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var pois = await db.Pois
                 .Where(p => p.SellerId == sellerId)
-                .Include(p => p.Zone)
-                .Include(p => p.Localizations)
+                .Include(p => p.Zone).Include(p => p.Localizations)
                 .OrderByDescending(p => p.CreatedAt)
                 .Select(p => new
                 {
                     p.PoiId, p.PoiName, p.Latitude, p.Longitude,
                     p.TriggerRadius, p.IsActive, p.CreatedAt,
-                    zoneName = p.Zone != null ? p.Zone.ZoneName : null,
-                    localizationCount = p.Localizations.Count
+                    zoneName           = p.Zone != null ? p.Zone.ZoneName : null,
+                    localizationCount  = p.Localizations.Count
                 })
                 .ToListAsync();
             return Results.Ok(pois);
-        });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.PoiManagement.Enabled);
 
-        // POST /api/seller/pois
-        group.MapPost("/pois", async (CreatePoiRequest req, AppDbContext db, HttpContext ctx) =>
+        // POST /api/seller/pois — F11 (create)
+        group.MapPost("/pois", async (CreatePoiRequest req, AppDbContext db, HttpContext ctx, FeaturesConfig features) =>
         {
+            if (!features.Features.Seller.PoiManagement.Create.Enabled)
+                return Results.NotFound(new { message = "Tính năng này hiện không khả dụng." });
+
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var seller   = await db.Sellers.FindAsync(sellerId);
+            if (seller is null) return Results.Forbid();
+
+            // Sub-flag: plan limit
+            if (features.Features.Seller.PoiManagement.PlanLimit.Enabled && seller.Plan == "free")
+            {
+                var count = await db.Pois.CountAsync(p => p.SellerId == sellerId);
+                if (count >= features.Features.Seller.PoiManagement.PlanLimit.FreePlanMaxPois)
+                    return Results.BadRequest(new
+                    {
+                        message = $"Gói Free chỉ được tạo {features.Features.Seller.PoiManagement.PlanLimit.FreePlanMaxPois} POI. Nâng cấp VIP để tạo thêm.",
+                        code    = "PLAN_LIMIT"
+                    });
+            }
+
             var poi = new Poi
             {
                 SellerId      = sellerId,
@@ -50,13 +163,17 @@ public static class SellerRoutes
             db.Pois.Add(poi);
             await db.SaveChangesAsync();
             return Results.Ok(new { poi.PoiId });
-        });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.PoiManagement.Enabled);
 
-        // PUT /api/seller/pois/{id}
-        group.MapPut("/pois/{id}", async (string id, CreatePoiRequest req, AppDbContext db, HttpContext ctx) =>
+        // PUT /api/seller/pois/{id} — F11 (update)
+        group.MapPut("/pois/{id}", async (string id, CreatePoiRequest req, AppDbContext db, HttpContext ctx, FeaturesConfig features) =>
         {
+            if (!features.Features.Seller.PoiManagement.Update.Enabled)
+                return Results.NotFound(new { message = "Tính năng này hiện không khả dụng." });
+
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var poi = await db.Pois.FirstOrDefaultAsync(p => p.PoiId == id && p.SellerId == sellerId);
+            var poi      = await db.Pois.FirstOrDefaultAsync(p => p.PoiId == id && p.SellerId == sellerId);
             if (poi is null) return Results.NotFound();
 
             poi.PoiName       = req.PoiName;
@@ -67,31 +184,35 @@ public static class SellerRoutes
             poi.IsActive      = req.IsActive ?? poi.IsActive;
             await db.SaveChangesAsync();
             return Results.Ok();
-        });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.PoiManagement.Enabled);
 
-        // DELETE /api/seller/pois/{id}
-        group.MapDelete("/pois/{id}", async (string id, AppDbContext db, HttpContext ctx) =>
+        // DELETE /api/seller/pois/{id} — F11 (delete)
+        group.MapDelete("/pois/{id}", async (string id, AppDbContext db, HttpContext ctx, FeaturesConfig features) =>
         {
+            if (!features.Features.Seller.PoiManagement.Delete.Enabled)
+                return Results.NotFound(new { message = "Tính năng này hiện không khả dụng." });
+
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var poi = await db.Pois.FirstOrDefaultAsync(p => p.PoiId == id && p.SellerId == sellerId);
+            var poi      = await db.Pois.FirstOrDefaultAsync(p => p.PoiId == id && p.SellerId == sellerId);
             if (poi is null) return Results.NotFound();
             db.Pois.Remove(poi);
             await db.SaveChangesAsync();
             return Results.Ok();
-        });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.PoiManagement.Enabled);
 
-        // ─── LOCALIZATION ────────────────────────────────────
+        // ─── LOCALIZATION ─────────────────────────────────────────────────────
 
-        // GET /api/seller/pois/{id}/localizations
+        // GET /api/seller/pois/{id}/localizations — F12
         group.MapGet("/pois/{id}/localizations", async (string id, AppDbContext db, HttpContext ctx) =>
         {
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var ownsPoi = await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId);
-            if (!ownsPoi) return Results.NotFound();
+            if (!await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId))
+                return Results.NotFound();
 
             var locs = await db.PoiLocalizations
-                .Where(l => l.PoiId == id)
-                .Include(l => l.Language)
+                .Where(l => l.PoiId == id).Include(l => l.Language)
                 .Select(l => new
                 {
                     l.LocalizationId, l.LanguageId,
@@ -101,16 +222,20 @@ public static class SellerRoutes
                 })
                 .ToListAsync();
             return Results.Ok(locs);
-        });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.Localization.Enabled);
 
-        // PUT /api/seller/pois/{id}/localizations/{languageId} — upsert
+        // PUT /api/seller/pois/{id}/localizations/{languageId} — F12 (upsert)
         group.MapPut("/pois/{id}/localizations/{languageId}", async (
             string id, string languageId, UpsertLocalizationRequest req,
-            AppDbContext db, HttpContext ctx) =>
+            AppDbContext db, HttpContext ctx, FeaturesConfig features) =>
         {
+            if (!features.Features.Seller.Localization.Upsert.Enabled)
+                return Results.NotFound(new { message = "Tính năng này hiện không khả dụng." });
+
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var ownsPoi = await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId);
-            if (!ownsPoi) return Results.NotFound();
+            if (!await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId))
+                return Results.NotFound();
 
             var loc = await db.PoiLocalizations
                 .FirstOrDefaultAsync(l => l.PoiId == id && l.LanguageId == languageId);
@@ -127,48 +252,19 @@ public static class SellerRoutes
             loc.AudioPublicId    = req.AudioPublicId;
             loc.AudioDuration    = req.AudioDuration;
             loc.IsAutoTranslated = false;
-
             await db.SaveChangesAsync();
             return Results.Ok();
-        });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.Localization.Enabled);
 
-        // POST /api/seller/pois/{id}/localizations/{languageId}/audio — upload audio lên Cloudinary
-        group.MapPost("/pois/{id}/localizations/{languageId}/audio", async (
-            string id, string languageId, IFormFile file,
-            AppDbContext db, HttpContext ctx, CloudinaryService cloudinary) =>
-        {
-            var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var ownsPoi = await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId);
-            if (!ownsPoi) return Results.NotFound();
-
-            var contentType = file.ContentType.ToLower();
-            if (!contentType.StartsWith("audio/"))
-                return Results.BadRequest(new { message = "Chỉ chấp nhận file audio" });
-
-            // Xóa audio cũ nếu có
-            var existing = await db.PoiLocalizations
-                .FirstOrDefaultAsync(l => l.PoiId == id && l.LanguageId == languageId);
-            if (existing?.AudioPublicId != null)
-                await cloudinary.DeleteAsync(existing.AudioPublicId);
-
-            var uploaded = await cloudinary.UploadAudioAsync(file, sellerId);
-
-            if (existing is null)
-            {
-                existing = new back_end_vozTrip.Models.PoiLocalization { PoiId = id, LanguageId = languageId };
-                db.PoiLocalizations.Add(existing);
-            }
-            existing.AudioUrl      = uploaded.Url;
-            existing.AudioPublicId = uploaded.PublicId;
-
-            await db.SaveChangesAsync();
-            return Results.Ok(new { audioUrl = uploaded.Url });
-        }).DisableAntiforgery();
-
-        // DELETE /api/seller/pois/{id}/localizations/{languageId}
+        // DELETE /api/seller/pois/{id}/localizations/{languageId} — F12 (delete)
         group.MapDelete("/pois/{id}/localizations/{languageId}", async (
-            string id, string languageId, AppDbContext db, HttpContext ctx, CloudinaryService cloudinary) =>
+            string id, string languageId,
+            AppDbContext db, HttpContext ctx, CloudinaryService cloudinary, FeaturesConfig features) =>
         {
+            if (!features.Features.Seller.Localization.Delete.Enabled)
+                return Results.NotFound(new { message = "Tính năng này hiện không khả dụng." });
+
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var loc = await db.PoiLocalizations
                 .Include(l => l.Poi)
@@ -181,13 +277,54 @@ public static class SellerRoutes
             db.PoiLocalizations.Remove(loc);
             await db.SaveChangesAsync();
             return Results.Ok();
-        });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.Localization.Enabled);
 
-        // POST /api/seller/pois/{id}/localizations/translate
-        // Tự động dịch từ 1 ngôn ngữ gốc sang tất cả ngôn ngữ còn thiếu
+        // ─── AUDIO ───────────────────────────────────────────────────────────
+
+        // POST /api/seller/pois/{id}/localizations/{languageId}/audio — F13
+        group.MapPost("/pois/{id}/localizations/{languageId}/audio", async (
+            string id, string languageId, IFormFile file,
+            AppDbContext db, HttpContext ctx, CloudinaryService cloudinary, FeaturesConfig features) =>
+        {
+            var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            if (!await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId))
+                return Results.NotFound();
+
+            if (!file.ContentType.ToLower().StartsWith("audio/"))
+                return Results.BadRequest(new { message = "Chỉ chấp nhận file audio" });
+
+            var existing = await db.PoiLocalizations
+                .FirstOrDefaultAsync(l => l.PoiId == id && l.LanguageId == languageId);
+
+            // Sub-flag: xóa audio cũ trên Cloudinary khi upload mới
+            if (features.Features.Seller.AudioUpload.DeleteOldOnReplace.Enabled
+                && existing?.AudioPublicId != null)
+            {
+                await cloudinary.DeleteAsync(existing.AudioPublicId);
+            }
+
+            var uploaded = await cloudinary.UploadAudioAsync(file, sellerId);
+
+            if (existing is null)
+            {
+                existing = new PoiLocalization { PoiId = id, LanguageId = languageId };
+                db.PoiLocalizations.Add(existing);
+            }
+            existing.AudioUrl      = uploaded.Url;
+            existing.AudioPublicId = uploaded.PublicId;
+            await db.SaveChangesAsync();
+            return Results.Ok(new { audioUrl = uploaded.Url });
+        })
+        .DisableAntiforgery()
+        .WithFeatureFlag(f => f.Features.Seller.AudioUpload.Enabled);
+
+        // ─── AUTO TRANSLATE ───────────────────────────────────────────────────
+
+        // POST /api/seller/pois/{id}/localizations/translate — F14
         group.MapPost("/pois/{id}/localizations/translate", async (
             string id, TranslateRequest req,
-            AppDbContext db, HttpContext ctx, LibreTranslateService translator) =>
+            AppDbContext db, HttpContext ctx, LibreTranslateService translator, FeaturesConfig features) =>
         {
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var poi = await db.Pois
@@ -195,39 +332,43 @@ public static class SellerRoutes
                 .FirstOrDefaultAsync(p => p.PoiId == id && p.SellerId == sellerId);
             if (poi is null) return Results.NotFound();
 
-            // Lấy localization gốc (nguồn dịch)
             var source = poi.Localizations.FirstOrDefault(l => l.LanguageId == req.SourceLanguageId);
             if (source is null)
                 return Results.BadRequest(new { message = "Chưa có nội dung ở ngôn ngữ nguồn" });
-
             if (string.IsNullOrWhiteSpace(source.Title) && string.IsNullOrWhiteSpace(source.Description))
                 return Results.BadRequest(new { message = "Nội dung nguồn trống, không có gì để dịch" });
 
-            // Lấy tất cả ngôn ngữ active, loại trừ ngôn ngữ nguồn và những ngôn ngữ đã có nội dung (không auto-translated)
             var allLanguages = await db.Languages
-                .Where(l => l.IsActive && l.LanguageId != req.SourceLanguageId)
-                .ToListAsync();
+                .Where(l => l.IsActive && l.LanguageId != req.SourceLanguageId).ToListAsync();
 
-            var existingIds = poi.Localizations
-                .Where(l => l.LanguageId != req.SourceLanguageId && !l.IsAutoTranslated)
-                .Select(l => l.LanguageId)
-                .ToHashSet();
+            // Sub-flag: bỏ qua những ngôn ngữ đã có nội dung thủ công
+            IEnumerable<Language> targetLanguages;
+            if (features.Features.Seller.AutoTranslate.SkipExistingManual.Enabled)
+            {
+                var existingIds = poi.Localizations
+                    .Where(l => l.LanguageId != req.SourceLanguageId && !l.IsAutoTranslated)
+                    .Select(l => l.LanguageId).ToHashSet();
+                targetLanguages = allLanguages.Where(l => !existingIds.Contains(l.LanguageId));
+            }
+            else
+            {
+                targetLanguages = allLanguages;
+            }
 
-            var targetLanguages = allLanguages.Where(l => !existingIds.Contains(l.LanguageId)).ToList();
-            if (targetLanguages.Count == 0)
+            var targetList = targetLanguages.ToList();
+            if (targetList.Count == 0)
                 return Results.Ok(new { message = "Tất cả ngôn ngữ đã có nội dung", translated = 0 });
 
-            // Lấy language code của nguồn
             var sourceLang = await db.Languages.FindAsync(req.SourceLanguageId);
-            if (sourceLang is null) return Results.BadRequest(new { message = "Ngôn ngữ nguồn không hợp lệ" });
+            if (sourceLang is null)
+                return Results.BadRequest(new { message = "Ngôn ngữ nguồn không hợp lệ" });
 
-            // Dịch song song
-            var targetCodes = targetLanguages.Select(l => l.LanguageCode).ToList();
-            var translations = await translator.TranslateToManyAsync(
+            var targetCodes   = targetList.Select(l => l.LanguageCode).ToList();
+            var translations  = await translator.TranslateToManyAsync(
                 source.Title, source.Description, sourceLang.LanguageCode, targetCodes);
 
             int count = 0;
-            foreach (var lang in targetLanguages)
+            foreach (var lang in targetList)
             {
                 if (!translations.TryGetValue(lang.LanguageCode, out var t)) continue;
                 if (t.Title is null && t.Description is null) continue;
@@ -247,30 +388,30 @@ public static class SellerRoutes
 
             await db.SaveChangesAsync();
             return Results.Ok(new { message = $"Đã dịch sang {count} ngôn ngữ", translated = count });
-        });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.AutoTranslate.Enabled);
 
-        // ─── MEDIA ───────────────────────────────────────────
+        // ─── MEDIA ───────────────────────────────────────────────────────────
 
-        // GET /api/seller/pois/{id}/media
+        // GET /api/seller/pois/{id}/media — F15
         group.MapGet("/pois/{id}/media", async (string id, AppDbContext db, HttpContext ctx) =>
         {
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var ownsPoi = await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId);
-            if (!ownsPoi) return Results.NotFound();
+            if (!await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId))
+                return Results.NotFound();
 
             var media = await db.PoiMedia
-                .Where(m => m.PoiId == id)
-                .OrderBy(m => m.SortOrder)
-                .ToListAsync();
+                .Where(m => m.PoiId == id).OrderBy(m => m.SortOrder).ToListAsync();
             return Results.Ok(media);
-        });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.MediaManagement.Enabled);
 
-        // POST /api/seller/pois/{id}/media
+        // POST /api/seller/pois/{id}/media — F15 (add by URL)
         group.MapPost("/pois/{id}/media", async (string id, AddMediaRequest req, AppDbContext db, HttpContext ctx) =>
         {
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var ownsPoi = await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId);
-            if (!ownsPoi) return Results.NotFound();
+            if (!await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId))
+                return Results.NotFound();
 
             var media = new PoiMedia
             {
@@ -283,15 +424,17 @@ public static class SellerRoutes
             db.PoiMedia.Add(media);
             await db.SaveChangesAsync();
             return Results.Ok(new { media.MediaId });
-        });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.MediaManagement.Upload.Enabled);
 
-        // POST /api/seller/pois/{id}/media/upload — upload ảnh hoặc video lên Cloudinary
+        // POST /api/seller/pois/{id}/media/upload — F15 (upload Cloudinary)
         group.MapPost("/pois/{id}/media/upload", async (
-            string id, IFormFile file, AppDbContext db, HttpContext ctx, CloudinaryService cloudinary) =>
+            string id, IFormFile file, AppDbContext db, HttpContext ctx,
+            CloudinaryService cloudinary, FeaturesConfig features) =>
         {
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var ownsPoi = await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId);
-            if (!ownsPoi) return Results.NotFound();
+            if (!await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId))
+                return Results.NotFound();
 
             var contentType = file.ContentType.ToLower();
             UploadResult uploaded;
@@ -299,12 +442,16 @@ public static class SellerRoutes
 
             if (contentType.StartsWith("video/"))
             {
-                uploaded = await cloudinary.UploadVideoAsync(file, sellerId);
+                if (!features.Features.Seller.MediaManagement.Upload.Video.Enabled)
+                    return Results.BadRequest(new { message = "Upload video hiện không khả dụng." });
+                uploaded  = await cloudinary.UploadVideoAsync(file, sellerId);
                 mediaType = "video";
             }
             else if (contentType.StartsWith("image/"))
             {
-                uploaded = await cloudinary.UploadImageAsync(file, sellerId);
+                if (!features.Features.Seller.MediaManagement.Upload.Image.Enabled)
+                    return Results.BadRequest(new { message = "Upload ảnh hiện không khả dụng." });
+                uploaded  = await cloudinary.UploadImageAsync(file, sellerId);
                 mediaType = "image";
             }
             else
@@ -323,17 +470,17 @@ public static class SellerRoutes
             };
             db.PoiMedia.Add(media);
             await db.SaveChangesAsync();
-
             return Results.Ok(new { media.MediaId, media.MediaUrl, media.MediaType });
-        }).DisableAntiforgery();
+        })
+        .DisableAntiforgery()
+        .WithFeatureFlag(f => f.Features.Seller.MediaManagement.Upload.Enabled);
 
-        // DELETE /api/seller/media/{mediaId}
+        // DELETE /api/seller/media/{mediaId} — F15 (delete)
         group.MapDelete("/media/{mediaId}", async (
             string mediaId, AppDbContext db, HttpContext ctx, CloudinaryService cloudinary) =>
         {
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var media = await db.PoiMedia
-                .Include(m => m.Poi)
+            var media    = await db.PoiMedia.Include(m => m.Poi)
                 .FirstOrDefaultAsync(m => m.MediaId == mediaId && m.Poi.SellerId == sellerId);
             if (media is null) return Results.NotFound();
 
@@ -348,21 +495,21 @@ public static class SellerRoutes
             db.PoiMedia.Remove(media);
             await db.SaveChangesAsync();
             return Results.Ok();
-        });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.MediaManagement.Delete.Enabled);
 
-        // ─── QUESTIONS & ANSWERS ─────────────────────────────
+        // ─── Q&A ─────────────────────────────────────────────────────────────
 
-        // GET /api/seller/pois/{id}/questions
+        // GET /api/seller/pois/{id}/questions — F16
         group.MapGet("/pois/{id}/questions", async (string id, AppDbContext db, HttpContext ctx) =>
         {
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var ownsPoi = await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId);
-            if (!ownsPoi) return Results.NotFound();
+            if (!await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId))
+                return Results.NotFound();
 
             var questions = await db.Questions
                 .Where(q => q.PoiId == id)
-                .Include(q => q.Language)
-                .Include(q => q.Answer)
+                .Include(q => q.Language).Include(q => q.Answer)
                 .OrderBy(q => q.SortOrder)
                 .Select(q => new
                 {
@@ -371,21 +518,24 @@ public static class SellerRoutes
                     q.QuestionText, q.SortOrder, q.IsActive,
                     answer = q.Answer == null ? null : new
                     {
-                        q.Answer.AnswerId,
-                        q.Answer.AnswerText,
-                        q.Answer.AudioUrl
+                        q.Answer.AnswerId, q.Answer.AnswerText, q.Answer.AudioUrl
                     }
                 })
                 .ToListAsync();
             return Results.Ok(questions);
-        });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.QnaManagement.Enabled);
 
-        // POST /api/seller/pois/{id}/questions
-        group.MapPost("/pois/{id}/questions", async (string id, CreateQuestionRequest req, AppDbContext db, HttpContext ctx) =>
+        // POST /api/seller/pois/{id}/questions — F16 (create)
+        group.MapPost("/pois/{id}/questions", async (
+            string id, CreateQuestionRequest req, AppDbContext db, HttpContext ctx, FeaturesConfig features) =>
         {
+            if (!features.Features.Seller.QnaManagement.CreateQuestion.Enabled)
+                return Results.NotFound(new { message = "Tính năng này hiện không khả dụng." });
+
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var ownsPoi = await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId);
-            if (!ownsPoi) return Results.NotFound();
+            if (!await db.Pois.AnyAsync(p => p.PoiId == id && p.SellerId == sellerId))
+                return Results.NotFound();
 
             var question = new Question
             {
@@ -397,91 +547,75 @@ public static class SellerRoutes
             db.Questions.Add(question);
             await db.SaveChangesAsync();
             return Results.Ok(new { question.QuestionId });
-        });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.QnaManagement.Enabled);
 
-        // PUT /api/seller/questions/{questionId}/answer — upsert answer
+        // PUT /api/seller/questions/{questionId}/answer — F16 (upsert answer)
         group.MapPut("/questions/{questionId}/answer", async (
-            string questionId, UpsertAnswerRequest req, AppDbContext db, HttpContext ctx) =>
+            string questionId, UpsertAnswerRequest req, AppDbContext db, HttpContext ctx, FeaturesConfig features) =>
         {
+            if (!features.Features.Seller.QnaManagement.UpsertAnswer.Enabled)
+                return Results.NotFound(new { message = "Tính năng này hiện không khả dụng." });
+
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var question = await db.Questions
-                .Include(q => q.Poi)
-                .Include(q => q.Answer)
+                .Include(q => q.Poi).Include(q => q.Answer)
                 .FirstOrDefaultAsync(q => q.QuestionId == questionId && q.Poi.SellerId == sellerId);
             if (question is null) return Results.NotFound();
 
             if (question.Answer is null)
             {
-                var answer = new Answer
+                db.Answers.Add(new Answer
                 {
-                    QuestionId  = questionId,
-                    PoiId       = question.PoiId,
-                    LanguageId  = question.LanguageId,
-                    AnswerText  = req.AnswerText,
-                    AudioUrl    = req.AudioUrl,
+                    QuestionId    = questionId,
+                    PoiId         = question.PoiId,
+                    LanguageId    = question.LanguageId,
+                    AnswerText    = req.AnswerText,
+                    AudioUrl      = req.AudioUrl,
                     AudioPublicId = req.AudioPublicId
-                };
-                db.Answers.Add(answer);
+                });
             }
             else
             {
-                question.Answer.AnswerText   = req.AnswerText;
-                question.Answer.AudioUrl     = req.AudioUrl;
+                question.Answer.AnswerText    = req.AnswerText;
+                question.Answer.AudioUrl      = req.AudioUrl;
                 question.Answer.AudioPublicId = req.AudioPublicId;
             }
             await db.SaveChangesAsync();
             return Results.Ok();
-        });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.QnaManagement.Enabled);
 
-        // DELETE /api/seller/questions/{questionId}
-        group.MapDelete("/questions/{questionId}", async (string questionId, AppDbContext db, HttpContext ctx) =>
+        // DELETE /api/seller/questions/{questionId} — F16 (delete)
+        group.MapDelete("/questions/{questionId}", async (
+            string questionId, AppDbContext db, HttpContext ctx, FeaturesConfig features) =>
         {
+            if (!features.Features.Seller.QnaManagement.DeleteQuestion.Enabled)
+                return Results.NotFound(new { message = "Tính năng này hiện không khả dụng." });
+
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            var question = await db.Questions
-                .Include(q => q.Poi)
+            var question = await db.Questions.Include(q => q.Poi)
                 .FirstOrDefaultAsync(q => q.QuestionId == questionId && q.Poi.SellerId == sellerId);
             if (question is null) return Results.NotFound();
             db.Questions.Remove(question);
             await db.SaveChangesAsync();
             return Results.Ok();
-        });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.QnaManagement.Enabled);
     }
 }
 
 record CreatePoiRequest(
-    string PoiName,
-    double Latitude,
-    double Longitude,
-    string? ZoneId,
-    double? TriggerRadius,
-    bool? IsActive
-);
+    string PoiName, double Latitude, double Longitude,
+    string? ZoneId, double? TriggerRadius, bool? IsActive);
+
+record UpgradeRequest(string? CardNumber, string? CardHolder);
 
 record UpsertLocalizationRequest(
-    string? Title,
-    string? Description,
-    string? AudioUrl,
-    string? AudioPublicId,
-    int? AudioDuration
-);
+    string? Title, string? Description,
+    string? AudioUrl, string? AudioPublicId, int? AudioDuration);
 
-record AddMediaRequest(
-    string MediaType,
-    string MediaUrl,
-    string? PublicId,
-    int? SortOrder
-);
-
-record CreateQuestionRequest(
-    string LanguageId,
-    string QuestionText,
-    int? SortOrder
-);
-
-record UpsertAnswerRequest(
-    string AnswerText,
-    string? AudioUrl,
-    string? AudioPublicId
-);
-
+record AddMediaRequest(string MediaType, string MediaUrl, string? PublicId, int? SortOrder);
+record CreateQuestionRequest(string LanguageId, string QuestionText, int? SortOrder);
+record UpsertAnswerRequest(string AnswerText, string? AudioUrl, string? AudioPublicId);
 record TranslateRequest(string SourceLanguageId);

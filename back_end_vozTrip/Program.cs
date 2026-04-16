@@ -2,53 +2,83 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json;
+using back_end_vozTrip.Config;
 using back_end_vozTrip.Models;
 using back_end_vozTrip.Routes;
 using back_end_vozTrip.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// CORS
+// ─── Feature Flags ───────────────────────────────────────────────────────────
+
+var featuresPath = Path.GetFullPath(
+    Path.Combine(builder.Environment.ContentRootPath, "..", "config", "features.json"));
+
+FeaturesConfig features;
+if (File.Exists(featuresPath))
+{
+    var json = File.ReadAllText(featuresPath);
+    features = JsonSerializer.Deserialize<FeaturesConfig>(json, new JsonSerializerOptions
+    {
+        PropertyNameCaseInsensitive = true
+    }) ?? new FeaturesConfig();
+}
+else
+{
+    Console.WriteLine($"[FeatureFlags] Không tìm thấy {featuresPath} — dùng mặc định (tất cả enabled).");
+    features = new FeaturesConfig();
+}
+
+builder.Services.AddSingleton(features);
+
+// ─── CORS ────────────────────────────────────────────────────────────────────
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:3001")
+        policy.WithOrigins(
+                  "http://localhost:3000",
+                  "http://localhost:3001"
+              )
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
 
-// Database
+// ─── Database ────────────────────────────────────────────────────────────────
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
-// JWT
+// ─── JWT ─────────────────────────────────────────────────────────────────────
+
 var jwtKey = builder.Configuration["Jwt:Key"]!;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
+            ValidateIssuer           = true,
+            ValidateAudience         = true,
+            ValidateLifetime         = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            ValidIssuer              = builder.Configuration["Jwt:Issuer"],
+            ValidAudience            = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
 
 builder.Services.AddAuthorization();
 
-// Cloudinary
-builder.Services.AddSingleton<CloudinaryService>();
+// ─── External Services ───────────────────────────────────────────────────────
 
-// LibreTranslate
+builder.Services.AddSingleton<CloudinaryService>();
 builder.Services.AddHttpClient<LibreTranslateService>();
 
-// Swagger
+// ─── Swagger ─────────────────────────────────────────────────────────────────
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -58,14 +88,36 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseCors();
+
+// ─── Maintenance Middleware ───────────────────────────────────────────────────
+// Chặn toàn bộ request nếu maintenance đang bật, ngoại trừ /api/features
+
+app.Use(async (ctx, next) =>
+{
+    if (features.App.Maintenance.Enabled
+        && !ctx.Request.Path.StartsWithSegments("/api/features"))
+    {
+        ctx.Response.StatusCode  = 503;
+        ctx.Response.ContentType = "application/json";
+        await ctx.Response.WriteAsJsonAsync(new
+        {
+            maintenance = true,
+            message     = features.App.Maintenance.Message
+        });
+        return;
+    }
+    await next();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+// ─── Seed ────────────────────────────────────────────────────────────────────
 
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    // Seed admin
     if (!db.Users.Any(u => u.Role == "admin"))
     {
         db.Users.Add(new User
@@ -78,7 +130,6 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
-    // Seed languages
     var defaultLanguages = new[]
     {
         new Language { LanguageCode = "vi", LanguageName = "Tiếng Việt" },
@@ -94,6 +145,11 @@ using (var scope = app.Services.CreateScope())
     }
     db.SaveChanges();
 }
+
+// ─── Routes ──────────────────────────────────────────────────────────────────
+
+// GET /api/features — public, trả về toàn bộ config (bypass maintenance)
+app.MapGet("/api/features", (FeaturesConfig f) => Results.Ok(f));
 
 AuthRoutes.Map(app);
 AdminRoutes.Map(app);
