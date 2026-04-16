@@ -1,7 +1,7 @@
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Linking, ScrollView, Platform } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Linking, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { tr } from "./src/i18n/translations";
@@ -201,6 +201,14 @@ function AppContent() {
   }
 
   if (screen === "detail" && selectedPoiId) {
+    if (!features.features.guest.poiDetail.enabled) {
+      return (
+        <MaintenanceScreen
+          featureName="Chi tiết điểm tham quan"
+          onBack={() => setScreen("main")}
+        />
+      );
+    }
     return (
       <POIDetailScreen
         poiId={selectedPoiId}

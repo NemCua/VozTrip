@@ -1,8 +1,10 @@
-export default function MaintenancePage({
-  message,
+export default async function MaintenancePage({
+  searchParams,
 }: {
-  message?: string;
+  searchParams: Promise<{ msg?: string }>;
 }) {
+  const { msg } = await searchParams;
+  const message = msg;
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center"
