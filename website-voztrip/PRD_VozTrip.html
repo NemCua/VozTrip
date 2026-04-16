@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VozTrip — Project Specification</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0f0f0f;
+    --bg2: #161616;
+    --bg3: #1e1e1e;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --muted: #666;
+    --accent: #4ade80;
+    --accent2: #60a5fa;
+    --accent3: #f59e0b;
+    --accent4: #f472b6;
+    --danger: #f87171;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    padding: 40px 24px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 48px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  h2 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 48px 0 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h3 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    margin: 24px 0 10px;
+  }
+
+  p {
+    color: #aaa;
+    margin-bottom: 10px;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin: 2px 2px 2px 0;
+  }
+
+  .tag-green  { background: #052e16; color: var(--accent); border: 1px solid #166534; }
+  .tag-blue   { background: #0c1a3a; color: var(--accent2); border: 1px solid #1d4ed8; }
+  .tag-amber  { background: #1c1207; color: var(--accent3); border: 1px solid #92400e; }
+  .tag-pink   { background: #2d0a1e; color: var(--accent4); border: 1px solid #9d174d; }
+  .tag-red    { background: #2d0a0a; color: var(--danger); border: 1px solid #991b1b; }
+  .tag-gray   { background: #1a1a1a; color: #888; border: 1px solid #333; }
+
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .tech-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .tech-card-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .tech-card-title {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .tech-card p {
+    font-size: 12px;
+    color: #777;
+    margin: 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+
+  th {
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #1a1a1a;
+    color: #bbb;
+    vertical-align: top;
+  }
+
+  td:first-child {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent2);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .sql-block {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: 6px;
+    padding: 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    overflow-x: auto;
+    margin-bottom: 16px;
+    white-space: pre;
+  }
+
+  .kw  { color: #c084fc; }
+  .ty  { color: var(--accent2); }
+  .cm  { color: #4a4a4a; }
+  .st  { color: var(--accent); }
+  .nm  { color: var(--accent3); }
+
+  .flow-section {
+    margin-bottom: 32px;
+  }
+
+  .flow-role {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  .role-guest   { background: #052e16; color: var(--accent); border: 1px solid #166534; }
+  .role-seller  { background: #0c1a3a; color: var(--accent2); border: 1px solid #1d4ed8; }
+  .role-admin   { background: #1c1207; color: var(--accent3); border: 1px solid #92400e; }
+
+  .crud-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .crud-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+
+  .crud-entity {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .crud-ops {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+
+  .op {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  .op-c { background: #052e16; color: var(--accent); }
+  .op-r { background: #0c1a3a; color: var(--accent2); }
+  .op-u { background: #1c1207; color: var(--accent3); }
+  .op-d { background: #2d0a0a; color: var(--danger); }
+
+  .crud-note {
+    font-size: 11px;
+    color: #555;
+    line-height: 1.5;
+  }
+
+  .flow-steps {
+    counter-reset: step;
+    list-style: none;
+    padding: 0;
+  }
+
+  .flow-steps li {
+    counter-increment: step;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    padding: 10px 14px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .flow-steps li::before {
+    content: counter(step, decimal-leading-zero);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    min-width: 24px;
+    padding-top: 1px;
+  }
+
+  .step-main {
+    flex: 1;
+  }
+
+  .step-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .step-detail {
+    font-size: 12px;
+    color: #555;
+    line-height: 1.5;
+  }
+
+  .step-tables {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+
+  .note-box {
+    background: #0c1a0c;
+    border: 1px solid #166534;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #86efac;
+    margin-bottom: 16px;
+  }
+
+  .warn-box {
+    background: #1c1207;
+    border: 1px solid #92400e;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #fcd34d;
+    margin-bottom: 16px;
+  }
+
+  .lib-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  .lib-row:last-child { border-bottom: none; }
+
+  .lib-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--accent2);
+    min-width: 220px;
+  }
+
+  .lib-desc {
+    font-size: 12px;
+    color: #666;
+  }
+
+  /* Use Case styles */
+  .uc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .uc-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+
+  .uc-id {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .uc-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .uc-actor {
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+
+  .uc-desc {
+    font-size: 11px;
+    color: #555;
+    line-height: 1.6;
+  }
+
+  /* ERD styles */
+  .erd-container {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 24px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+  }
+
+  .erd-table {
+    display: inline-block;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    min-width: 160px;
+    margin: 8px;
+    vertical-align: top;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+  }
+
+  .erd-table-header {
+    background: var(--bg3);
+    padding: 6px 10px;
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.5px;
+  }
+
+  .erd-table-header.t-user   { color: var(--accent); border-left: 3px solid var(--accent); }
+  .erd-table-header.t-seller { color: var(--accent2); border-left: 3px solid var(--accent2); }
+  .erd-table-header.t-poi    { color: var(--accent3); border-left: 3px solid var(--accent3); }
+  .erd-table-header.t-media  { color: var(--accent4); border-left: 3px solid var(--accent4); }
+  .erd-table-header.t-guest  { color: #34d399; border-left: 3px solid #34d399; }
+  .erd-table-header.t-misc   { color: #94a3b8; border-left: 3px solid #475569; }
+
+  .erd-field {
+    padding: 3px 10px;
+    border-bottom: 1px solid #1a1a1a;
+    color: #aaa;
+    font-size: 10px;
+  }
+
+  .erd-field:last-child { border-bottom: none; }
+
+  .erd-pk { color: var(--accent3); }
+  .erd-fk { color: var(--accent2); font-style: italic; }
+
+  .erd-rel-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-top: 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    line-height: 2;
+    color: #666;
+  }
+
+  .rel-arrow { color: var(--accent3); }
+
+  /* Sequence diagram styles */
+  .seq-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent3);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    line-height: 1.9;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .seq-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+
+  .s-actor  { color: var(--accent); }
+  .s-sys    { color: var(--accent2); }
+  .s-db     { color: var(--accent4); }
+  .s-ext    { color: var(--accent3); }
+  .s-arrow  { color: #555; }
+  .s-note   { color: #444; }
+  .s-alt    { color: #c084fc; }
+</style>
+</head>
+<body>
+
+<h1>voztrip — tourism guide app</h1>
+<div class="subtitle">// project specification — full stack overview · updated 2025</div>
+
+<!-- ===================== TONG QUAN ===================== -->
+<h2>01 — tong quan he thong</h2>
+
+<div class="tech-grid">
+  <div class="tech-card">
+    <div class="tech-card-label">Mobile — Du khach</div>
+    <div class="tech-card-title" style="color: var(--accent);">Expo React Native</div>
+    <p>App cai tren dien thoai. Khong can dang nhap. GPS tu dong phat audio khi den gan POI. Quet QR code de xem nhanh chi tiet POI. 5-tab navigation.</p>
+  </div>
+  <div class="tech-card">
+    <div class="tech-card-label">Web — Seller & Admin</div>
+    <div class="tech-card-title" style="color: var(--accent2);">Next.js</div>
+    <p>Dashboard quan ly gian hang, noi dung, nguoi dung. Seller tao QR code cho tung POI, chon toa do bang ban do tuong tac, nang cap VIP de tao nhieu POI.</p>
+  </div>
+  <div class="tech-card">
+    <div class="tech-card-label">Backend — API</div>
+    <div class="tech-card-title" style="color: var(--accent3);">.NET Minimal API</div>
+    <p>REST API trung tam. Xu ly logic, phan quyen JWT, kiem tra gioi han plan, giao tiep PostgreSQL qua EF Core.</p>
+  </div>
+  <div class="tech-card">
+    <div class="tech-card-label">Database</div>
+    <div class="tech-card-title" style="color: var(--accent4);">PostgreSQL + EF Core</div>
+    <p>PostgreSQL tren Neon (cloud). EF Core code-first migration. Media luu tren Cloudinary, chi luu URL + public_id vao DB.</p>
+  </div>
+</div>
+
+<!-- ===================== DATABASE ===================== -->
+
+
+<!-- ===================== THU VIEN ===================== -->
+<h2>03 — thu vien su dung</h2>
+
+<h3 style="color: var(--accent); margin-top: 16px;">Expo React Native — app du khach</h3>
+<div class="lib-row">
+  <span class="lib-name">expo-location</span>
+  <span class="lib-desc">Lay toa do GPS lien tuc, tinh khoang cach Haversine den tung POI. watchPositionAsync accuracy=High, distanceInterval=5m.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">expo-av</span>
+  <span class="lib-desc">Phat file audio mp3/m4a tu Cloudinary URL. Hien thi progress bar va thoi luong.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">expo-speech</span>
+  <span class="lib-desc">Text-to-Speech fallback khi POI chua co audio. Chien luoc Hybrid: uu tien AudioUrl neu co, fallback TTS theo ngon ngu khach.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">expo-camera</span>
+  <span class="lib-desc">Quet QR code tren ScanScreen (tab 4). Su dung CameraView voi barcodeScannerSettings: [{barcodeTypes: ["qr"]}]. Parse format voztrip:poi:{poiId}, Vibration.vibrate(80) khi quet thanh cong, chuyen sang POIDetailScreen.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">react-native-maps</span>
+  <span class="lib-desc">Hien thi MapScreen voi custom gold marker. Bottom sheet Animated.View khi tap marker (tuong thich Expo Go). Hien vi tri user lam blue dot.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">i18n custom (src/i18n/translations.ts)</span>
+  <span class="lib-desc">File dich tinh noi bo, ham tr(key, languageCode). Ho tro 5 ngon ngu: vi/en/zh/ko/ja. Bao gom tab_scan: {vi:"Quet QR", en:"Scan", zh:"扫码", ko:"QR스캔", ja:"QR"}.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">@react-native-async-storage</span>
+  <span class="lib-desc">Luu SessionId va LanguageId xuong local.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">axios</span>
+  <span class="lib-desc">Goi REST API toi .NET backend. Base URL cau hinh qua EXPO_PUBLIC_API_URL trong .env.</span>
+</div>
+
+<h3 style="color: var(--accent2); margin-top: 24px;">Next.js — web seller & admin</h3>
+<div class="lib-row">
+  <span class="lib-name">next-auth</span>
+  <span class="lib-desc">Xu ly dang nhap, quan ly session JWT, phan quyen admin / seller.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">@tanstack/react-query</span>
+  <span class="lib-desc">Cache va fetch du lieu tu API. Dashboard dung refetchInterval: 30000 de lam moi thong ke dinh ky.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">react-qr-code</span>
+  <span class="lib-desc">Tao SVG QR code cho tung POI voi format voztrip:poi:{poiId}. Canvas API download PNG co label ten POI.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">leaflet + OpenStreetMap</span>
+  <span class="lib-desc">Ban do tuong tac chon toa do GPS khi tao/sua POI. Khong can API key. Import dong qua next/dynamic({ssr:false}) de tranh loi SSR. Drag marker hoac click map de cap nhat lat/lng.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">axios / fetch</span>
+  <span class="lib-desc">Goi API .NET tu client components.</span>
+</div>
+
+<h3 style="color: var(--accent3); margin-top: 24px;">.NET Minimal API — backend</h3>
+<div class="lib-row">
+  <span class="lib-name">Npgsql.EntityFrameworkCore.PostgreSQL</span>
+  <span class="lib-desc">ORM chinh cho PostgreSQL tren Neon, code-first, migration.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">Microsoft.AspNetCore.Authentication.JwtBearer</span>
+  <span class="lib-desc">Phan quyen API bang JWT token, phan biet admin / seller / guest.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">BCrypt.Net-Next</span>
+  <span class="lib-desc">Ma hoa password truoc khi luu.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">CloudinaryDotNet</span>
+  <span class="lib-desc">Upload anh/audio, nhan URL + public_id. Dung public_id khi xoa file.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">Swashbuckle.AspNetCore</span>
+  <span class="lib-desc">Swagger UI de test API trong qua trinh phat trien.</span>
+</div>
+<div class="lib-row">
+  <span class="lib-name">LibreTranslate (self-hosted / API)</span>
+  <span class="lib-desc">Dich tu dong noi dung PoiLocalizations sang cac ngon ngu chua co. Backend goi HTTP, luu ket qua va danh dau is_auto_translated.</span>
+</div>
+
+<!-- ===================== USE CASE ===================== -->
+<h2>04 — use cases</h2>
+
+<div class="note-box">
+  4 nhom actor chinh: Guest (du khach dung app), Seller Free (gioi han 1 POI), Seller VIP (khong gioi han), Admin. Cac use case duoi day mo ta luong chinh da duoc xay dung.
+</div>
+
+<h3>Guest — du khach</h3>
+<div class="uc-grid">
+  <div class="uc-card">
+    <div class="uc-id">UC-G01</div>
+    <div class="uc-name">Chon ngon ngu</div>
+    <div class="uc-actor"><span class="tag tag-green">Guest</span></div>
+    <div class="uc-desc">Mo app lan dau, chon 1 trong 5 ngon ngu (vi/en/zh/ko/ja). App luu languageId vao AsyncStorage. Moi lan sau mo app, toan bo noi dung hien thi theo ngon ngu da chon.</div>
+  </div>
+  <div class="uc-card">
+    <div class="uc-id">UC-G02</div>
+    <div class="uc-name">GPS tu dong trigger audio</div>
+    <div class="uc-actor"><span class="tag tag-green">Guest</span></div>
+    <div class="uc-desc">Khach di chuyen den gan POI (khoang cach &lt; TriggerRadius). App tu dong hien banner va phat audio thuyet minh (uu tien file Cloudinary, fallback TTS). Ghi VisitLog. Moi POI chi trigger 1 lan/session.</div>
+  </div>
+  <div class="uc-card">
+    <div class="uc-id">UC-G03</div>
+    <div class="uc-name">Quet QR code</div>
+    <div class="uc-actor"><span class="tag tag-green">Guest</span></div>
+    <div class="uc-desc">Khach mo tab "Quet QR" (tab 4), quet QR code in tren bien hieu POI. App parse voztrip:poi:{id}, rung nhe, chuyen thang vao POIDetailScreen cua diem do.</div>
+  </div>
+  <div class="uc-card">
+    <div class="uc-id">UC-G04</div>
+    <div class="uc-name">Xem chi tiet POI</div>
+    <div class="uc-actor"><span class="tag tag-green">Guest</span></div>
+    <div class="uc-desc">Xem anh, nghe audio, doc mo ta, xem Q&A. Doi ngon ngu truc tiep trong man hinh chi tiet. Neu ngon ngu chua co audio thi dung TTS. Vao tu HomeScreen, NearbyScreen, MapScreen hoac quet QR.</div>
+  </div>
+  <div class="uc-card">
+    <div class="uc-id">UC-G05</div>
+    <div class="uc-name">Xem ban do POI</div>
+    <div class="uc-actor"><span class="tag tag-green">Guest</span></div>
+    <div class="uc-desc">Xem vi tri cac POI tren ban do, tap marker hien thong tin tom tat + nut chi tiet. Blue dot hien vi tri hien tai cua khach.</div>
+  </div>
+</div>
+<img src="" alt="">
+<h3>Seller — quan ly gian hang</h3>
+<div class="uc-grid">
+  <div class="uc-card">
+    <div class="uc-id">UC-S01</div>
+    <div class="uc-name">Dang ky & dang nhap</div>
+    <div class="uc-actor"><span class="tag tag-blue">Seller</span></div>
+    <div class="uc-desc">Seller dang ky tai khoan, admin duyet. Sau khi duoc duyet (approved_at != NULL), seller dang nhap bang username/password, nhan JWT token.</div>
+  </div>
+  <div class="uc-card">
+    <div class="uc-id">UC-S02</div>
+    <div class="uc-name">Tao POI voi ban do</div>
+    <div class="uc-actor"><span class="tag tag-blue">Seller Free</span><span class="tag tag-blue">Seller VIP</span></div>
+    <div class="uc-desc">Dien form tao POI: ten, toa do (nhap tay hoac chon tren ban do Leaflet/OpenStreetMap), ban kinh trigger. Seller Free bi gioi han 1 POI; vuot gioi han tra ve {code:"PLAN_LIMIT"}, chuyen trang upgrade.</div>
+  </div>
+  <div class="uc-card">
+    <div class="uc-id">UC-S03</div>
+    <div class="uc-name">Quan ly noi dung da ngon ngu</div>
+    <div class="uc-actor"><span class="tag tag-blue">Seller</span></div>
+    <div class="uc-desc">Them text mo ta va upload audio .mp3 cho tung ngon ngu (vi/en/zh/ko/ja). Them Q&A theo ngon ngu. Upload anh/video cho gallery.</div>
+  </div>
+  <div class="uc-card">
+    <div class="uc-id">UC-S04</div>
+    <div class="uc-name">Tao & tai QR code</div>
+    <div class="uc-actor"><span class="tag tag-blue">Seller</span></div>
+    <div class="uc-desc">Tao QR code dung react-qr-code (SVG, format voztrip:poi:{id}). Tai ve file PNG (Canvas API) co label ten POI. In dan len bien hieu gian hang.</div>
+  </div>
+  <div class="uc-card">
+    <div class="uc-id">UC-S05</div>
+    <div class="uc-name">Nang cap VIP</div>
+    <div class="uc-actor"><span class="tag tag-blue">Seller Free</span></div>
+    <div class="uc-desc">Seller nhap thong tin the (16 chu so), thanh toan 299.000d mot lan. Backend cap nhat plan='vip', plan_upgraded_at=NOW(). Sau do co the tao khong gioi han POI.</div>
+  </div>
+  <div class="uc-card">
+    <div class="uc-id">UC-S06</div>
+    <div class="uc-name">Xem thong ke gian hang</div>
+    <div class="uc-actor"><span class="tag tag-blue">Seller</span></div>
+    <div class="uc-desc">Xem dashboard: tong POI, luot tham quan hom nay, bieu do 7 ngay, top 5 POI duoc ghe nhieu nhat. Du lieu lam moi moi 30 giay.</div>
+  </div>
+</div>
+<img src="" alt="">
+<h3>Admin — quan tri vien</h3>
+<div class="uc-grid">
+  <div class="uc-card">
+    <div class="uc-id">UC-A01</div>
+    <div class="uc-name">Duyet seller</div>
+    <div class="uc-actor"><span class="tag tag-amber">Admin</span></div>
+    <div class="uc-desc">Xem danh sach seller cho duyet, bam Approve de set approved_at. Seller chua duoc duyet khong the dang nhap.</div>
+  </div>
+  <div class="uc-card">
+    <div class="uc-id">UC-A02</div>
+    <div class="uc-name">Quan ly tat ca POI</div>
+    <div class="uc-actor"><span class="tag tag-amber">Admin</span></div>
+    <div class="uc-desc">Xem toan bo POI cua moi seller, loc theo ten/seller/trang thai. Toggle IsActive de an/hien POI vi pham khoi app guest.</div>
+  </div>
+  <div class="uc-card">
+    <div class="uc-id">UC-A03</div>
+    <div class="uc-name">Xem bao cao tong hop</div>
+    <div class="uc-actor"><span class="tag tag-amber">Admin</span></div>
+    <div class="uc-desc">Dashboard: tong seller, seller cho duyet, tong POI, POI dang hoat dong, tong luot tham quan, luot hom nay. Bieu do 7 ngay, top 5 POI toan he thong.</div>
+  </div>
+</div>
+<img src="" alt="">
+<!-- ===================== ERD ===================== -->
+<h2>05 — entity relationship diagram</h2>
+
+<div class="erd-container">
+  <div style="display: flex; flex-wrap: wrap; gap: 0; align-items: flex-start;">
+
+    <div class="erd-table">
+      <div class="erd-table-header t-user">users</div>
+      <div class="erd-field erd-pk">PK  user_id TEXT</div>
+      <div class="erd-field">username VARCHAR(100)</div>
+      <div class="erd-field">password_hash VARCHAR(255)</div>
+      <div class="erd-field">role VARCHAR(20)</div>
+      <div class="erd-field">is_active BOOLEAN</div>
+      <div class="erd-field">created_at TIMESTAMPTZ</div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-table-header t-seller">sellers</div>
+      <div class="erd-field erd-pk">PK/FK  seller_id → users</div>
+      <div class="erd-field">shop_name VARCHAR(200)</div>
+      <div class="erd-field">shop_logo VARCHAR(500)</div>
+      <div class="erd-field">approved_at TIMESTAMPTZ</div>
+      <div class="erd-field erd-fk">FK  approved_by → users</div>
+      <div class="erd-field" style="color: var(--accent3);">plan VARCHAR(20) DEFAULT 'free'</div>
+      <div class="erd-field" style="color: var(--accent3);">plan_upgraded_at TIMESTAMPTZ</div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-table-header t-misc">zones</div>
+      <div class="erd-field erd-pk">PK  zone_id TEXT</div>
+      <div class="erd-field">zone_name VARCHAR(100)</div>
+      <div class="erd-field">description TEXT</div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-table-header t-poi">pois</div>
+      <div class="erd-field erd-pk">PK  poi_id TEXT</div>
+      <div class="erd-field erd-fk">FK  seller_id → sellers</div>
+      <div class="erd-field erd-fk">FK  zone_id → zones</div>
+      <div class="erd-field">poi_name VARCHAR(200)</div>
+      <div class="erd-field">latitude DOUBLE</div>
+      <div class="erd-field">longitude DOUBLE</div>
+      <div class="erd-field">trigger_radius DOUBLE</div>
+      <div class="erd-field">is_active BOOLEAN</div>
+      <div class="erd-field">created_at TIMESTAMPTZ</div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-table-header t-misc">languages</div>
+      <div class="erd-field erd-pk">PK  language_id TEXT</div>
+      <div class="erd-field">language_code VARCHAR(10)</div>
+      <div class="erd-field">language_name VARCHAR(100)</div>
+      <div class="erd-field">is_active BOOLEAN</div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-table-header t-poi">poi_localizations</div>
+      <div class="erd-field erd-pk">PK  localization_id TEXT</div>
+      <div class="erd-field erd-fk">FK  poi_id → pois</div>
+      <div class="erd-field erd-fk">FK  language_id → languages</div>
+      <div class="erd-field">title VARCHAR(200)</div>
+      <div class="erd-field">description TEXT</div>
+      <div class="erd-field">audio_url VARCHAR(500)</div>
+      <div class="erd-field">audio_public_id VARCHAR(200)</div>
+      <div class="erd-field">audio_duration INTEGER</div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-table-header t-media">poi_media</div>
+      <div class="erd-field erd-pk">PK  media_id TEXT</div>
+      <div class="erd-field erd-fk">FK  poi_id → pois</div>
+      <div class="erd-field">media_type VARCHAR(20)</div>
+      <div class="erd-field">media_url VARCHAR(500)</div>
+      <div class="erd-field">public_id VARCHAR(200)</div>
+      <div class="erd-field">sort_order INTEGER</div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-table-header t-poi">questions</div>
+      <div class="erd-field erd-pk">PK  question_id TEXT</div>
+      <div class="erd-field erd-fk">FK  poi_id → pois</div>
+      <div class="erd-field erd-fk">FK  language_id → languages</div>
+      <div class="erd-field">question_text VARCHAR(500)</div>
+      <div class="erd-field">sort_order INTEGER</div>
+      <div class="erd-field">is_active BOOLEAN</div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-table-header t-poi">answers</div>
+      <div class="erd-field erd-pk">PK  answer_id TEXT</div>
+      <div class="erd-field erd-fk">FK  question_id → questions</div>
+      <div class="erd-field erd-fk">FK  poi_id → pois</div>
+      <div class="erd-field erd-fk">FK  language_id → languages</div>
+      <div class="erd-field">answer_text TEXT</div>
+      <div class="erd-field">audio_url VARCHAR(500)</div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-table-header t-guest">guest_sessions</div>
+      <div class="erd-field erd-pk">PK  session_id TEXT</div>
+      <div class="erd-field erd-fk">FK  language_id → languages</div>
+      <div class="erd-field">started_at TIMESTAMPTZ</div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-table-header t-guest">visit_logs</div>
+      <div class="erd-field erd-pk">PK  log_id TEXT</div>
+      <div class="erd-field erd-fk">FK  session_id → guest_sessions</div>
+      <div class="erd-field erd-fk">FK  poi_id → pois</div>
+      <div class="erd-field">triggered_at TIMESTAMPTZ</div>
+    </div>
+
+  </div>
+</div>
+
+
+
+<!-- ===================== SEQUENCE DIAGRAMS ===================== -->
+
+
+<!-- ===================== LUONG CHUC NANG ===================== -->
+<h2>07 — luong chuc nang du khach</h2>
+
+<div class="flow-section">
+  <div class="flow-role role-guest">guest — expo react native (5-tab navigation)</div>
+
+  <div class="note-box">
+    Navigation: Bottom tab bar 5 tab — Kham pha | Gan day | Ban do | Quet QR | Cai dat. POIDetailScreen la full-screen overlay (khong co tab bar). GPS trigger chay ngam tren tat ca cac tab. Toan bo label UI dich qua ham tr(key, languageCode) trong src/i18n/translations.ts.
+  </div>
+
+  <ul class="flow-steps">
+    <li>
+      <div class="step-main">
+        <div class="step-title">Mo app lan dau — LanguagePickerScreen</div>
+        <div class="step-detail">App kiem tra AsyncStorage xem da co languageId chua. Neu chua, hien LanguagePickerScreen voi 5 ngon ngu (vi/en/zh/ko/ja). Chon langCode → tim languageId → luu AsyncStorage, tao SessionId, POST /api/sessions → chuyen HomeScreen.</div>
+        <div class="step-tables">
+          <span class="tag tag-blue">Languages (static list)</span>
+          <span class="tag tag-gray">AsyncStorage: languageId, sessionId</span>
+          <span class="tag tag-gray">POST /api/sessions</span>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="step-main">
+        <div class="step-title">Tab Kham pha — HomeScreen</div>
+        <div class="step-detail">GET /api/pois?languageId= tra ve POI IsActive=true kem thumbnailUrl va localizedName. List doc voi filter pills. GPS trigger chay ngam: khi vao vung trigger hien banner truot len, phat audio hybrid, POST /api/visitlogs.</div>
+        <div class="step-tables">
+          <span class="tag tag-pink">GET /api/pois?languageId=</span>
+          <span class="tag tag-amber">PoiLocalizations.Title</span>
+          <span class="tag tag-gray">POST /api/visitlogs</span>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="step-main">
+        <div class="step-title">Tab Gan day — NearbyScreen</div>
+        <div class="step-detail">Fetch cung GET /api/pois, tinh Haversine, sap xep tang dan. Badge xanh khi dang trong vung trigger. Nut play hybrid audio.</div>
+        <div class="step-tables">
+          <span class="tag tag-pink">GET /api/pois?languageId=</span>
+          <span class="tag tag-gray">expo-location: watchPositionAsync</span>
+          <span class="tag tag-amber">Haversine sort</span>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="step-main">
+        <div class="step-title">Tab Ban do — MapScreen</div>
+        <div class="step-detail">react-native-maps voi gold custom marker. Tap marker: Animated.View slide-up panel hien: thumbnail, ten, khoang cach, mo ta ngan, nut nghe + nut chi tiet. FAB recenter. GPS trigger van chay ngam.</div>
+        <div class="step-tables">
+          <span class="tag tag-pink">GET /api/pois?languageId=</span>
+          <span class="tag tag-pink">GET /api/pois/{id}?languageId=</span>
+          <span class="tag tag-gray">react-native-maps</span>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="step-main">
+        <div class="step-title">Tab Quet QR — ScanScreen</div>
+        <div class="step-detail">CameraView voi barcodeScannerSettings: [{barcodeTypes:["qr"]}]. Overlay voi 4 goc vang lam khung can. Khi quet duoc QR hop le (voztrip:poi:{id}): Vibration.vibrate(80), navigate POIDetailScreen. Hien UI xin quyen camera neu chua cap. Hint pill phia duoi man hinh. Quet 1 lan roi reset sau 2s de quet tiep.</div>
+        <div class="step-tables">
+          <span class="tag tag-pink">expo-camera: CameraView</span>
+          <span class="tag tag-pink">GET /api/pois/{id}?languageId=</span>
+          <span class="tag tag-gray">format: voztrip:poi:{poiId}</span>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="step-main">
+        <div class="step-title">Xem chi tiet POI — POIDetailScreen (full-screen)</div>
+        <div class="step-detail">GET /api/pois/{id}?languageId= tra ve media + localizations. Hero image fullwidth; thumbnail strip ngang khi nhieu anh. Language pills VI/EN/ZH/KO/JA. Audio player card: play/pause, badge "Audio goc" vs "TTS". Section Gioi thieu. Q&A accordion voi audio tung cau.</div>
+        <div class="step-tables">
+          <span class="tag tag-green">PoiMedia</span>
+          <span class="tag tag-amber">PoiLocalizations</span>
+          <span class="tag tag-pink">Questions + Answers</span>
+        </div>
+      </div>
+    </li>
+    <li>
+      <div class="step-main">
+        <div class="step-title">Tab Cai dat — ProfileScreen</div>
+        <div class="step-detail">Hien ngon ngu hien tai, grid 5 ngon ngu. Nut doi ngon ngu thuyet minh → LanguagePickerScreen. Thong tin app.</div>
+        <div class="step-tables">
+          <span class="tag tag-gray">AsyncStorage: languageId</span>
+          <span class="tag tag-blue">Languages static</span>
+        </div>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<!-- ===================== SELLER ===================== -->
+<h2>08 — chuc nang seller</h2>
+
+<div class="flow-section">
+  <div class="flow-role role-seller">seller — next.js dashboard</div>
+
+  <div class="warn-box">
+    Seller chi thao tac duoc tren du lieu cua chinh minh. Backend filter SellerId = currentUser.SellerId. Seller Free gioi han 1 POI — tao vuot tra {code:"PLAN_LIMIT"} → redirect /seller/upgrade.
+  </div>
+
+  <div class="crud-grid">
+    <div class="crud-card">
+      <div class="crud-entity">Dashboard / Stats</div>
+      <div class="crud-ops">
+        <span class="op op-r">READ</span>
+      </div>
+      <div class="crud-note">GET /api/seller/stats: totalPois, activePois, totalVisits, visitsToday, visitsByDay (7 ngay), topPois (5 POI nhieu luot nhat). RefetchInterval 30s.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">POIs</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+        <span class="op op-d">DELETE</span>
+      </div>
+      <div class="crud-note">Tao POI: form ten, toa do (nhap tay + MapPicker Leaflet), ban kinh trigger. Free plan: toi da 1 POI. Bat/tat IsActive.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">QR Code</div>
+      <div class="crud-ops">
+        <span class="op op-r">READ</span>
+      </div>
+      <div class="crud-note">Hien SVG QR (react-qr-code) cho tung POI voi format voztrip:poi:{id}. Nut tai PNG bang Canvas API co label ten POI.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">Map Picker</div>
+      <div class="crud-ops">
+        <span class="op op-u">UPDATE</span>
+      </div>
+      <div class="crud-note">Leaflet + OpenStreetMap (ssr:false). Click map hoac keo marker de chon lat/lng. Dong bo hai chieu voi input so.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">PoiLocalizations</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+        <span class="op op-d">DELETE</span>
+      </div>
+      <div class="crud-note">Them noi dung text va upload audio .mp3 cho tung ngon ngu.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">PoiMedia</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+        <span class="op op-r">READ</span>
+        <span class="op op-d">DELETE</span>
+      </div>
+      <div class="crud-note">Upload anh va video, sap xep SortOrder.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">Questions & Answers</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+        <span class="op op-d">DELETE</span>
+      </div>
+      <div class="crud-note">Them Q&A theo ngon ngu, upload audio tra loi.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">VIP Upgrade</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+      </div>
+      <div class="crud-note">So sanh Free vs VIP (299.000d mot lan). Form the tin dung mock (bat ky so 16 chu so). POST /api/seller/upgrade → plan='vip'.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ADMIN ===================== -->
+<h2>09 — chuc nang admin</h2>
+
+<div class="flow-section">
+  <div class="flow-role role-admin">admin — next.js dashboard</div>
+
+  <div class="note-box">
+    Admin thay toan bo du lieu. Them quyen duyet seller, khoa tai khoan, an POI vi pham, va xem thong ke toan he thong.
+  </div>
+
+  <div class="crud-grid">
+    <div class="crud-card">
+      <div class="crud-entity">Dashboard / Stats</div>
+      <div class="crud-ops">
+        <span class="op op-r">READ</span>
+      </div>
+      <div class="crud-note">GET /api/admin/stats: totalSellers, pendingSellers, totalPois, activePois, totalVisits, visitsToday, visitsByDay (7 ngay), topPois (5 POI toan he thong). Bar chart 7 ngay.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">Sellers — duyet</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+      </div>
+      <div class="crud-note">Xem, tao seller moi, duyet (set approved_at). Seller chua duyet khong dang nhap duoc.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">POIs — toan he thong</div>
+      <div class="crud-ops">
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+        <span class="op op-d">DELETE</span>
+      </div>
+      <div class="crud-note">GET /api/admin/pois: xem tat ca POI kem seller info, visit count. Loc theo ten/seller/trang thai. PUT /api/admin/pois/{id}/toggle: toggle IsActive.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">Users</div>
+      <div class="crud-ops">
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+        <span class="op op-d">DELETE</span>
+      </div>
+      <div class="crud-note">Xem danh sach, bat/tat is_active de khoa tai khoan.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">Zones</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+        <span class="op op-d">DELETE</span>
+      </div>
+      <div class="crud-note">Quan ly khu vuc trung bay.</div>
+    </div>
+    <div class="crud-card">
+      <div class="crud-entity">Languages</div>
+      <div class="crud-ops">
+        <span class="op op-c">CREATE</span>
+        <span class="op op-r">READ</span>
+        <span class="op op-u">UPDATE</span>
+      </div>
+      <div class="crud-note">Them ngon ngu, bat/tat IsActive.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== API ENDPOINTS ===================== -->
+<h2>10 — api endpoints</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Endpoint</th>
+      <th>Actor</th>
+      <th>Mo ta</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>POST</td><td>/api/auth/login</td><td><span class="tag tag-blue">seller</span><span class="tag tag-amber">admin</span></td><td>Dang nhap, tra ve JWT token</td></tr>
+    <tr><td>POST</td><td>/api/auth/register</td><td><span class="tag tag-blue">seller</span></td><td>Seller tu dang ky, cho admin duyet</td></tr>
+    <tr><td>GET</td><td>/api/pois</td><td><span class="tag tag-green">guest</span></td><td>Tat ca POI IsActive=true kem lat/lng, thumbnailUrl, localizedName</td></tr>
+    <tr><td>GET</td><td>/api/pois/{id}</td><td><span class="tag tag-green">guest</span></td><td>Chi tiet POI: media, localization theo languageId, Q&A</td></tr>
+    <tr><td>GET</td><td>/api/pois/{id}/questions</td><td><span class="tag tag-green">guest</span></td><td>Cau hoi theo PoiId + languageId</td></tr>
+    <tr><td>GET</td><td>/api/questions/{id}/answer</td><td><span class="tag tag-green">guest</span></td><td>Tra loi khi khach bam cau hoi</td></tr>
+    <tr><td>POST</td><td>/api/sessions</td><td><span class="tag tag-green">guest</span></td><td>Tao GuestSession moi khi mo app</td></tr>
+    <tr><td>POST</td><td>/api/visitlogs</td><td><span class="tag tag-green">guest</span></td><td>Ghi lai khi GPS trigger POI</td></tr>
+    <tr><td>GET</td><td>/api/languages</td><td><span class="tag tag-green">guest</span></td><td>Danh sach ngon ngu IsActive=1</td></tr>
+    <tr><td>GET</td><td>/api/seller/pois</td><td><span class="tag tag-blue">seller</span></td><td>POI cua chinh seller dang nhap</td></tr>
+    <tr><td>POST</td><td>/api/seller/pois</td><td><span class="tag tag-blue">seller</span></td><td>Tao POI moi. Free plan: tra 403 {code:"PLAN_LIMIT"} neu da co 1 POI</td></tr>
+    <tr><td>PUT</td><td>/api/seller/pois/{id}</td><td><span class="tag tag-blue">seller</span></td><td>Sua thong tin POI</td></tr>
+    <tr><td>DELETE</td><td>/api/seller/pois/{id}</td><td><span class="tag tag-blue">seller</span></td><td>Xoa POI</td></tr>
+    <tr><td>POST</td><td>/api/seller/pois/{id}/localizations</td><td><span class="tag tag-blue">seller</span></td><td>Them/sua noi dung text + audio cho ngon ngu</td></tr>
+    <tr><td>POST</td><td>/api/seller/pois/{id}/media</td><td><span class="tag tag-blue">seller</span></td><td>Upload anh / video len Cloudinary</td></tr>
+    <tr><td>GET</td><td>/api/seller/stats</td><td><span class="tag tag-blue">seller</span></td><td>Thong ke cua seller: totalPois, visits, top 5, bieu do 7 ngay</td></tr>
+    <tr><td>GET</td><td>/api/seller/profile</td><td><span class="tag tag-blue">seller</span></td><td>Thong tin seller: shopName, plan, poiCount, poiLimit</td></tr>
+    <tr><td>POST</td><td>/api/seller/upgrade</td><td><span class="tag tag-blue">seller</span></td><td>Mock thanh toan: cap nhat plan='vip', plan_upgraded_at=NOW()</td></tr>
+    <tr><td>GET</td><td>/api/admin/sellers</td><td><span class="tag tag-amber">admin</span></td><td>Danh sach tat ca seller kem trang thai duyet</td></tr>
+    <tr><td>POST</td><td>/api/admin/sellers</td><td><span class="tag tag-amber">admin</span></td><td>Admin tu tao tai khoan seller moi</td></tr>
+    <tr><td>PUT</td><td>/api/admin/sellers/{id}/approve</td><td><span class="tag tag-amber">admin</span></td><td>Duyet seller tu dang ky</td></tr>
+    <tr><td>GET</td><td>/api/admin/users</td><td><span class="tag tag-amber">admin</span></td><td>Danh sach tat ca tai khoan</td></tr>
+    <tr><td>PUT</td><td>/api/admin/users/{id}/toggle</td><td><span class="tag tag-amber">admin</span></td><td>Khoa / mo khoa tai khoan</td></tr>
+    <tr><td>GET</td><td>/api/admin/stats</td><td><span class="tag tag-amber">admin</span></td><td>Thong ke toan he thong: dem, bieu do 7 ngay, top 5 POI</td></tr>
+    <tr><td>GET</td><td>/api/admin/pois</td><td><span class="tag tag-amber">admin</span></td><td>Tat ca POI kem seller info, visit count. Ho tro loc theo ten/seller/status</td></tr>
+    <tr><td>PUT</td><td>/api/admin/pois/{id}/toggle</td><td><span class="tag tag-amber">admin</span></td><td>Toggle IsActive de an/hien POI tren app guest</td></tr>
+    <tr><td>CRUD</td><td>/api/admin/zones</td><td><span class="tag tag-amber">admin</span></td><td>Quan ly khu vuc</td></tr>
+    <tr><td>CRUD</td><td>/api/admin/languages</td><td><span class="tag tag-amber">admin</span></td><td>Quan ly ngon ngu ho tro</td></tr>
+  </tbody>
+</table>
+
+<!-- ===================== CAU TRUC THU MUC ===================== -->
+<h2>11 — cau truc thu muc thuc te</h2>
+
+<div class="sql-block"><span class="cm">// Backend — .NET Minimal API</span>
+back_end_vozTrip/
+├── Models/
+│   ├── User.cs
+│   ├── Seller.cs           <span class="cm">-- Plan (default "free"), PlanUpgradedAt</span>
+│   ├── Zone.cs
+│   ├── Poi.cs
+│   ├── Language.cs
+│   ├── PoiLocalization.cs
+│   ├── PoiMedia.cs
+│   ├── Question.cs
+│   ├── Answer.cs
+│   ├── GuestSession.cs
+│   └── VisitLog.cs
+├── Services/
+│   ├── AppDbContext.cs
+│   └── CloudinaryService.cs
+├── Routes/
+│   ├── AuthRoutes.cs
+│   ├── GuestRoutes.cs
+│   ├── SellerRoutes.cs     <span class="cm">-- /stats, /profile, /upgrade, PLAN_LIMIT check</span>
+│   └── AdminRoutes.cs      <span class="cm">-- /stats, /pois, /pois/{id}/toggle</span>
+├── Migrations/
+└── Program.cs              <span class="cm">-- CORS: localhost:3000 + localhost:3001</span>
+
+<span class="cm">// Frontend Web — Next.js</span>
+website-voztrip/
+├── app/
+│   ├── login/
+│   ├── seller/
+│   │   ├── layout.tsx       <span class="cm">-- sidebar: Dashboard, Diem tham quan, Nang cap VIP</span>
+│   │   ├── page.tsx         <span class="cm">-- redirect → /seller/dashboard</span>
+│   │   ├── dashboard/
+│   │   │   └── page.tsx     <span class="cm">-- stats cards, bar chart, top POIs</span>
+│   │   ├── pois/
+│   │   │   ├── page.tsx     <span class="cm">-- list POIs, QRModal, create form + MapPicker</span>
+│   │   │   └── [id]/
+│   │   │       └── page.tsx <span class="cm">-- edit POI, tabs (Info/Media/Q&A), QRModal, MapPicker</span>
+│   │   └── upgrade/
+│   │       └── page.tsx     <span class="cm">-- Free vs VIP compare, payment form</span>
+│   └── admin/
+│       ├── layout.tsx       <span class="cm">-- sidebar: Dashboard, Sellers, All POIs, Users, Zones...</span>
+│       ├── page.tsx         <span class="cm">-- redirect → /admin/dashboard</span>
+│       ├── dashboard/
+│       │   └── page.tsx     <span class="cm">-- stat cards, bar chart, top POIs system-wide</span>
+│       ├── sellers/
+│       ├── pois/
+│       │   └── page.tsx     <span class="cm">-- all POIs table, search/filter, toggle active</span>
+│       ├── users/
+│       ├── zones/
+│       └── languages/
+└── components/
+    └── MapPicker.tsx        <span class="cm">-- Leaflet map, dynamic import ssr:false, drag/click</span>
+
+<span class="cm">// Mobile — Expo React Native</span>
+app-vozTrip/
+├── App.tsx                  <span class="cm">-- 5 tabs: explore/nearby/map/scan/settings</span>
+├── .env                     <span class="cm">-- EXPO_PUBLIC_API_URL=http://192.168.x.x:5183</span>
+└── src/
+    ├── screens/
+    │   ├── HomeScreen.tsx
+    │   ├── NearbyScreen.tsx
+    │   ├── MapScreen.tsx
+    │   ├── ScanScreen.tsx   <span class="cm">-- expo-camera QR, overlay goc vang, voztrip:poi:{id}</span>
+    │   ├── ProfileScreen.tsx
+    │   ├── POIDetailScreen.tsx
+    │   └── LanguagePickerScreen.tsx
+    ├── constants/
+    │   └── index.ts         <span class="cm">-- API_URL = process.env.EXPO_PUBLIC_API_URL ?? fallback</span>
+    └── i18n/
+        └── translations.ts  <span class="cm">-- vi/en/zh/ko/ja kem tab_scan</span></div>
+
+</body>
+</html>

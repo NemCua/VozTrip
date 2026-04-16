@@ -10,28 +10,28 @@ import { getPois, Poi } from "../services/api";
 import { useAudio } from "../hooks/useAudio";
 import { useGPS } from "../hooks/useGPS";
 import { logVisit } from "../services/api";
-
-const FILTERS = ["Tất cả", "Gần đây", "Nổi bật"];
+import { tr } from "../i18n/translations";
 
 type Props = {
   languageCode: string;
+  languageId: string;
   sessionId: string;
   onPoiPress: (poiId: string) => void;
   onChangeLanguage: () => void;
 };
 
 export default function HomeScreen({
-  languageCode, sessionId, onPoiPress, onChangeLanguage
+  languageCode, languageId, sessionId, onPoiPress, onChangeLanguage
 }: Props) {
-  const [activeFilter, setActiveFilter] = useState("Tất cả");
+  const [activeFilter, setActiveFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [triggeredPoi, setTriggeredPoi] = useState<Poi | null>(null);
   const bannerAnim = useRef(new Animated.Value(100)).current;
   const { play, currentId, playing } = useAudio();
 
   const { data: pois = [], isLoading } = useQuery<Poi[]>({
-    queryKey: ["pois"],
-    queryFn: getPois,
+    queryKey: ["pois", languageId],
+    queryFn: () => getPois(languageId),
   });
 
   // GPS hook — phát hiện POI gần
@@ -40,7 +40,7 @@ export default function HomeScreen({
     // Hiện banner
     Animated.spring(bannerAnim, { toValue: 0, useNativeDriver: true }).start();
     // Tự phát audio
-    play(poi.poiId, null, poi.poiName, languageCode);
+    play(poi.poiId, null, poi.localizedName ?? poi.poiName, languageCode);
     // Log visit
     try { await logVisit(sessionId, poi.poiId); } catch {}
     // Tự ẩn banner sau 8s
@@ -58,7 +58,7 @@ export default function HomeScreen({
   );
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
       <StatusBar barStyle="dark-content" backgroundColor="#fdfaf4" />
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
 
@@ -80,7 +80,7 @@ export default function HomeScreen({
           <Ionicons name="search-outline" size={18} color="#b09878" style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Tìm điểm tham quan..."
+            placeholder={tr("home_search", languageCode)}
             placeholderTextColor="#b09878"
             value={search}
             onChangeText={setSearch}
@@ -100,11 +100,11 @@ export default function HomeScreen({
             resizeMode="cover"
           />
           <View style={styles.heroOverlay}>
-            <Text style={styles.heroLabel}>ĐANG Ở GẦN BẠN</Text>
-            <Text style={styles.heroTitle}>Khám phá{"\n"}xung quanh</Text>
+            <Text style={styles.heroLabel}>{tr("home_hero_label", languageCode)}</Text>
+            <Text style={styles.heroTitle}>{tr("home_hero_title", languageCode)}</Text>
             <View style={styles.heroBadge}>
               <Ionicons name="location-outline" size={13} color="#f5f0e8" />
-              <Text style={styles.heroBadgeText}>{filtered.length} địa điểm</Text>
+              <Text style={styles.heroBadgeText}>{filtered.length} {tr("home_places", languageCode)}</Text>
             </View>
           </View>
         </View>
@@ -112,30 +112,34 @@ export default function HomeScreen({
         {/* ── Filters ── */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false}
           style={styles.filterScroll} contentContainerStyle={styles.filterContent}>
-          {FILTERS.map(f => (
-            <TouchableOpacity key={f} onPress={() => setActiveFilter(f)}
-              style={[styles.pill, activeFilter === f && styles.pillActive]}>
-              <Text style={[styles.pillText, activeFilter === f && styles.pillTextActive]}>{f}</Text>
+          {([
+            ["all", tr("home_filter_all", languageCode)],
+            ["near", tr("home_filter_near", languageCode)],
+            ["popular", tr("home_filter_popular", languageCode)],
+          ] as [string, string][]).map(([key, label]) => (
+            <TouchableOpacity key={key} onPress={() => setActiveFilter(key)}
+              style={[styles.pill, activeFilter === key && styles.pillActive]}>
+              <Text style={[styles.pillText, activeFilter === key && styles.pillTextActive]}>{label}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
 
         {/* ── POI List ── */}
         <View style={styles.listHeader}>
-          <Text style={styles.listTitle}>Địa điểm gần bạn</Text>
-          <Text style={styles.listCount}>{filtered.length} nơi</Text>
+          <Text style={styles.listTitle}>{tr("home_list_title", languageCode)}</Text>
+          <Text style={styles.listCount}>{filtered.length}</Text>
         </View>
 
         <View style={styles.listWrap}>
           {isLoading ? (
             <View style={styles.loadingBox}>
               <Ionicons name="map-outline" size={28} color="#c8a96e" />
-              <Text style={styles.loadingText}>Đang tải địa điểm...</Text>
+              <Text style={styles.loadingText}>{tr("home_loading", languageCode)}</Text>
             </View>
           ) : filtered.length === 0 ? (
             <View style={styles.loadingBox}>
               <Ionicons name="search-outline" size={28} color="#c8a96e" />
-              <Text style={styles.loadingText}>Không tìm thấy địa điểm</Text>
+              <Text style={styles.loadingText}>{tr("home_empty", languageCode)}</Text>
             </View>
           ) : (
             filtered.map((poi, index) => {
@@ -144,15 +148,19 @@ export default function HomeScreen({
                 <TouchableOpacity key={poi.poiId} style={styles.card}
                   activeOpacity={0.85} onPress={() => onPoiPress(poi.poiId)}>
                   <View style={styles.cardImageWrap}>
-                    <View style={styles.cardImagePlaceholder}>
-                      <Ionicons name="image-outline" size={32} color="#d8cbb0" />
-                    </View>
+                    {poi.thumbnailUrl ? (
+                      <Image source={{ uri: poi.thumbnailUrl }} style={styles.cardImage} resizeMode="cover" />
+                    ) : (
+                      <View style={styles.cardImagePlaceholder}>
+                        <Ionicons name="image-outline" size={32} color="#d8cbb0" />
+                      </View>
+                    )}
                     {/* Play button overlay */}
                     <TouchableOpacity
                       style={styles.cardPlayBtn}
                       onPress={(e) => {
                         e.stopPropagation();
-                        play(poi.poiId, null, poi.poiName, languageCode);
+                        play(poi.poiId, null, poi.localizedName ?? poi.poiName, languageCode);
                       }}
                     >
                       <Ionicons
@@ -177,13 +185,13 @@ export default function HomeScreen({
                       <Text style={styles.cardIndexText}>{String(index + 1).padStart(2, "0")}</Text>
                     </View>
 
-                    <Text style={styles.cardName}>{poi.poiName}</Text>
+                    <Text style={styles.cardName}>{poi.localizedName ?? poi.poiName}</Text>
                     <Text style={styles.cardShop} numberOfLines={1}>{poi.shopName}</Text>
 
                     <View style={styles.cardFooter}>
                       <View style={styles.gpsChip}>
                         <Ionicons name="radio-outline" size={11} color="#16a34a" />
-                        <Text style={styles.gpsChipText}>GPS trigger</Text>
+                        <Text style={styles.gpsChipText}>{tr("common_gps_chip", languageCode)}</Text>
                       </View>
                       <Ionicons name="chevron-forward" size={16} color="#d8cbb0" />
                     </View>
@@ -204,14 +212,14 @@ export default function HomeScreen({
               <Ionicons name="radio" size={18} color="#c8a96e" />
             </View>
             <View>
-              <Text style={styles.bannerLabel}>Bạn đang ở gần</Text>
-              <Text style={styles.bannerName} numberOfLines={1}>{triggeredPoi.poiName}</Text>
+              <Text style={styles.bannerLabel}>{tr("banner_near", languageCode)}</Text>
+              <Text style={styles.bannerName} numberOfLines={1}>{triggeredPoi.localizedName ?? triggeredPoi.poiName}</Text>
             </View>
           </View>
           <View style={styles.bannerActions}>
             <TouchableOpacity style={styles.bannerDetailBtn}
               onPress={() => { hideBanner(); onPoiPress(triggeredPoi.poiId); }}>
-              <Text style={styles.bannerDetailText}>Xem</Text>
+              <Text style={styles.bannerDetailText}>{tr("banner_view", languageCode)}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={hideBanner}>
               <Ionicons name="close" size={18} color="#8c7a5e" />
@@ -283,6 +291,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 }, elevation: 3,
   },
   cardImageWrap: { position: "relative" },
+  cardImage: { width: "100%", height: 140 },
   cardImagePlaceholder: {
     width: "100%", height: 140,
     backgroundColor: "#f5f0e8", alignItems: "center", justifyContent: "center",

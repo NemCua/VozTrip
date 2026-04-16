@@ -9,6 +9,8 @@ public class Seller
     public string? Description { get; set; }
     public DateTime? ApprovedAt { get; set; }
     public string? ApprovedBy { get; set; } // FK -> User.UserId
+    public string Plan { get; set; } = "free"; // "free" | "vip"
+    public DateTime? PlanUpgradedAt { get; set; }
 
     // Navigation
     public User User { get; set; } = null!;

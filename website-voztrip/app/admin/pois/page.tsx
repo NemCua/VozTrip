@@ -34,10 +34,21 @@ export default function AdminPoisPage() {
     enabled: !!session?.accessToken,
   });
 
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
   const toggleMutation = useMutation({
     mutationFn: (poiId: string) =>
       api.put(`/api/admin/pois/${poiId}/toggle`, null, { headers: authHeader }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-pois"] }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (poiId: string) =>
+      api.delete(`/api/admin/pois/${poiId}`, { headers: authHeader }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-pois"] });
+      setConfirmDelete(null);
+    },
   });
 
   const filtered = pois.filter(p => {
@@ -105,7 +116,7 @@ export default function AdminPoisPage() {
           {/* Column header */}
           <div
             className="px-5 py-2 grid items-center text-xs tracking-widest uppercase"
-            style={{ color: "#b09878", gridTemplateColumns: "1fr 1fr 80px 60px 80px 100px" }}
+            style={{ color: "#b09878", gridTemplateColumns: "1fr 1fr 80px 60px 80px 160px" }}
           >
             <span>POI</span>
             <span>Seller / Zone</span>
@@ -123,7 +134,7 @@ export default function AdminPoisPage() {
                 backgroundColor: "#fdfaf4",
                 border: "1px solid #e8dfc8",
                 borderRadius: "2px",
-                gridTemplateColumns: "1fr 1fr 80px 60px 80px 100px",
+                gridTemplateColumns: "1fr 1fr 80px 60px 80px 160px",
               }}
             >
               {/* POI name */}
@@ -175,8 +186,8 @@ export default function AdminPoisPage() {
                 </span>
               </div>
 
-              {/* Toggle action */}
-              <div>
+              {/* Actions */}
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => toggleMutation.mutate(poi.poiId)}
                   disabled={toggleMutation.isPending}
@@ -197,11 +208,50 @@ export default function AdminPoisPage() {
                 >
                   {poi.isActive ? "Deactivate" : "Activate"}
                 </button>
+                <button
+                  onClick={() => setConfirmDelete(poi.poiId)}
+                  className="px-3 py-1.5 text-xs tracking-widest uppercase transition-all"
+                  style={{ border: "1px solid #fecaca", color: "#dc2626", borderRadius: "1px" }}
+                >
+                  Delete
+                </button>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      {/* Confirm delete modal */}
+      {confirmDelete && (() => {
+        const poi = pois.find(p => p.poiId === confirmDelete);
+        return (
+          <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+            <div className="p-8 w-full max-w-sm" style={{ backgroundColor: "#fdfaf4", border: "1px solid #e8dfc8" }}>
+              <div className="text-sm font-medium mb-2" style={{ color: "#2c2416" }}>Xóa POI này?</div>
+              <div className="text-xs mb-6" style={{ color: "#8c7a5e" }}>
+                Xóa <strong>{poi?.poiName}</strong> sẽ xóa toàn bộ media, nội dung và Q&A. Không thể hoàn tác.
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => deleteMutation.mutate(confirmDelete)}
+                  disabled={deleteMutation.isPending}
+                  className="flex-1 py-2 text-xs tracking-widest uppercase"
+                  style={{ backgroundColor: "#dc2626", color: "#fff", borderRadius: "1px" }}
+                >
+                  {deleteMutation.isPending ? "Deleting..." : "Confirm Delete"}
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(null)}
+                  className="flex-1 py-2 text-xs tracking-widest uppercase"
+                  style={{ border: "1px solid #d8cbb0", color: "#8c7a5e", borderRadius: "1px" }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

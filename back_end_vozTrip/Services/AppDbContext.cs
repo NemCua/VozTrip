@@ -49,6 +49,8 @@ public class AppDbContext : DbContext
             e.Property(s => s.Description).HasColumnName("description");
             e.Property(s => s.ApprovedAt).HasColumnName("approved_at");
             e.Property(s => s.ApprovedBy).HasColumnName("approved_by");
+            e.Property(s => s.Plan).HasColumnName("plan").HasMaxLength(20).HasDefaultValue("free");
+            e.Property(s => s.PlanUpgradedAt).HasColumnName("plan_upgraded_at");
 
             e.HasOne(s => s.User)
              .WithOne(u => u.Seller)

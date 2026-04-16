@@ -19,6 +19,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [consentError, setConsentError] = useState(false);
   const router = useRouter();
 
   const {
@@ -29,6 +31,10 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterForm) => {
     setServerError("");
+    if (!agreed) {
+      setConsentError(true);
+      return;
+    }
     try {
       await api.post("/api/auth/register", {
         username: data.username,
@@ -234,6 +240,59 @@ export default function RegisterPage() {
           <p className="text-xs leading-relaxed" style={{ color: "#b09878" }}>
             * Account requires Admin approval before login.
           </p>
+
+          {/* Consent checkbox */}
+          <div
+            className="px-4 py-4 rounded-sm"
+            style={{
+              backgroundColor: consentError && !agreed ? "#fdf2f2" : "#f5f0e8",
+              border: `1px solid ${consentError && !agreed ? "#f5c6c6" : "#e8dfc8"}`,
+            }}
+          >
+            <label className="flex items-start gap-3 cursor-pointer">
+              <div className="relative mt-0.5 shrink-0">
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={agreed}
+                  onChange={e => { setAgreed(e.target.checked); setConsentError(false); }}
+                />
+                <div
+                  className="w-5 h-5 flex items-center justify-center transition-all"
+                  style={{
+                    border: `1.5px solid ${agreed ? "#2c2416" : "#c8b898"}`,
+                    borderRadius: "4px",
+                    backgroundColor: agreed ? "#2c2416" : "#fff",
+                  }}
+                >
+                  {agreed && (
+                    <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                      <path d="M1 4L4 7L10 1" stroke="#c8a96e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <span className="text-xs leading-relaxed" style={{ color: "#5c4a30" }}>
+                Tôi đã đọc và đồng ý với{" "}
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 transition-colors"
+                  style={{ color: "#c8a96e" }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  Chính sách bảo mật
+                </a>
+                {" "}của VozTrip. Tôi hiểu rằng thông tin tài khoản và nội dung tôi đăng tải sẽ được lưu trữ và xử lý theo chính sách đó.
+              </span>
+            </label>
+            {consentError && !agreed && (
+              <p className="mt-2 text-xs pl-8" style={{ color: "#c0392b" }}>
+                Vui lòng đồng ý với chính sách bảo mật để tiếp tục.
+              </p>
+            )}
+          </div>
 
           {serverError && (
             <div className="px-4 py-3 text-xs" style={{ backgroundColor: "#fdf2f2", border: "1px solid #f5c6c6", borderRadius: "1px", color: "#c0392b" }}>

@@ -9,10 +9,12 @@ export const api = axios.create({
 export type Poi = {
   poiId: string;
   poiName: string;
+  localizedName: string | null;
   latitude: number;
   longitude: number;
   triggerRadius: number;
   shopName: string;
+  thumbnailUrl: string | null;
 };
 
 export type PoiDetail = Poi & {
@@ -40,7 +42,8 @@ export type Question = {
   answer: { answerText: string; audioUrl: string | null } | null;
 };
 
-export const getPois = () => api.get<Poi[]>("/api/pois").then(r => r.data);
+export const getPois = (languageId?: string) =>
+  api.get<Poi[]>("/api/pois", { params: languageId ? { languageId } : undefined }).then(r => r.data);
 export const getPoiDetail = (id: string, languageId?: string) =>
   api.get<PoiDetail>(`/api/pois/${id}`, { params: { languageId } }).then(r => r.data);
 export const getLanguages = () => api.get<Language[]>("/api/languages").then(r => r.data);
