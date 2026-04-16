@@ -3,20 +3,23 @@
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-
-const navItems = [
-  { href: "/admin/dashboard", label: "Dashboard" },
-  { href: "/admin/sellers", label: "Sellers" },
-  { href: "/admin/users", label: "Users" },
-  { href: "/admin/pois", label: "All POIs" },
-  { href: "/admin/media", label: "Media" },
-  { href: "/admin/zones", label: "Zones" },
-  { href: "/admin/languages", label: "Languages" },
-];
+import { useFeatures } from "../../context/FeaturesContext";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const features = useFeatures();
+  const f = features.features.admin;
+
+  const navItems = [
+    { href: "/admin/dashboard", label: "Dashboard",  show: f.dashboard.enabled },
+    { href: "/admin/sellers",   label: "Sellers",    show: f.sellerManagement.enabled },
+    { href: "/admin/users",     label: "Users",      show: f.userManagement.enabled },
+    { href: "/admin/pois",      label: "All POIs",   show: f.poiModeration.enabled },
+    { href: "/admin/media",     label: "Media",      show: f.mediaModeration.enabled },
+    { href: "/admin/zones",     label: "Zones",      show: f.zoneManagement.enabled },
+    { href: "/admin/languages", label: "Languages",  show: f.languageManagement.enabled },
+  ].filter(item => item.show);
 
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: "#f5f0e8" }}>

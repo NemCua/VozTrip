@@ -3,16 +3,19 @@
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-
-const navItems = [
-  { href: "/seller/dashboard", label: "Dashboard" },
-  { href: "/seller/pois", label: "Điểm tham quan" },
-  { href: "/seller/upgrade", label: "Nâng cấp VIP" },
-];
+import { useFeatures } from "../../context/FeaturesContext";
 
 export default function SellerLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const features = useFeatures();
+  const f = features.features.seller;
+
+  const navItems = [
+    { href: "/seller/dashboard", label: "Dashboard",         show: f.dashboard.enabled,    vip: false },
+    { href: "/seller/pois",      label: "Điểm tham quan",    show: f.poiManagement.enabled, vip: false },
+    { href: "/seller/upgrade",   label: "Nâng cấp VIP",      show: f.vipUpgrade.enabled,    vip: true  },
+  ].filter(item => item.show);
 
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: "#f5f0e8" }}>
@@ -28,19 +31,18 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
         <nav className="flex-1 px-3 py-4 space-y-1">
           {navItems.map(item => {
             const active = pathname.startsWith(item.href);
-            const isVip = item.href === "/seller/upgrade";
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className="flex items-center px-3 py-2 text-xs tracking-widest uppercase rounded-sm transition-all"
                 style={{
-                  backgroundColor: active ? "#c8a96e" : isVip ? "rgba(200,169,110,0.12)" : "transparent",
-                  color: active ? "#2c2416" : isVip ? "#c8a96e" : "#b09878",
-                  border: isVip && !active ? "1px solid rgba(200,169,110,0.3)" : "1px solid transparent",
+                  backgroundColor: active ? "#c8a96e" : item.vip ? "rgba(200,169,110,0.12)" : "transparent",
+                  color: active ? "#2c2416" : item.vip ? "#c8a96e" : "#b09878",
+                  border: item.vip && !active ? "1px solid rgba(200,169,110,0.3)" : "1px solid transparent",
                 }}
               >
-                {isVip && <span className="mr-1.5">✦</span>}
+                {item.vip && <span className="mr-1.5">✦</span>}
                 {item.label}
               </Link>
             );

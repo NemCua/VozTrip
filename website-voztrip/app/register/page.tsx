@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { useFeatureEnabled } from "../../context/FeaturesContext";
 
 type RegisterForm = {
   username: string;
@@ -22,6 +23,25 @@ export default function RegisterPage() {
   const [agreed, setAgreed] = useState(false);
   const [consentError, setConsentError] = useState(false);
   const router = useRouter();
+  const registerEnabled = useFeatureEnabled(f => f.auth.register.enabled);
+
+  if (!registerEnabled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#f5f0e8" }}>
+        <div className="text-center px-8 py-10 max-w-sm" style={{ backgroundColor: "#fdfaf4", border: "1px solid #e8dfc8", borderRadius: "2px" }}>
+          <div className="text-xs tracking-[0.3em] uppercase mb-3" style={{ color: "#c8a96e" }}>VozTrip</div>
+          <div className="w-12 h-px mx-auto mb-6" style={{ backgroundColor: "#c8a96e" }} />
+          <p className="text-sm font-light mb-2" style={{ color: "#2c2416" }}>Đăng ký tạm thời đóng</p>
+          <p className="text-xs leading-relaxed mb-6" style={{ color: "#8c7a5e" }}>
+            Chức năng đăng ký seller hiện không khả dụng. Vui lòng liên hệ quản trị viên.
+          </p>
+          <a href="/login" className="text-xs underline underline-offset-4" style={{ color: "#8c7a5e" }}>
+            Về trang đăng nhập
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   const {
     register,
