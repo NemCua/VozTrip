@@ -95,7 +95,7 @@ export default function HomeScreen({
         {/* ── Hero ── */}
         <View style={styles.heroWrap}>
           <Image
-            source={{ uri: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Hoan_Kiem_Lake_and_Ngoc_Son_Temple%2C_Hanoi%2C_Vietnam.jpg/640px-Hoan_Kiem_Lake_and_Ngoc_Son_Temple%2C_Hanoi%2C_Vietnam.jpg" }}
+            source={{ uri: "https://fptshop.com.vn/tin-tuc/danh-gia/danh-lam-thang-canh-172727" }}
             style={styles.heroImage}
             resizeMode="cover"
           />
