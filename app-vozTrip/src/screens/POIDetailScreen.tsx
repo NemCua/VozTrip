@@ -7,6 +7,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { getPoiDetail, getLanguages, getQuestions, Language, PoiDetail, Question } from "../services/api";
 import { useAudio } from "../hooks/useAudio";
+import { tr } from "../i18n/translations";
+import { useFeatureEnabled } from "../context/FeaturesContext";
 
 const { width } = Dimensions.get("window");
 
@@ -22,6 +24,9 @@ export default function POIDetailScreen({ poiId, languageId, languageCode, onBac
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [expandedQA, setExpandedQA] = useState<string | null>(null);
   const { play, currentId, playing } = useAudio();
+
+  const audioEnabled = useFeatureEnabled(f => f.features.guest.poiDetail.audio.enabled);
+  const qnaEnabled   = useFeatureEnabled(f => f.features.guest.qna.enabled);
 
   const { data: languages = [] } = useQuery<Language[]>({
     queryKey: ["languages"],
@@ -40,7 +45,7 @@ export default function POIDetailScreen({ poiId, languageId, languageCode, onBac
   const { data: questions = [] } = useQuery<Question[]>({
     queryKey: ["questions", poiId, activeLangId],
     queryFn: () => getQuestions(poiId, activeLangId),
-    enabled: !!poiId,
+    enabled: !!poiId && qnaEnabled,
   });
 
   const loc = poi?.localizations?.[0];
@@ -68,7 +73,7 @@ export default function POIDetailScreen({ poiId, languageId, languageCode, onBac
           ) : (
             <View style={[styles.heroImage, styles.heroPlaceholder]}>
               <Ionicons name="image-outline" size={40} color="#d8cbb0" />
-              <Text style={styles.heroPlaceholderText}>Chưa có ảnh</Text>
+              <Text style={styles.heroPlaceholderText}>{tr("common_no_image", activeLangCode)}</Text>
             </View>
           )}
 
@@ -144,7 +149,7 @@ export default function POIDetailScreen({ poiId, languageId, languageCode, onBac
               )}
             </View>
             <Text style={styles.poiName}>
-              {isLoading ? "Đang tải..." : (loc?.title ?? poi?.poiName ?? "—")}
+              {isLoading ? tr("detail_loading", activeLangCode) : (loc?.title ?? poi?.poiName ?? "—")}
             </Text>
           </View>
 
@@ -169,15 +174,15 @@ export default function POIDetailScreen({ poiId, languageId, languageCode, onBac
             })}
           </ScrollView>
 
-          {/* ── Audio player ── */}
-          <View style={styles.playerCard}>
+          {/* ── Audio player — ẩn nếu flag tắt ── */}
+          {audioEnabled && <View style={styles.playerCard}>
             <View style={styles.playerLeft}>
               <TouchableOpacity style={styles.playBtn} onPress={handlePlayPOI}>
                 <Ionicons name={isPoiPlaying ? "pause" : "play"} size={22} color="#fdfaf4" />
               </TouchableOpacity>
               <View>
                 <Text style={styles.playerTitle}>
-                  {isPoiPlaying ? "Đang phát..." : "Thuyết minh"}
+                  {isPoiPlaying ? tr("detail_pause", activeLangCode) : tr("detail_listen", activeLangCode)}
                 </Text>
                 <View style={styles.playerSourceRow}>
                   {loc?.audioUrl ? (
@@ -203,32 +208,30 @@ export default function POIDetailScreen({ poiId, languageId, languageCode, onBac
                 }]} />
               ))}
             </View>
-          </View>
+          </View>}
 
           {/* ── Description ── */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Giới thiệu</Text>
+            <Text style={styles.sectionTitle}>{tr("detail_intro", activeLangCode)}</Text>
             {isLoading ? (
-              <Text style={styles.descText}>Đang tải...</Text>
+              <Text style={styles.descText}>{tr("detail_loading", activeLangCode)}</Text>
             ) : hasContent ? (
               <Text style={styles.descText}>{loc?.description}</Text>
             ) : (
               <View style={styles.noContentBox}>
                 <Ionicons name="globe-outline" size={20} color="#c8a96e" />
-                <Text style={styles.noContentText}>
-                  Chưa có nội dung bằng ngôn ngữ này.{"\n"}Nội dung sẽ được tự động dịch sớm.
-                </Text>
+                <Text style={styles.noContentText}>{tr("detail_no_content", activeLangCode)}</Text>
               </View>
             )}
           </View>
 
-          {/* ── Q&A ── */}
-          {questions.length > 0 && (
+          {/* ── Q&A — ẩn nếu flag tắt ── */}
+          {qnaEnabled && questions.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionRow}>
-                <Text style={styles.sectionTitle}>Hỏi & Đáp</Text>
+                <Text style={styles.sectionTitle}>{tr("detail_qa", activeLangCode)}</Text>
                 <View style={styles.qaBadge}>
-                  <Text style={styles.qaBadgeText}>{questions.length} câu hỏi</Text>
+                  <Text style={styles.qaBadgeText}>{questions.length}</Text>
                 </View>
               </View>
               <View style={styles.qaList}>
@@ -251,7 +254,7 @@ export default function POIDetailScreen({ poiId, languageId, languageCode, onBac
                             <Ionicons name={isAnswerPlaying ? "pause" : (qa.answer.audioUrl ? "musical-notes-outline" : "mic-outline")}
                               size={13} color={qa.answer.audioUrl ? "#c8a96e" : "#8c7a5e"} />
                             <Text style={styles.answerAudioText}>
-                              {isAnswerPlaying ? "Đang phát" : (qa.answer.audioUrl ? "Nghe câu trả lời" : "Đọc (TTS)")}
+                              {isAnswerPlaying ? tr("detail_playing", activeLangCode) : (qa.answer.audioUrl ? tr("detail_listen_ans", activeLangCode) : tr("detail_tts", activeLangCode))}
                             </Text>
                           </TouchableOpacity>
                         </View>

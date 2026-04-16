@@ -16,6 +16,7 @@ import NearbyScreen from "./src/screens/NearbyScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import ScanScreen from "./src/screens/ScanScreen";
 import MaintenanceScreen from "./src/screens/MaintenanceScreen";
+import { FeaturesProvider, useFeatures } from "./src/context/FeaturesContext";
 
 const queryClient = new QueryClient();
 
@@ -156,6 +157,7 @@ function AppContent() {
   const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
   const [showEmergency, setShowEmergency] = useState(false);
   const insets = useSafeAreaInsets();
+  const features = useFeatures();
 
   const { data: languages = [] } = useQuery<Language[]>({
     queryKey: ["languages"],
@@ -166,6 +168,16 @@ function AppContent() {
   const languageCode = currentLang?.languageCode ?? "vi";
 
   if (!ready) return null;
+
+  // ── Maintenance toàn app ──────────────────────────────────────────────────
+  if (features.app.maintenance.enabled) {
+    return (
+      <MaintenanceScreen
+        featureName="VozTrip"
+        message={features.app.maintenance.message}
+      />
+    );
+  }
 
   if (!languageId || screen === "language") {
     return (
@@ -207,6 +219,8 @@ function AppContent() {
   const renderTab = () => {
     switch (activeTab) {
       case "home":
+        if (!features.features.guest.explorePois.enabled)
+          return <MaintenanceScreen featureName="Khám phá POI" onBack={() => setActiveTab("home")} />;
         return (
           <HomeScreen
             languageCode={languageCode}
@@ -217,6 +231,8 @@ function AppContent() {
           />
         );
       case "nearby":
+        if (!features.features.guest.explorePois.enabled)
+          return <MaintenanceScreen featureName="Địa điểm gần đây" onBack={() => setActiveTab("home")} />;
         return (
           <NearbyScreen
             languageCode={languageCode}
@@ -225,6 +241,8 @@ function AppContent() {
           />
         );
       case "map":
+        if (!features.features.guest.explorePois.enabled)
+          return <MaintenanceScreen featureName="Bản đồ" onBack={() => setActiveTab("home")} />;
         return (
           <MapScreen
             languageCode={languageCode}
@@ -234,10 +252,8 @@ function AppContent() {
           />
         );
       case "scan":
-        // Ví dụ: khi features.guest.qrScan.enabled = false → hiện MaintenanceScreen
-        // Thay `false` bằng flag thật sau khi có FeaturesContext
-        // if (!features.guest.qrScan.enabled)
-        //   return <MaintenanceScreen featureName="Quét QR" onBack={() => setActiveTab("home")} />;
+        if (!features.features.guest.gpsVisitLog.enabled)
+          return <MaintenanceScreen featureName="Quét QR" onBack={() => setActiveTab("home")} />;
         return (
           <ScanScreen
             languageCode={languageCode}
@@ -277,9 +293,11 @@ function AppContent() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <AppContent />
-      </QueryClientProvider>
+      <FeaturesProvider>
+        <QueryClientProvider client={queryClient}>
+          <AppContent />
+        </QueryClientProvider>
+      </FeaturesProvider>
     </SafeAreaProvider>
   );
 }
