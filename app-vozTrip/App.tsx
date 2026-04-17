@@ -16,6 +16,7 @@ import NearbyScreen from "./src/screens/NearbyScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import ScanScreen from "./src/screens/ScanScreen";
 import MaintenanceScreen from "./src/screens/MaintenanceScreen";
+import PaymentScreen from "./src/screens/PaymentScreen";
 import { FeaturesProvider, useFeatures } from "./src/context/FeaturesContext";
 
 const queryClient = new QueryClient();
@@ -152,7 +153,7 @@ function TabBar({ activeTab, onTabPress, languageCode }: { activeTab: Tab; onTab
 
 function AppContent() {
   const { sessionId, languageId, saveLanguage, ready } = useSession();
-  const [screen, setScreen] = useState<"main" | "detail" | "language">("main");
+  const [screen, setScreen] = useState<"payment" | "main" | "detail" | "language">("payment");
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
   const [showEmergency, setShowEmergency] = useState(false);
@@ -168,6 +169,10 @@ function AppContent() {
   const languageCode = currentLang?.languageCode ?? "vi";
 
   if (!ready) return null;
+
+  if (screen === "payment") {
+    return <PaymentScreen onPaid={() => setScreen("main")} />;
+  }
 
   // ── Maintenance toàn app ──────────────────────────────────────────────────
   if (features.app.maintenance.enabled) {
