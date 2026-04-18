@@ -215,9 +215,13 @@ public static class AdminRoutes
             var totalVisits    = await db.VisitLogs.CountAsync();
             var visitsToday    = await db.VisitLogs.CountAsync(v => v.TriggeredAt.Date == DateTime.UtcNow.Date);
             var totalSessions  = await db.GuestSessions.CountAsync();
+            var totalQrScans     = await db.UsageLogs.CountAsync(u => u.EventType == "qr_scan");
+            var totalAppOpens    = await db.UsageLogs.CountAsync(u => u.EventType == "app_open");
+            var totalDeviceJoins = await db.DeviceRecords.CountAsync();
 
             object? topPois     = null;
             object? visitsByDay = null;
+            object? qrScansByDay = null;
 
             if (features.Features.Admin.Dashboard.Top5Pois.Enabled)
             {
@@ -239,6 +243,12 @@ public static class AdminRoutes
                     .GroupBy(v => v.TriggeredAt.Date)
                     .Select(g => new { date = g.Key, count = g.Count() })
                     .OrderBy(x => x.date).ToListAsync();
+
+                qrScansByDay = await db.UsageLogs
+                    .Where(u => u.EventType == "qr_scan" && u.CreatedAt >= since)
+                    .GroupBy(u => u.CreatedAt.Date)
+                    .Select(g => new { date = g.Key, count = g.Count() })
+                    .OrderBy(x => x.date).ToListAsync();
             }
 
             return Results.Ok(new
@@ -246,7 +256,8 @@ public static class AdminRoutes
                 totalSellers, pendingSellers,
                 totalPois, activePois,
                 totalVisits, visitsToday, totalSessions,
-                topPois, visitsByDay,
+                totalQrScans, totalAppOpens, totalDeviceJoins,
+                topPois, visitsByDay, qrScansByDay,
             });
         })
         .WithFeatureFlag(f => f.Features.Admin.Dashboard.Enabled);
@@ -409,6 +420,35 @@ public static class AdminRoutes
             return Results.Ok(new { message = "Đã xóa POI" });
         })
         .WithFeatureFlag(f => f.Features.Admin.PoiModeration.Delete.Enabled);
+
+        // ─── DEVICES — thống kê thiết bị ────────────────────────────────────────
+
+        group.MapGet("/devices", async (AppDbContext db) =>
+        {
+            var devices = await db.DeviceRecords
+                .OrderByDescending(d => d.LastSeenAt ?? d.JoinedAt)
+                .Select(d => new
+                {
+                    d.DeviceId,
+                    d.Platform,
+                    d.OsVersion,
+                    d.JoinedAt,
+                    d.LastSeenAt,
+                })
+                .ToListAsync();
+            return Results.Ok(devices);
+        })
+        .WithFeatureFlag(f => f.Features.Admin.DeviceTracking.Enabled);
+
+        group.MapDelete("/devices/{id}", async (string id, AppDbContext db) =>
+        {
+            var device = await db.DeviceRecords.FindAsync(id);
+            if (device is null) return Results.NotFound(new { message = "Thiết bị không tồn tại" });
+            db.DeviceRecords.Remove(device);
+            await db.SaveChangesAsync();
+            return Results.Ok(new { message = "Đã xóa thiết bị" });
+        })
+        .WithFeatureFlag(f => f.Features.Admin.DeviceTracking.Delete.Enabled);
     }
 }
 

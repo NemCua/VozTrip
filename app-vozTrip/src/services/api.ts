@@ -53,3 +53,10 @@ export const createSession = (sessionId: string, languageId?: string) =>
   api.post("/api/sessions", { sessionId, languageId }).then(r => r.data);
 export const logVisit = (sessionId: string, poiId: string) =>
   api.post("/api/visitlogs", { sessionId, poiId }).then(r => r.data);
+export const logUsage = (eventType: "qr_scan" | "app_open" | "device_join", sessionId?: string) =>
+  api.post("/api/usagelogs", { eventType, sessionId }).then(r => r.data).catch(() => {});
+
+export const joinDevice = (deviceId: string, platform: string, osVersion: string) =>
+  api.post<{ alreadyJoined: boolean; joinedAt: string }>("/api/devices/join", { deviceId, platform, osVersion })
+    .then(r => r.data)
+    .catch(() => null);

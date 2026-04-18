@@ -132,8 +132,54 @@ public static class GuestRoutes
             return Results.Ok(new { log.LogId });
         })
         .WithFeatureFlag(f => f.Features.Guest.GpsVisitLog.VisitLog.Enabled);
+
+        // POST /api/devices/join — đăng ký thiết bị lần đầu
+        app.MapPost("/api/devices/join", async (DeviceJoinRequest req, AppDbContext db) =>
+        {
+            var existing = await db.DeviceRecords.FindAsync(req.DeviceId);
+            if (existing is not null)
+            {
+                existing.LastSeenAt = DateTime.UtcNow;
+                await db.SaveChangesAsync();
+                return Results.Ok(new { alreadyJoined = true, joinedAt = existing.JoinedAt });
+            }
+
+            var device = new DeviceRecord
+            {
+                DeviceId   = req.DeviceId,
+                Platform   = req.Platform,
+                OsVersion  = req.OsVersion ?? "",
+                JoinedAt   = DateTime.UtcNow,
+                LastSeenAt = DateTime.UtcNow,
+            };
+            db.DeviceRecords.Add(device);
+            await db.SaveChangesAsync();
+            return Results.Ok(new { alreadyJoined = false, joinedAt = device.JoinedAt });
+        })
+        .WithFeatureFlag(f => f.Features.Guest.UsageLog.Enabled);
+
+        // POST /api/usagelogs — ghi sự kiện dùng app
+        app.MapPost("/api/usagelogs", async (UsageLogRequest req, AppDbContext db) =>
+        {
+            var validEvents = new[] { "qr_scan", "app_open", "device_join" };
+            if (!validEvents.Contains(req.EventType))
+                return Results.BadRequest(new { message = "EventType không hợp lệ" });
+
+            var log = new UsageLog
+            {
+                SessionId = req.SessionId,
+                EventType = req.EventType,
+                CreatedAt = DateTime.UtcNow
+            };
+            db.UsageLogs.Add(log);
+            await db.SaveChangesAsync();
+            return Results.Ok(new { log.LogId });
+        })
+        .WithFeatureFlag(f => f.Features.Guest.UsageLog.Enabled);
     }
 }
 
 record SessionRequest(string SessionId, string? LanguageId);
 record VisitLogRequest(string SessionId, string PoiId);
+record UsageLogRequest(string? SessionId, string EventType);
+record DeviceJoinRequest(string DeviceId, string Platform, string? OsVersion);

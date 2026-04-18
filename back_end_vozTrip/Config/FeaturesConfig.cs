@@ -57,6 +57,7 @@ public class GuestCfg
     public PoiDetailCfg    PoiDetail      { get; set; } = new();
     public EnabledCfg      Qna            { get; set; } = new();
     public GpsVisitLogCfg  GpsVisitLog    { get; set; } = new();
+    public EnabledCfg      UsageLog       { get; set; } = new();
 }
 
 public class ExplorePoisCfg
@@ -180,6 +181,7 @@ public class AdminCfg
     public PoiModerationCfg      PoiModeration     { get; set; } = new();
     public ZoneManagementCfg     ZoneManagement    { get; set; } = new();
     public LanguageManagementCfg LanguageManagement { get; set; } = new();
+    public DeviceTrackingCfg      DeviceTracking    { get; set; } = new();
 }
 
 public class AdminDashboardCfg
@@ -242,6 +244,12 @@ public class LanguageManagementCfg
     public EnabledCfg Create       { get; set; } = new();
     public EnabledCfg Update       { get; set; } = new();
     public EnabledCfg ToggleActive { get; set; } = new();
+}
+
+public class DeviceTrackingCfg
+{
+    public bool       Enabled { get; set; } = true;
+    public EnabledCfg Delete  { get; set; } = new();
 }
 
 // ─── Pages ───────────────────────────────────────────────────────────────────

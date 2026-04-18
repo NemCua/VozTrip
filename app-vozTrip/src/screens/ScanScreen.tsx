@@ -4,13 +4,15 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { tr } from "../i18n/translations";
+import { logUsage } from "../services/api";
 
 type Props = {
   languageCode: string;
+  sessionId: string;
   onPoiPress: (poiId: string) => void;
 };
 
-export default function ScanScreen({ languageCode, onPoiPress }: Props) {
+export default function ScanScreen({ languageCode, sessionId, onPoiPress }: Props) {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const insets = useSafeAreaInsets();
@@ -49,6 +51,7 @@ export default function ScanScreen({ languageCode, onPoiPress }: Props) {
 
     setScanned(true);
     Vibration.vibrate(80);
+    logUsage("qr_scan", sessionId);
     onPoiPress(match[1]);
   };
 

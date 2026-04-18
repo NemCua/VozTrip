@@ -18,6 +18,8 @@ public class AppDbContext : DbContext
     public DbSet<Answer> Answers => Set<Answer>();
     public DbSet<GuestSession> GuestSessions => Set<GuestSession>();
     public DbSet<VisitLog> VisitLogs => Set<VisitLog>();
+    public DbSet<UsageLog> UsageLogs => Set<UsageLog>();
+    public DbSet<DeviceRecord> DeviceRecords => Set<DeviceRecord>();
 
     protected override void OnModelCreating(ModelBuilder model)
     {
@@ -236,6 +238,29 @@ public class AppDbContext : DbContext
              .WithMany(p => p.VisitLogs)
              .HasForeignKey(v => v.PoiId)
              .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // device_records
+        model.Entity<DeviceRecord>(e =>
+        {
+            e.ToTable("device_records");
+            e.HasKey(d => d.DeviceId);
+            e.Property(d => d.DeviceId).HasColumnName("device_id");
+            e.Property(d => d.Platform).HasColumnName("platform").HasMaxLength(20).IsRequired();
+            e.Property(d => d.OsVersion).HasColumnName("os_version").HasMaxLength(50);
+            e.Property(d => d.JoinedAt).HasColumnName("joined_at").HasDefaultValueSql("NOW()");
+            e.Property(d => d.LastSeenAt).HasColumnName("last_seen_at");
+        });
+
+        // usage_logs — session_id là metadata thuần, không có FK constraint
+        model.Entity<UsageLog>(e =>
+        {
+            e.ToTable("usage_logs");
+            e.HasKey(u => u.LogId);
+            e.Property(u => u.LogId).HasColumnName("log_id");
+            e.Property(u => u.SessionId).HasColumnName("session_id");
+            e.Property(u => u.EventType).HasColumnName("event_type").HasMaxLength(50).IsRequired();
+            e.Property(u => u.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
         });
     }
 }

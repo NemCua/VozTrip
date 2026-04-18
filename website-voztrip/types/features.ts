@@ -39,6 +39,7 @@ export interface AdminCfg {
   poiModeration: EnabledCfg;
   zoneManagement: EnabledCfg;
   languageManagement: EnabledCfg;
+  deviceTracking?: EnabledCfg;
 }
 
 export interface FeaturesCfg { guest: GuestCfg; seller: SellerCfg; admin: AdminCfg }

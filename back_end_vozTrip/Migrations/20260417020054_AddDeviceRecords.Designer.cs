@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using back_end_vozTrip.Services;
@@ -11,9 +12,11 @@ using back_end_vozTrip.Services;
 namespace back_end_vozTrip.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260417020054_AddDeviceRecords")]
+    partial class AddDeviceRecords
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -81,10 +84,6 @@ namespace back_end_vozTrip.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("joined_at")
                         .HasDefaultValueSql("NOW()");
-
-                    b.Property<DateTime?>("LastSeenAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_seen_at");
 
                     b.Property<string>("OsVersion")
                         .IsRequired()

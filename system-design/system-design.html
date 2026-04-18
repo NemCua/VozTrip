@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VozTrip — System Design Document</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-light: #eff6ff;
+      --accent: #7c3aed;
+      --success: #059669;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --sidebar-w: 280px;
+      --radius: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      display: flex;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      top: 0; left: 0;
+      overflow-y: auto;
+      z-index: 100;
+    }
+
+    .sidebar-header {
+      padding: 20px 16px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-header .logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: -.3px;
+    }
+    .sidebar-header .version {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .nav-section {
+      padding: 8px 0;
+    }
+    .nav-section-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      padding: 6px 16px 4px;
+    }
+    .nav-link {
+      display: block;
+      padding: 6px 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-radius: 0;
+      transition: all .15s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover {
+      color: var(--primary);
+      background: var(--primary-light);
+      border-left-color: var(--primary);
+    }
+    .nav-link.sub {
+      padding-left: 28px;
+      font-size: 12px;
+    }
+
+    /* ── MAIN ── */
+    main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 40px 48px;
+      max-width: 1000px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 36px 40px;
+      margin-bottom: 40px;
+    }
+    .hero h1 { font-size: 28px; font-weight: 700; letter-spacing: -.5px; }
+    .hero p { margin-top: 8px; opacity: .85; font-size: 14px; }
+    .hero-badges {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .badge-blue  { background: rgba(255,255,255,.2); color: white; }
+    .badge-green { background: #d1fae5; color: #065f46; }
+    .badge-purple{ background: #ede9fe; color: #5b21b6; }
+    .badge-orange{ background: #fef3c7; color: #92400e; }
+    .badge-red   { background: #fee2e2; color: #991b1b; }
+
+    /* ── SECTIONS ── */
+    section {
+      margin-bottom: 48px;
+    }
+    .section-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 20px; padding-bottom: 12px;
+      border-bottom: 2px solid var(--border);
+    }
+    .section-num {
+      background: var(--primary);
+      color: white;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .section-header h2 {
+      font-size: 20px; font-weight: 700; color: var(--text);
+    }
+
+    h3 {
+      font-size: 15px; font-weight: 600; color: var(--text);
+      margin: 24px 0 10px;
+    }
+    h4 {
+      font-size: 13px; font-weight: 600; color: var(--text-muted);
+      margin: 16px 0 8px; text-transform: uppercase; letter-spacing: .5px;
+    }
+
+    p { font-size: 14px; color: var(--text-muted); margin-bottom: 10px; }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    /* ── ARCH DIAGRAM ── */
+    .arch-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .arch-layer {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .arch-layer:last-child { border-bottom: none; }
+    .arch-layer-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;
+    }
+    .arch-nodes {
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .arch-node {
+      padding: 8px 14px; border-radius: 6px;
+      font-size: 12px; font-weight: 600;
+      border: 1.5px solid;
+    }
+    .node-client  { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
+    .node-route   { background: #f0fdf4; border-color: #86efac; color: #166534; }
+    .node-service { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+    .node-db      { background: #fce7f3; border-color: #f9a8d4; color: #9d174d; }
+    .node-ext     { background: #f5f3ff; border-color: #c4b5fd; color: #5b21b6; }
+
+    .arch-arrow {
+      text-align: center; padding: 6px; font-size: 18px; color: var(--text-muted);
+    }
+
+    /* ── TABLE ── */
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+    table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead { background: #f1f5f9; }
+    th {
+      padding: 10px 14px; text-align: left;
+      font-size: 11px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .5px;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #7c3aed;
+    }
+
+    /* ── API ENDPOINT ── */
+    .endpoint {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+    .endpoint-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border);
+    }
+    .method {
+      font-size: 11px; font-weight: 700; padding: 3px 8px;
+      border-radius: 4px; letter-spacing: .5px;
+    }
+    .method-get    { background: #d1fae5; color: #065f46; }
+    .method-post   { background: #dbeafe; color: #1e40af; }
+    .method-put    { background: #fef3c7; color: #92400e; }
+    .method-delete { background: #fee2e2; color: #991b1b; }
+    .endpoint-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; font-weight: 600; color: var(--text);
+    }
+    .endpoint-body { padding: 16px; }
+    .endpoint-note {
+      margin-top: 10px; padding: 10px 12px;
+      background: #f8fafc; border-left: 3px solid var(--primary);
+      border-radius: 0 4px 4px 0;
+      font-size: 12px; color: var(--text-muted);
+    }
+
+    /* ── JSON BLOCK ── */
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+    pre .key   { color: #93c5fd; }
+    pre .str   { color: #86efac; }
+    pre .num   { color: #fb923c; }
+    pre .bool  { color: #f472b6; }
+
+    /* ── FLOW ── */
+    .flow {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .flow-step {
+      display: flex; align-items: flex-start; gap: 12px;
+      margin-bottom: 10px;
+    }
+    .flow-step:last-child { margin-bottom: 0; }
+    .flow-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--primary); margin-top: 7px; flex-shrink: 0;
+    }
+    .flow-actor {
+      font-size: 12px; font-weight: 700; color: var(--primary);
+      min-width: 70px; margin-top: 1px;
+    }
+    .flow-action {
+      font-size: 13px; color: var(--text); flex: 1;
+    }
+    .flow-arrow { color: var(--text-muted); margin: 0 4px; }
+
+    /* ── PLACEHOLDER ── */
+    .img-placeholder {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      background: #f8fafc;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px; padding: 60px 20px;
+      color: var(--text-muted); font-size: 14px;
+    }
+    .img-placeholder svg { opacity: .3; }
+    .img-placeholder span { font-weight: 600; }
+    .img-placeholder small { font-size: 12px; opacity: .7; }
+
+    /* ── FLAG TABLE ── */
+    .flag-group { margin-bottom: 28px; }
+    .flag-group-title {
+      font-size: 13px; font-weight: 700;
+      color: var(--surface);
+      padding: 6px 14px;
+      border-radius: 4px 4px 0 0;
+      display: inline-block;
+    }
+    .flag-guest  { background: var(--success); }
+    .flag-seller { background: var(--primary); }
+    .flag-admin  { background: var(--accent); }
+
+    /* ── RULE TABLE ── */
+    .rule-num {
+      font-size: 11px; font-weight: 700; color: var(--primary);
+      white-space: nowrap;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+    @media (max-width: 768px) {
+      #sidebar { display: none; }
+      main { margin-left: 0; padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ──────────────── SIDEBAR ──────────────── -->
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">🗺 VozTrip</div>
+    <div class="version">System Design · 2026-04-17</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Tổng quan</div>
+    <a href="#arch" class="nav-link">1. Kiến trúc hệ thống</a>
+    <a href="#entity" class="nav-link">2. Mô hình dữ liệu (ERD)</a>
+    <a href="#auth" class="nav-link">3. Phân quyền & Xác thực</a>
+    <a href="#flags" class="nav-link">4. Feature Flag</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">API Catalog</div>
+    <a href="#api-guest" class="nav-link">5. Guest APIs</a>
+    <a href="#api-auth" class="nav-link">6. Auth APIs</a>
+    <a href="#api-seller" class="nav-link">7. Seller APIs</a>
+    <a href="#api-admin" class="nav-link">8. Admin APIs</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Thiết kế</div>
+    <a href="#services" class="nav-link">9. Internal Services</a>
+    <a href="#sequence" class="nav-link">10. Sequence Diagrams</a>
+    <a href="#business" class="nav-link">11. Business Flows</a>
+    <a href="#rules" class="nav-link">12. Ràng buộc & Quy tắc</a>
+    <a href="#flaglist" class="nav-link">13. Danh sách Feature Flag</a>
+  </div>
+</nav>
+
+<!-- ──────────────── MAIN ──────────────── -->
+<main>
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>VozTrip — System Design Document</h1>
+    <p>Tài liệu thiết kế hệ thống · Phiên bản 2026-04-17</p>
+    <div class="hero-badges">
+      <span class="badge badge-blue">ASP.NET Core Minimal API</span>
+      <span class="badge badge-blue">PostgreSQL + EF Core</span>
+      <span class="badge badge-blue">JWT HS256</span>
+      <span class="badge badge-blue">Cloudinary</span>
+      <span class="badge badge-blue">LibreTranslate</span>
+    </div>
+  </div>
+
+  <!-- ── 1. ARCHITECTURE ── -->
+  <section id="arch">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <h2>Tổng quan kiến trúc</h2>
+    </div>
+
+    <div class="arch-box">
+      <div class="arch-layer">
+        <div class="arch-layer-label">Client Layer</div>
+        <div class="arch-nodes">
+          <div class="arch-node node-client">React Native App (Expo)</div>
+          <div class="arch-node node-client">Next.js Website (Admin / Seller)</div>
+        </div>
+      </div>
+      <div class="arch-arrow">↕ HTTP / REST (JSON)</div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">Backend — ASP.NET Core Minimal API</div>
+        <div class="arch-nodes">
+          <div class="arch-node node-route">GuestRoutes <code>/api/*</code></div>
+          <div class="arch-node node-route">AuthRoutes <code>/api/auth/*</code></div>
+          <div class="arch-node node-route">SellerRoutes <code>/api/seller/*</code></div>
+          <div class="arch-node node-route">AdminRoutes <code>/api/admin/*</code></div>
+          <div class="arch-node node-service">Feature Flag Middleware</div>
+          <div class="arch-node node-service">CloudinaryService</div>
+          <div class="arch-node node-service">LibreTranslateService</div>
+          <div class="arch-node node-service">AppDbContext (EF Core)</div>
+        </div>
+      </div>
+      <div class="arch-arrow">↕ EF Core / SQL</div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">Data Layer</div>
+        <div class="arch-nodes">
+          <div class="arch-node node-db">PostgreSQL Database</div>
+        </div>
+      </div>
+      <div class="arch-arrow">↕ HTTPS</div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">External Services</div>
+        <div class="arch-nodes">
+          <div class="arch-node node-ext">Cloudinary — ảnh / video / audio</div>
+          <div class="arch-node node-ext">LibreTranslate — dịch đa ngôn ngữ</div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Các tầng định tuyến</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Module</th><th>Route Prefix</th><th>Auth</th><th>Role</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>GuestRoutes</code></td><td><code>/api/</code></td><td>Không</td><td>—</td></tr>
+          <tr><td><code>AuthRoutes</code></td><td><code>/api/auth/</code></td><td>Không</td><td>—</td></tr>
+          <tr><td><code>SellerRoutes</code></td><td><code>/api/seller/</code></td><td>JWT</td><td><span class="badge badge-blue">seller</span></td></tr>
+          <tr><td><code>AdminRoutes</code></td><td><code>/api/admin/</code></td><td>JWT</td><td><span class="badge badge-purple">admin</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── 2. ERD ── -->
+  <section id="entity">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <h2>Mô hình dữ liệu (Entity Model / ERD)</h2>
+    </div>
+    <img src="erd_vozTrip.png" alt="">
+  </section>
+
+  <!-- ── 3. AUTH ── -->
+  <section id="auth">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <h2>Phân quyền & Xác thực</h2>
+    </div>
+
+    <h3>3.1 Cơ chế JWT</h3>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Thuộc tính</th><th>Giá trị</th></tr></thead>
+          <tbody>
+            <tr><td>Thuật toán</td><td><code>HMAC SHA-256 (HmacSha256)</code></td></tr>
+            <tr><td>Thời hạn token</td><td><strong>7 ngày</strong> kể từ thời điểm đăng nhập</td></tr>
+            <tr><td><code>ClaimTypes.NameIdentifier</code></td><td><code>User.UserId</code></td></tr>
+            <tr><td><code>ClaimTypes.Name</code></td><td><code>User.Username</code></td></tr>
+            <tr><td><code>ClaimTypes.Role</code></td><td><code>"admin"</code> hoặc <code>"seller"</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h3>3.2 Quy tắc truy cập</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Endpoint Group</th><th>Yêu cầu</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>GET /api/languages</code>, <code>/api/pois</code>, <code>/api/pois/{id}</code>,<br><code>/api/pois/{id}/questions</code>, <code>POST /api/sessions</code>, <code>POST /api/visitlogs</code></td>
+            <td><span class="badge badge-green">Không cần auth</span></td>
+          </tr>
+          <tr>
+            <td><code>POST /api/auth/login</code>, <code>POST /api/auth/register</code></td>
+            <td><span class="badge badge-green">Không cần auth</span></td>
+          </tr>
+          <tr>
+            <td><code>/api/seller/*</code></td>
+            <td>JWT + Role = <code>seller</code> + <code>ApprovedAt != null</code></td>
+          </tr>
+          <tr>
+            <td><code>/api/admin/*</code></td>
+            <td>JWT + Role = <code>admin</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>3.3 Điều kiện login bị từ chối</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tình huống</th><th>HTTP Response</th></tr></thead>
+        <tbody>
+          <tr><td>Sai username hoặc password</td><td><span class="badge badge-red">401 Unauthorized</span></td></tr>
+          <tr><td>Tài khoản <code>IsActive = false</code></td><td><span class="badge badge-red">403 Forbid</span></td></tr>
+          <tr><td>Seller chưa được admin duyệt (<code>ApprovedAt = null</code>)</td><td><span class="badge badge-orange">403 JSON { message: "Tài khoản chưa được duyệt" }</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── 4. FEATURE FLAG ── -->
+  <section id="flags">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <h2>Feature Flag</h2>
+    </div>
+    <div class="card">
+      <p>Toàn bộ endpoint đều được bảo vệ bởi feature flag. Nếu flag bị tắt, endpoint trả về <code>404 { message: "Tính năng này hiện không khả dụng." }</code> thay vì thực thi handler.</p>
+      <div class="flow" style="margin-top:12px;">
+        <div class="flow-step">
+          <div class="flow-dot"></div>
+          <div class="flow-action">Request → <strong>EndpointFilter</strong> (WithFeatureFlag) → kiểm tra FeaturesConfig</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-dot" style="background:#dc2626"></div>
+          <div class="flow-action">flag = <code>false</code> → <span class="badge badge-red">404</span> ngay lập tức</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-dot" style="background:#059669"></div>
+          <div class="flow-action">flag = <code>true</code> → chạy handler bình thường</div>
+        </div>
+      </div>
+      <p style="margin-top:12px;"><code>FeaturesConfig</code> được inject qua DI, đọc từ <code>appsettings.json</code> hoặc environment variables.</p>
+    </div>
+  </section>
+
+  <!-- ── 5. API GUEST ── -->
+  <section id="api-guest">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <h2>API Catalog — Guest</h2>
+    </div>
+    <p>Prefix: <em>không có</em> · Auth: Không cần · Feature flag: <code>Features.Guest.*</code></p>
+
+    <!-- F03 -->
+    <h3>F03 — Lấy danh sách ngôn ngữ</h3>
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/languages</span>
+      </div>
+      <div class="endpoint-body">
+        <pre>[
+  { <span class="key">"languageId"</span>: <span class="str">"..."</span>, <span class="key">"languageCode"</span>: <span class="str">"vi"</span>, <span class="key">"languageName"</span>: <span class="str">"Tiếng Việt"</span> },
+  { <span class="key">"languageId"</span>: <span class="str">"..."</span>, <span class="key">"languageCode"</span>: <span class="str">"en"</span>, <span class="key">"languageName"</span>: <span class="str">"English"</span> }
+]</pre>
+        <div class="endpoint-note">Chỉ trả về ngôn ngữ có <code>IsActive = true</code>.</div>
+      </div>
+    </div>
+
+    <!-- F04 -->
+    <h3>F04 — Danh sách POI (Browse / Nearby)</h3>
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/pois?languageId={languageId}</span>
+      </div>
+      <div class="endpoint-body">
+        <h4>Query Params</h4>
+        <div class="table-wrap">
+          <table><thead><tr><th>Param</th><th>Bắt buộc</th><th>Mô tả</th></tr></thead>
+          <tbody><tr><td><code>languageId</code></td><td>Không</td><td>GUID ngôn ngữ, dùng để lấy tên địa phương hóa</td></tr></tbody></table>
+        </div>
+        <pre style="margin-top:12px;">[
+  {
+    <span class="key">"poiId"</span>: <span class="str">"..."</span>,
+    <span class="key">"poiName"</span>: <span class="str">"Bảo tàng Lịch sử"</span>,
+    <span class="key">"latitude"</span>: <span class="num">10.7769</span>,
+    <span class="key">"longitude"</span>: <span class="num">106.7009</span>,
+    <span class="key">"triggerRadius"</span>: <span class="num">10.0</span>,
+    <span class="key">"shopName"</span>: <span class="str">"Công ty Du lịch ABC"</span>,
+    <span class="key">"thumbnailUrl"</span>: <span class="str">"https://res.cloudinary.com/..."</span>,
+    <span class="key">"localizedName"</span>: <span class="str">"Historical Museum"</span>
+  }
+]</pre>
+        <div class="endpoint-note">
+          Chỉ trả về POI có <code>IsActive = true</code>.<br>
+          <code>thumbnailUrl</code>: ảnh đầu tiên theo <code>SortOrder ASC</code> (nếu flag <code>Thumbnail.Enabled</code>).<br>
+          <code>localizedName</code>: tên địa phương hóa theo ngôn ngữ (nếu flag <code>LocalizedName.Enabled</code>).
+        </div>
+      </div>
+    </div>
+
+    <!-- F05 -->
+    <h3>F05 — Chi tiết một POI</h3>
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/pois/{id}?languageId={languageId}</span>
+      </div>
+      <div class="endpoint-body">
+        <pre>{
+  <span class="key">"poiId"</span>: <span class="str">"..."</span>,
+  <span class="key">"poiName"</span>: <span class="str">"Bảo tàng Lịch sử"</span>,
+  <span class="key">"latitude"</span>: <span class="num">10.7769</span>, <span class="key">"longitude"</span>: <span class="num">106.7009</span>, <span class="key">"triggerRadius"</span>: <span class="num">10.0</span>,
+  <span class="key">"zoneName"</span>: <span class="str">"Quận 1"</span>,
+  <span class="key">"media"</span>: [{ <span class="key">"mediaId"</span>: <span class="str">"..."</span>, <span class="key">"mediaType"</span>: <span class="str">"image"</span>, <span class="key">"mediaUrl"</span>: <span class="str">"..."</span>, <span class="key">"sortOrder"</span>: <span class="num">0</span> }],
+  <span class="key">"localizations"</span>: [{
+    <span class="key">"languageId"</span>: <span class="str">"..."</span>, <span class="key">"languageCode"</span>: <span class="str">"vi"</span>,
+    <span class="key">"title"</span>: <span class="str">"Bảo tàng Lịch sử Việt Nam"</span>,
+    <span class="key">"description"</span>: <span class="str">"..."</span>,
+    <span class="key">"audioUrl"</span>: <span class="str">"https://res.cloudinary.com/..."</span>,
+    <span class="key">"audioDuration"</span>: <span class="num">120</span>
+  }]
+}</pre>
+        <div class="endpoint-note">
+          <code>media</code>: theo <code>SortOrder ASC</code> (flag <code>Media.Enabled</code>).<br>
+          <code>localizations</code>: lọc theo <code>languageId</code> nếu có (flag <code>Localization.Enabled</code>).<br>
+          <code>audioUrl</code>: chỉ xuất hiện nếu flag <code>Audio.Enabled</code>.
+        </div>
+      </div>
+    </div>
+
+    <!-- F06 -->
+    <h3>F06 — Q&A của POI</h3>
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/pois/{id}/questions?languageId={languageId}</span>
+      </div>
+      <div class="endpoint-body">
+        <pre>[{ <span class="key">"questionId"</span>: <span class="str">"..."</span>, <span class="key">"questionText"</span>: <span class="str">"Giờ mở cửa là mấy giờ?"</span>,
+   <span class="key">"answer"</span>: { <span class="key">"answerText"</span>: <span class="str">"8:00 - 17:00 hàng ngày"</span>, <span class="key">"audioUrl"</span>: <span class="bool">null</span> }
+}]</pre>
+        <div class="endpoint-note">Chỉ trả về câu hỏi có <code>IsActive = true</code>, sắp xếp theo <code>SortOrder ASC</code>.</div>
+      </div>
+    </div>
+
+    <!-- F07 Session -->
+    <h3>F07 — Tạo Guest Session</h3>
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method method-post">POST</span>
+        <span class="endpoint-path">/api/sessions</span>
+      </div>
+      <div class="endpoint-body">
+        <pre>Body: { <span class="key">"sessionId"</span>: <span class="str">"uuid-do-app-sinh"</span>, <span class="key">"languageId"</span>: <span class="str">"..."</span> }
+
+Response 200: { <span class="key">"sessionId"</span>: <span class="str">"..."</span>, <span class="key">"startedAt"</span>: <span class="str">"2026-04-17T10:00:00Z"</span> }</pre>
+        <div class="endpoint-note">Idempotent: nếu <code>sessionId</code> đã tồn tại → không tạo mới, trả về session hiện tại.</div>
+      </div>
+    </div>
+
+    <!-- F07 VisitLog -->
+    <h3>F07 — Ghi lượt tham quan (GPS Trigger)</h3>
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method method-post">POST</span>
+        <span class="endpoint-path">/api/visitlogs</span>
+      </div>
+      <div class="endpoint-body">
+        <pre>Body: { <span class="key">"sessionId"</span>: <span class="str">"..."</span>, <span class="key">"poiId"</span>: <span class="str">"..."</span> }
+Response: { <span class="key">"logId"</span>: <span class="str">"..."</span> }</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 6. API AUTH ── -->
+  <section id="api-auth">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <h2>API Catalog — Auth</h2>
+    </div>
+    <p>Prefix: <code>/api/auth/</code> · Auth: Không cần</p>
+
+    <h3>Đăng nhập</h3>
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method method-post">POST</span>
+        <span class="endpoint-path">/api/auth/login</span>
+      </div>
+      <div class="endpoint-body">
+        <pre>Body: { <span class="key">"username"</span>: <span class="str">"..."</span>, <span class="key">"password"</span>: <span class="str">"..."</span> }
+
+Response 200:
+{
+  <span class="key">"token"</span>: <span class="str">"eyJ..."</span>,
+  <span class="key">"userId"</span>: <span class="str">"..."</span>,
+  <span class="key">"username"</span>: <span class="str">"seller01"</span>,
+  <span class="key">"role"</span>: <span class="str">"seller"</span>,
+  <span class="key">"fullName"</span>: <span class="str">"Nguyễn Văn A"</span>,
+  <span class="key">"shopName"</span>: <span class="str">"Du lịch ABC"</span>
+}</pre>
+        <h4 style="margin-top:12px;">Lỗi</h4>
+        <div class="table-wrap">
+          <table><thead><tr><th>Code</th><th>Điều kiện</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge badge-red">401</span></td><td>Sai username/password</td></tr>
+            <tr><td><span class="badge badge-red">403 Forbid</span></td><td><code>IsActive = false</code></td></tr>
+            <tr><td><span class="badge badge-orange">403 JSON</span></td><td>Seller chưa được duyệt</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <h3>Đăng ký Seller</h3>
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method method-post">POST</span>
+        <span class="endpoint-path">/api/auth/register</span>
+      </div>
+      <div class="endpoint-body">
+        <pre>Body:
+{
+  <span class="key">"username"</span>: <span class="str">"seller01"</span>, <span class="key">"password"</span>: <span class="str">"password123"</span>,
+  <span class="key">"shopName"</span>: <span class="str">"Du lịch ABC"</span>, <span class="key">"fullName"</span>: <span class="str">"Nguyễn Văn A"</span>,
+  <span class="key">"email"</span>: <span class="str">"a@example.com"</span>, <span class="key">"contactPhone"</span>: <span class="str">"0901234567"</span>,
+  <span class="key">"description"</span>: <span class="str">"Mô tả đơn vị"</span>
+}
+
+Response 200: { <span class="key">"message"</span>: <span class="str">"Đăng ký thành công, chờ admin duyệt"</span> }</pre>
+        <div class="endpoint-note">Tạo đồng thời <code>User</code> (role=seller) và <code>Seller</code>. <code>ApprovedAt = null</code> cho đến khi Admin duyệt.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 7. API SELLER ── -->
+  <section id="api-seller">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <h2>API Catalog — Seller</h2>
+    </div>
+    <p>Prefix: <code>/api/seller/</code> · Auth: JWT, Role = <code>seller</code> · Feature flag: <code>Features.Seller.*</code></p>
+
+    <!-- F08 Profile -->
+    <h3>F08 — Profile</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/seller/profile</span></div>
+      <div class="endpoint-body">
+        <pre>{ <span class="key">"shopName"</span>: <span class="str">"Du lịch ABC"</span>, <span class="key">"plan"</span>: <span class="str">"free"</span>, <span class="key">"planUpgradedAt"</span>: <span class="bool">null</span>, <span class="key">"poiCount"</span>: <span class="num">1</span>, <span class="key">"poiLimit"</span>: <span class="num">1</span> }</pre>
+        <div class="endpoint-note"><code>poiLimit = null</code> nếu là VIP (không giới hạn).</div>
+      </div>
+    </div>
+
+    <!-- F09 Upgrade -->
+    <h3>F09 — Nâng cấp VIP</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-post">POST</span><span class="endpoint-path">/api/seller/upgrade</span></div>
+      <div class="endpoint-body">
+        <pre>Body: { <span class="key">"cardNumber"</span>: <span class="str">"1234 5678 9012 3456"</span>, <span class="key">"cardHolder"</span>: <span class="str">"NGUYEN VAN A"</span> }
+Response: { <span class="key">"message"</span>: <span class="str">"Nâng cấp VIP thành công!"</span>, <span class="key">"plan"</span>: <span class="str">"vip"</span> }</pre>
+        <div class="endpoint-note">Nếu flag <code>MockPayment.Enabled</code>: kiểm tra <code>CardNumber</code> có 16 chữ số (sau khi bỏ dấu cách).</div>
+      </div>
+    </div>
+
+    <!-- F10 Stats -->
+    <h3>F10 — Dashboard / Thống kê</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/seller/stats</span></div>
+      <div class="endpoint-body">
+        <pre>{
+  <span class="key">"totalPois"</span>: <span class="num">3</span>, <span class="key">"activePois"</span>: <span class="num">2</span>,
+  <span class="key">"totalVisits"</span>: <span class="num">150</span>, <span class="key">"visitsToday"</span>: <span class="num">12</span>,
+  <span class="key">"topPois"</span>: [{ <span class="key">"poiId"</span>: <span class="str">"..."</span>, <span class="key">"poiName"</span>: <span class="str">"Bảo tàng"</span>, <span class="key">"count"</span>: <span class="num">80</span> }],
+  <span class="key">"visitsByDay"</span>: [{ <span class="key">"date"</span>: <span class="str">"2026-04-11"</span>, <span class="key">"count"</span>: <span class="num">18</span> }]
+}</pre>
+        <div class="endpoint-note">Các trường <code>totalVisits</code>, <code>topPois</code>, <code>visitsByDay</code> chỉ xuất hiện nếu flag tương ứng bật.</div>
+      </div>
+    </div>
+
+    <!-- F11 POI Management -->
+    <h3>F11 — Quản lý POI</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/seller/pois</span></div>
+      <div class="endpoint-body"><p>Mảng POI thuộc seller đang đăng nhập, sắp xếp <code>CreatedAt DESC</code>.</p></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-post">POST</span><span class="endpoint-path">/api/seller/pois</span></div>
+      <div class="endpoint-body">
+        <pre>Body: { <span class="key">"poiName"</span>: <span class="str">"Nhà thờ Đức Bà"</span>, <span class="key">"latitude"</span>: <span class="num">10.7797</span>, <span class="key">"longitude"</span>: <span class="num">106.6990</span>, <span class="key">"zoneId"</span>: <span class="str">"..."</span>, <span class="key">"triggerRadius"</span>: <span class="num">15.0</span>, <span class="key">"isActive"</span>: <span class="bool">true</span> }
+Response: { <span class="key">"poiId"</span>: <span class="str">"..."</span> }</pre>
+        <div class="endpoint-note">
+          <strong>Plan limit:</strong> Nếu flag <code>PlanLimit.Enabled</code> VÀ seller đang ở plan <code>"free"</code>:<br>
+          Đếm POI hiện tại → nếu &gt;= <code>FreePlanMaxPois</code> → <span class="badge badge-red">400</span> <code>{ code: "PLAN_LIMIT" }</code>
+        </div>
+      </div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-put">PUT</span><span class="endpoint-path">/api/seller/pois/{id}</span></div>
+      <div class="endpoint-body"><p>Cập nhật POI. Chỉ cho phép với POI thuộc seller đang đăng nhập.</p></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-delete">DELETE</span><span class="endpoint-path">/api/seller/pois/{id}</span></div>
+      <div class="endpoint-body">
+        <div class="endpoint-note">Cascade xóa Localization, Media, Question, VisitLog. <strong>Không dọn Cloudinary</strong> — nhiệm vụ của Admin.</div>
+      </div>
+    </div>
+
+    <!-- F12 Localization -->
+    <h3>F12 — Nội dung đa ngôn ngữ (Localization)</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/seller/pois/{id}/localizations</span></div>
+      <div class="endpoint-body"><p>Lấy tất cả localization của POI.</p></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-put">PUT</span><span class="endpoint-path">/api/seller/pois/{id}/localizations/{languageId}</span></div>
+      <div class="endpoint-body">
+        <pre>Body: { <span class="key">"title"</span>: <span class="str">"..."</span>, <span class="key">"description"</span>: <span class="str">"..."</span>, <span class="key">"audioUrl"</span>: <span class="bool">null</span>, <span class="key">"audioDuration"</span>: <span class="bool">null</span> }</pre>
+        <div class="endpoint-note">Nếu chưa có record → tạo mới. Nếu đã có → cập nhật. Luôn set <code>IsAutoTranslated = false</code>.</div>
+      </div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-delete">DELETE</span><span class="endpoint-path">/api/seller/pois/{id}/localizations/{languageId}</span></div>
+      <div class="endpoint-body"><div class="endpoint-note">Xóa audio trên Cloudinary (nếu có <code>AudioPublicId</code>), sau đó xóa record.</div></div>
+    </div>
+
+    <!-- F13 Audio -->
+    <h3>F13 — Upload Audio thuyết minh</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-post">POST</span><span class="endpoint-path">/api/seller/pois/{id}/localizations/{languageId}/audio</span></div>
+      <div class="endpoint-body">
+        <p><code>Content-Type: multipart/form-data</code> · Field: <code>file (audio/*)</code></p>
+        <pre>Response: { <span class="key">"audioUrl"</span>: <span class="str">"https://res.cloudinary.com/..."</span> }</pre>
+        <div class="endpoint-note">
+          1. Kiểm tra <code>ContentType</code> phải bắt đầu bằng <code>audio/</code><br>
+          2. Nếu đã có <code>AudioPublicId</code> cũ VÀ flag <code>DeleteOldOnReplace.Enabled</code> → xóa file cũ<br>
+          3. Upload lên <code>voztrip/audio/{sellerId}</code><br>
+          4. Upsert <code>AudioUrl</code>, <code>AudioPublicId</code>
+        </div>
+      </div>
+    </div>
+
+    <!-- F14 Translate -->
+    <h3>F14 — Dịch tự động (Auto Translate)</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-post">POST</span><span class="endpoint-path">/api/seller/pois/{id}/localizations/translate</span></div>
+      <div class="endpoint-body">
+        <pre>Body: { <span class="key">"sourceLanguageId"</span>: <span class="str">"..."</span> }
+Response: { <span class="key">"message"</span>: <span class="str">"Đã dịch sang N ngôn ngữ"</span>, <span class="key">"translated"</span>: <span class="num">3</span> }</pre>
+        <div class="endpoint-note">
+          Bỏ qua ngôn ngữ đã có bản thủ công nếu flag <code>SkipExistingManual.Enabled</code>.<br>
+          Gọi <code>LibreTranslateService.TranslateToManyAsync()</code> song song. Set <code>IsAutoTranslated = true</code>.
+        </div>
+      </div>
+    </div>
+
+    <!-- F15 Media -->
+    <h3>F15 — Quản lý Media</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/seller/pois/{id}/media</span></div>
+      <div class="endpoint-body"><p>Danh sách media của POI.</p></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-post">POST</span><span class="endpoint-path">/api/seller/pois/{id}/media/upload</span></div>
+      <div class="endpoint-body">
+        <p><code>Content-Type: multipart/form-data</code> · Field: <code>file (image/* hoặc video/*)</code></p>
+        <pre>Response: { <span class="key">"mediaId"</span>: <span class="str">"..."</span>, <span class="key">"mediaUrl"</span>: <span class="str">"..."</span>, <span class="key">"mediaType"</span>: <span class="str">"image"</span> }</pre>
+        <div class="endpoint-note">
+          <code>video/*</code> → folder <code>voztrip/videos/{sellerId}</code> (flag <code>Video.Enabled</code>)<br>
+          <code>image/*</code> → folder <code>voztrip/images/{sellerId}</code> (flag <code>Image.Enabled</code>)
+        </div>
+      </div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-delete">DELETE</span><span class="endpoint-path">/api/seller/media/{mediaId}</span></div>
+      <div class="endpoint-body"><div class="endpoint-note">Xóa file trên Cloudinary theo <code>PublicId</code> + <code>MediaType</code>, sau đó xóa record.</div></div>
+    </div>
+
+    <!-- F16 Q&A -->
+    <h3>F16 — Quản lý Q&A</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/seller/pois/{id}/questions</span></div>
+      <div class="endpoint-body"><p>Danh sách câu hỏi của POI.</p></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-post">POST</span><span class="endpoint-path">/api/seller/pois/{id}/questions</span></div>
+      <div class="endpoint-body">
+        <pre>Body: { <span class="key">"languageId"</span>: <span class="str">"..."</span>, <span class="key">"questionText"</span>: <span class="str">"Giờ mở cửa là mấy giờ?"</span>, <span class="key">"sortOrder"</span>: <span class="num">0</span> }</pre>
+      </div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-put">PUT</span><span class="endpoint-path">/api/seller/questions/{questionId}/answer</span></div>
+      <div class="endpoint-body">
+        <pre>Body: { <span class="key">"answerText"</span>: <span class="str">"8:00 - 17:00 hàng ngày"</span>, <span class="key">"audioUrl"</span>: <span class="bool">null</span> }</pre>
+        <div class="endpoint-note">Nếu chưa có Answer → tạo mới. Nếu đã có → cập nhật.</div>
+      </div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-delete">DELETE</span><span class="endpoint-path">/api/seller/questions/{questionId}</span></div>
+      <div class="endpoint-body"><div class="endpoint-note">Cascade xóa Answer liên quan.</div></div>
+    </div>
+  </section>
+
+  <!-- ── 8. API ADMIN ── -->
+  <section id="api-admin">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <h2>API Catalog — Admin</h2>
+    </div>
+    <p>Prefix: <code>/api/admin/</code> · Auth: JWT, Role = <code>admin</code> · Feature flag: <code>Features.Admin.*</code></p>
+
+    <!-- F17 Dashboard -->
+    <h3>F17 — Dashboard tổng quan</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/admin/stats</span></div>
+      <div class="endpoint-body">
+        <pre>{
+  <span class="key">"totalSellers"</span>: <span class="num">25</span>, <span class="key">"pendingSellers"</span>: <span class="num">3</span>,
+  <span class="key">"totalPois"</span>: <span class="num">120</span>, <span class="key">"activePois"</span>: <span class="num">98</span>,
+  <span class="key">"totalVisits"</span>: <span class="num">5000</span>, <span class="key">"visitsToday"</span>: <span class="num">47</span>,
+  <span class="key">"totalSessions"</span>: <span class="num">1200</span>,
+  <span class="key">"topPois"</span>: [{ <span class="key">"poiId"</span>: <span class="str">"..."</span>, <span class="key">"poiName"</span>: <span class="str">"Bảo tàng"</span>, <span class="key">"count"</span>: <span class="num">450</span> }],
+  <span class="key">"visitsByDay"</span>: [{ <span class="key">"date"</span>: <span class="str">"2026-04-11"</span>, <span class="key">"count"</span>: <span class="num">320</span> }]
+}</pre>
+        <div class="endpoint-note"><code>topPois</code>: Top 5 POI (flag <code>Top5Pois.Enabled</code>). <code>visitsByDay</code>: 7 ngày gần nhất (flag <code>VisitChart7Days.Enabled</code>).</div>
+      </div>
+    </div>
+
+    <!-- F18 Sellers -->
+    <h3>F18 — Quản lý Seller</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/admin/sellers</span></div>
+      <div class="endpoint-body"><div class="endpoint-note">Seller chưa duyệt lên đầu, sau đó theo <code>CreatedAt DESC</code>.</div></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-post">POST</span><span class="endpoint-path">/api/admin/sellers</span></div>
+      <div class="endpoint-body">
+        <p>Tạo Seller thủ công với <code>ApprovedAt = DateTime.UtcNow</code> (duyệt ngay).</p>
+      </div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-put">PUT</span><span class="endpoint-path">/api/admin/sellers/{id}/approve</span></div>
+      <div class="endpoint-body">
+        <pre>Response: { <span class="key">"message"</span>: <span class="str">"Duyệt thành công"</span> }</pre>
+        <div class="endpoint-note">Set <code>ApprovedAt = UtcNow</code>, <code>ApprovedBy = AdminId</code>. Nếu đã duyệt rồi → <span class="badge badge-red">400</span>.</div>
+      </div>
+    </div>
+
+    <!-- F19 Users -->
+    <h3>F19 — Quản lý User</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/admin/users</span></div>
+      <div class="endpoint-body"><p>Danh sách tất cả user.</p></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-put">PUT</span><span class="endpoint-path">/api/admin/users/{id}/toggle</span></div>
+      <div class="endpoint-body">
+        <pre>Response: { <span class="key">"isActive"</span>: <span class="bool">false</span> }</pre>
+        <div class="endpoint-note">Toggle <code>IsActive</code>. Không áp dụng cho role <code>admin</code>.</div>
+      </div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-delete">DELETE</span><span class="endpoint-path">/api/admin/users/{id}</span></div>
+      <div class="endpoint-body"><div class="endpoint-note">Không áp dụng cho role <code>admin</code>.</div></div>
+    </div>
+
+    <!-- F20 Media Moderation -->
+    <h3>F20 — Kiểm duyệt Media</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/admin/media</span></div>
+      <div class="endpoint-body"><p>Tất cả media kèm thông tin POI và chủ sở hữu (Seller).</p></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-delete">DELETE</span><span class="endpoint-path">/api/admin/media/{mediaId}</span></div>
+      <div class="endpoint-body"><div class="endpoint-note">Nếu flag <code>CleanCloudinary.Enabled</code> → xóa file trên Cloudinary trước, sau đó xóa record.</div></div>
+    </div>
+
+    <!-- F21 POI Moderation -->
+    <h3>F21 — Quản lý POI (Admin)</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/admin/pois</span></div>
+      <div class="endpoint-body"><p>Tất cả POI của mọi Seller, kèm Zone, ShopName, số localization, số lượt visit.</p></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/admin/pois/{id}</span></div>
+      <div class="endpoint-body"><p>Đầy đủ: thông tin POI, Seller+User, media, localizations, questions+answers.</p></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-put">PUT</span><span class="endpoint-path">/api/admin/pois/{id}/toggle</span></div>
+      <div class="endpoint-body"><p>Toggle <code>IsActive</code>.</p></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-delete">DELETE</span><span class="endpoint-path">/api/admin/pois/{id}</span></div>
+      <div class="endpoint-body">
+        <div class="endpoint-note">
+          Nếu flag <code>CleanCloudinary.Enabled</code>:<br>
+          1. Xóa tất cả <code>PoiMedia</code> trên Cloudinary<br>
+          2. Xóa tất cả <code>AudioPublicId</code> trong <code>PoiLocalization</code> trên Cloudinary<br>
+          Sau đó xóa POI (cascade DB).
+        </div>
+      </div>
+    </div>
+
+    <!-- F22 Zone -->
+    <h3>F22 — Quản lý Zone</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/admin/zones</span></div>
+      <div class="endpoint-body"></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-post">POST</span><span class="endpoint-path">/api/admin/zones</span></div>
+      <div class="endpoint-body"><pre>Body: { <span class="key">"zoneName"</span>: <span class="str">"..."</span>, <span class="key">"description"</span>: <span class="str">"..."</span> }</pre></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-put">PUT</span><span class="endpoint-path">/api/admin/zones/{id}</span></div>
+      <div class="endpoint-body"></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-delete">DELETE</span><span class="endpoint-path">/api/admin/zones/{id}</span></div>
+      <div class="endpoint-body"></div>
+    </div>
+
+    <!-- F23 Language -->
+    <h3>F23 — Quản lý Ngôn ngữ</h3>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/api/admin/languages</span></div>
+      <div class="endpoint-body"></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-post">POST</span><span class="endpoint-path">/api/admin/languages</span></div>
+      <div class="endpoint-body"><pre>Body: { <span class="key">"languageCode"</span>: <span class="str">"ja"</span>, <span class="key">"languageName"</span>: <span class="str">"日本語"</span> }</pre></div>
+    </div>
+    <div class="endpoint">
+      <div class="endpoint-header"><span class="method method-put">PUT</span><span class="endpoint-path">/api/admin/languages/{id}</span></div>
+      <div class="endpoint-body"><pre>Body: { <span class="key">"languageCode"</span>: <span class="str">"..."</span>, <span class="key">"languageName"</span>: <span class="str">"..."</span>, <span class="key">"isActive"</span>: <span class="bool">true</span> }</pre></div>
+    </div>
+  </section>
+
+  <!-- ── 9. SERVICES ── -->
+  <section id="services">
+    <div class="section-header">
+      <div class="section-num">9</div>
+      <h2>Services nội bộ</h2>
+    </div>
+
+    <h3>CloudinaryService</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Method</th><th>Mô tả</th><th>Folder</th><th>ResourceType</th></tr></thead>
+        <tbody>
+          <tr><td><code>UploadAudioAsync(file, sellerId)</code></td><td>Upload file audio</td><td><code>voztrip/audio/{sellerId}</code></td><td><code>Raw</code></td></tr>
+          <tr><td><code>UploadImageAsync(file, sellerId)</code></td><td>Upload ảnh, auto-optimize quality+format</td><td><code>voztrip/images/{sellerId}</code></td><td><code>Image</code></td></tr>
+          <tr><td><code>UploadVideoAsync(file, sellerId)</code></td><td>Upload video</td><td><code>voztrip/videos/{sellerId}</code></td><td><code>Video</code></td></tr>
+          <tr><td><code>DeleteAsync(publicId, resourceType)</code></td><td>Xóa file theo publicId</td><td>—</td><td>Tuỳ loại</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <p>Tất cả upload dùng <code>UniqueFilename = true</code>, <code>Overwrite = false</code> → không bao giờ đè file cũ.</p>
+      <p><code>UploadResult</code> trả về: <code>(Url, PublicId, Duration)</code>.</p>
+    </div>
+
+    <h3>LibreTranslateService</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Method</th><th>Mô tả</th></tr></thead>
+        <tbody>
+          <tr><td><code>TranslateAsync(text, sourceLang, targetLang)</code></td><td>Dịch một đoạn text</td></tr>
+          <tr><td><code>TranslateToManyAsync(title, description, sourceLang, targetLangs)</code></td><td>Dịch song song title+description sang nhiều ngôn ngữ</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <pre>// appsettings.json
+<span class="key">"LibreTranslate"</span>: { <span class="key">"Url"</span>: <span class="str">"https://libretranslate.com"</span>, <span class="key">"ApiKey"</span>: <span class="str">"..."</span> }</pre>
+      <p style="margin-top:8px;">Nếu call HTTP thất bại → trả về <code>null</code> (không throw exception).</p>
+    </div>
+  </section>
+
+  <!-- ── 10. SEQUENCE DIAGRAMS ── -->
+  <section id="sequence">
+    <div class="section-header">
+      <div class="section-num">10</div>
+      <h2>Sơ đồ tuần tự (Sequence Diagrams)</h2>
+    </div>
+    <p>Ký hiệu: <code>App</code> = React Native / Next.js · <code>API</code> = ASP.NET Core · <code>DB</code> = PostgreSQL · <code>CDN</code> = Cloudinary · <code>LT</code> = LibreTranslate</p>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:20px;">
+      <div>
+        <h4>SD-01 Khởi động app & tạo session</h4>
+        <img src="tuantuUML/tourist/first.png" alt="SD-01" style="width:100%;border:1px solid #e2e8f0;border-radius:6px;" />
+      </div>
+      <div>
+        <h4>SD-02 Browse danh sách POI</h4>
+        <img src="tuantuUML/tourist/listPois.png" alt="SD-02 listPois" style="width:100%;border:1px solid #e2e8f0;border-radius:6px;" />
+      </div>
+      <div>
+        <h4>SD-02b GPS Trigger</h4>
+        <img src="tuantuUML/tourist/TriggerPois.png" alt="SD-02 GPS Trigger" style="width:100%;border:1px solid #e2e8f0;border-radius:6px;" />
+      </div>
+      <div>
+        <h4>SD-03 Chi tiết POI (Audio / TTS)</h4>
+        <img src="tuantuUML/tourist/view-detialsPois.png" alt="SD-03" style="width:100%;border:1px solid #e2e8f0;border-radius:6px;" />
+      </div>
+      <div>
+        <h4>SD-04 Seller đăng ký & Admin duyệt</h4>
+        <img src="tuantuUML/seller/register.png" alt="SD-04" style="width:100%;border:1px solid #e2e8f0;border-radius:6px;" />
+      </div>
+      <div>
+        <h4>SD-05 Seller đăng nhập</h4>
+        <img src="tuantuUML/seller/login.png" alt="SD-05" style="width:100%;border:1px solid #e2e8f0;border-radius:6px;" />
+      </div>
+      <div>
+        <h4>SD-06 Seller tạo POI (plan limit)</h4>
+        <img src="tuantuUML/seller/POIManagement.png" alt="SD-06" style="width:100%;border:1px solid #e2e8f0;border-radius:6px;" />
+      </div>
+      <div>
+        <h4>SD-07 Upload audio thuyết minh</h4>
+        <img src="tuantuUML/seller/AudioUpload.png" alt="SD-07" style="width:100%;border:1px solid #e2e8f0;border-radius:6px;" />
+      </div>
+      <div>
+        <h4>SD-08 Dịch tự động đa ngôn ngữ</h4>
+        <img src="tuantuUML/seller/Localization.png" alt="SD-08" style="width:100%;border:1px solid #e2e8f0;border-radius:6px;" />
+      </div>
+      <div>
+        <h4>SD-09 Upload media (ảnh / video)</h4>
+        <img src="tuantuUML/seller/MediaManagement.png" alt="SD-09" style="width:100%;border:1px solid #e2e8f0;border-radius:6px;" />
+      </div>
+      <div>
+        <h4>SD-10 Admin xóa media vi phạm</h4>
+        <img src="tuantuUML/admin/MediaModeration.png" alt="SD-10" style="width:100%;border:1px solid #e2e8f0;border-radius:6px;" />
+      </div>
+      <div>
+        <h4>SD-11 Admin xóa POI (dọn Cloudinary)</h4>
+        <img src="tuantuUML/admin/AdminPOIManagement.png" alt="SD-11" style="width:100%;border:1px solid #e2e8f0;border-radius:6px;" />
+      </div>
+      <div>
+        <h4>SD-12 Seller nâng cấp VIP</h4>
+        <img src="tuantuUML/seller/vipUpgrage.png" alt="SD-12" style="width:100%;border:1px solid #e2e8f0;border-radius:6px;" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 11. BUSINESS FLOW ── -->
+   <section id="business">
+    <div class="section-header">
+      <div class="section-num">11</div>
+      <h2>Sơ đồ Usecase</h2>
+      <img src="adminUsecase.png" alt="">
+      <img src="useCaseTourist.png" alt="">
+      <img src="sellerUsecase.png" alt="">
+    </div>
+    </section>
+  <section id="business">
+    <div class="section-header">
+      <div class="section-num">11</div>
+      <h2>Luồng nghiệp vụ chính (Business Flow)</h2>
+    </div>
+
+    <h3>Seller Onboarding (đăng ký → duyệt → tạo nội dung)</h3>
+    <div class="flow">
+      <div class="flow-step"><div class="flow-dot"></div><div><span class="flow-actor">[Seller]</span> Đăng ký → Trạng thái: <code>ApprovedAt = null</code></div></div>
+      <div class="flow-step"><div class="flow-dot"></div><div><span class="flow-actor">[Admin]</span> Duyệt → Trạng thái: <code>ApprovedAt = now</code>, <code>ApprovedBy = adminId</code></div></div>
+      <div class="flow-step"><div class="flow-dot"></div><div><span class="flow-actor">[Seller]</span> Đăng nhập → Nhận JWT token (7 ngày)</div></div>
+      <div class="flow-step"><div class="flow-dot"></div><div><span class="flow-actor">[Seller]</span> Tạo POI → Kiểm tra plan limit (Free: max N POI)</div></div>
+      <div class="flow-step"><div class="flow-dot"></div><div><span class="flow-actor">[Seller]</span> Nhập text → <code>PoiLocalization</code> (title + description)</div></div>
+      <div class="flow-step"><div class="flow-dot"></div><div><span class="flow-actor">[Seller]</span> Dịch tự động → LibreTranslate → <code>PoiLocalization</code> cho các ngôn ngữ khác</div></div>
+      <div class="flow-step"><div class="flow-dot"></div><div><span class="flow-actor">[Seller]</span> Upload audio → Cloudinary → cập nhật <code>AudioUrl</code>, <code>AudioPublicId</code></div></div>
+      <div class="flow-step"><div class="flow-dot"></div><div><span class="flow-actor">[Seller]</span> Upload media → Cloudinary → <code>PoiMedia</code> record</div></div>
+      <div class="flow-step"><div class="flow-dot"></div><div><span class="flow-actor">[Seller]</span> Tạo Q&A → <code>Question</code> + <code>Answer</code></div></div>
+    </div>
+
+    <h3>Guest trải nghiệm</h3>
+    <div class="flow">
+      <div class="flow-step"><div class="flow-dot" style="background:#7c3aed"></div><div><span class="flow-actor" style="color:#7c3aed">[App]</span> Mở lần đầu → <code>GET /api/languages</code> → chọn ngôn ngữ</div></div>
+      <div class="flow-step"><div class="flow-dot" style="background:#7c3aed"></div><div><span class="flow-actor" style="color:#7c3aed">[App]</span> Đồng ý policy → <code>POST /api/sessions</code> → tạo GuestSession</div></div>
+      <div class="flow-step"><div class="flow-dot" style="background:#7c3aed"></div><div><span class="flow-actor" style="color:#7c3aed">[App]</span> Browse POI → <code>GET /api/pois?languageId=...</code></div></div>
+      <div class="flow-step"><div class="flow-dot" style="background:#7c3aed"></div><div><span class="flow-actor" style="color:#7c3aed">[App]</span> Xem chi tiết → <code>GET /api/pois/{id}?languageId=...</code></div></div>
+      <div class="flow-step"><div class="flow-dot" style="background:#7c3aed"></div><div><span class="flow-actor" style="color:#7c3aed">[App]</span> Nghe audio → Phát trực tiếp từ Cloudinary URL</div></div>
+      <div class="flow-step"><div class="flow-dot" style="background:#7c3aed"></div><div><span class="flow-actor" style="color:#7c3aed">[App]</span> Nếu no audio → TTS đọc description (client-side)</div></div>
+      <div class="flow-step"><div class="flow-dot" style="background:#7c3aed"></div><div><span class="flow-actor" style="color:#7c3aed">[App]</span> Xem Q&A → <code>GET /api/pois/{id}/questions?languageId=...</code></div></div>
+      <div class="flow-step"><div class="flow-dot" style="background:#7c3aed"></div><div><span class="flow-actor" style="color:#7c3aed">[App]</span> GPS Trigger → khoảng cách &lt; <code>TriggerRadius</code> → <code>POST /api/visitlogs</code></div></div>
+    </div>
+  </section>
+
+  <!-- ── 12. RULES ── -->
+  <section id="rules">
+    <div class="section-header">
+      <div class="section-num">12</div>
+      <h2>Ràng buộc & Quy tắc nghiệp vụ</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Quy tắc</th><th>Nơi thực thi</th></tr></thead>
+        <tbody>
+          <tr><td class="rule-num">R01</td><td>Username phải unique</td><td><code>AuthRoutes.register: AnyAsync(Username)</code></td></tr>
+          <tr><td class="rule-num">R02</td><td>Seller phải được Admin duyệt mới đăng nhập được</td><td><code>AuthRoutes.login: ApprovedAt != null</code></td></tr>
+          <tr><td class="rule-num">R03</td><td>Không thể khóa / xóa tài khoản admin</td><td><code>AdminRoutes.toggle, .delete</code></td></tr>
+          <tr><td class="rule-num">R04</td><td>Seller chỉ thao tác với POI của chính mình</td><td><code>SellerRoutes: filter SellerId = sellerId từ JWT</code></td></tr>
+          <tr><td class="rule-num">R05</td><td>Plan Free bị giới hạn số POI</td><td><code>SellerRoutes.createPoi: COUNT >= FreePlanMaxPois</code></td></tr>
+          <tr><td class="rule-num">R06</td><td>Mỗi POI localization chỉ giữ 1 file audio</td><td><code>SellerRoutes.uploadAudio: xóa AudioPublicId cũ trước</code></td></tr>
+          <tr><td class="rule-num">R07</td><td>Auto-translate: <code>IsAutoTranslated = true</code>; thủ công: <code>false</code></td><td><code>SellerRoutes.upsertLocalization, .translate</code></td></tr>
+          <tr><td class="rule-num">R08</td><td>Seller VIP không bị giới hạn số POI</td><td><code>poiLimit = null</code> nếu plan = "vip"</td></tr>
+          <tr><td class="rule-num">R09</td><td>GPS trigger ghi log bất kể đã ghé thăm trước đó chưa</td><td><code>GuestRoutes.visitlogs: luôn INSERT mới</code></td></tr>
+          <tr><td class="rule-num">R10</td><td>Xóa POI từ Admin dọn cả Cloudinary (media + audio)</td><td><code>AdminRoutes.deletePoi với CleanCloudinary flag</code></td></tr>
+          <tr><td class="rule-num">R11</td><td>Seller xóa POI không dọn Cloudinary</td><td><code>SellerRoutes.deletePoi: chỉ xóa DB</code></td></tr>
+          <tr><td class="rule-num">R12</td><td>Token JWT có hiệu lực 7 ngày</td><td><code>AuthRoutes.GenerateToken: AddDays(7)</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── 13. FLAG LIST ── -->
+  <section id="flaglist">
+    <div class="section-header">
+      <div class="section-num">13</div>
+      <h2>Danh sách Feature Flag</h2>
+    </div>
+
+    <!-- Guest Flags -->
+    <div class="flag-group">
+      <div class="flag-group-title flag-guest">Guest</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Flag</th><th>Endpoint bảo vệ</th></tr></thead>
+          <tbody>
+            <tr><td><code>Guest.LanguagePicker.Enabled</code></td><td><code>GET /api/languages</code></td></tr>
+            <tr><td><code>Guest.ExplorePois.Enabled</code></td><td><code>GET /api/pois</code></td></tr>
+            <tr><td><code>Guest.ExplorePois.Thumbnail.Enabled</code></td><td>Tính <code>thumbnailUrl</code> trong danh sách POI</td></tr>
+            <tr><td><code>Guest.ExplorePois.LocalizedName.Enabled</code></td><td>Tính <code>localizedName</code> trong danh sách POI</td></tr>
+            <tr><td><code>Guest.PoiDetail.Enabled</code></td><td><code>GET /api/pois/{id}</code></td></tr>
+            <tr><td><code>Guest.PoiDetail.Media.Enabled</code></td><td>Include media trong chi tiết POI</td></tr>
+            <tr><td><code>Guest.PoiDetail.Localization.Enabled</code></td><td>Include localization trong chi tiết POI</td></tr>
+            <tr><td><code>Guest.PoiDetail.Audio.Enabled</code></td><td>Include <code>audioUrl</code>, <code>audioDuration</code> trong localization</td></tr>
+            <tr><td><code>Guest.Qna.Enabled</code></td><td><code>GET /api/pois/{id}/questions</code></td></tr>
+            <tr><td><code>Guest.GpsVisitLog.Session.Enabled</code></td><td><code>POST /api/sessions</code></td></tr>
+            <tr><td><code>Guest.GpsVisitLog.VisitLog.Enabled</code></td><td><code>POST /api/visitlogs</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Seller Flags -->
+    <div class="flag-group">
+      <div class="flag-group-title flag-seller">Seller</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Flag</th><th>Endpoint / Logic bảo vệ</th></tr></thead>
+          <tbody>
+            <tr><td><code>Seller.Profile.Enabled</code></td><td><code>GET /api/seller/profile</code></td></tr>
+            <tr><td><code>Seller.VipUpgrade.Enabled</code></td><td><code>POST /api/seller/upgrade</code></td></tr>
+            <tr><td><code>Seller.VipUpgrade.MockPayment.Enabled</code></td><td>Kiểm tra cardNumber 16 chữ số</td></tr>
+            <tr><td><code>Seller.Dashboard.Enabled</code></td><td><code>GET /api/seller/stats</code></td></tr>
+            <tr><td><code>Seller.Dashboard.TotalVisits.Enabled</code></td><td>Tính <code>totalVisits</code>, <code>visitsToday</code></td></tr>
+            <tr><td><code>Seller.Dashboard.Top5Pois.Enabled</code></td><td>Tính <code>topPois</code></td></tr>
+            <tr><td><code>Seller.Dashboard.VisitChart7Days.Enabled</code></td><td>Tính <code>visitsByDay</code></td></tr>
+            <tr><td><code>Seller.PoiManagement.Enabled</code></td><td>CRUD <code>/api/seller/pois</code></td></tr>
+            <tr><td><code>Seller.PoiManagement.Create.Enabled</code></td><td>Sub-flag tạo POI</td></tr>
+            <tr><td><code>Seller.PoiManagement.Update.Enabled</code></td><td>Sub-flag cập nhật POI</td></tr>
+            <tr><td><code>Seller.PoiManagement.Delete.Enabled</code></td><td>Sub-flag xóa POI</td></tr>
+            <tr><td><code>Seller.PoiManagement.PlanLimit.Enabled</code></td><td>Kiểm tra giới hạn POI theo plan</td></tr>
+            <tr><td><code>Seller.PoiManagement.PlanLimit.FreePlanMaxPois</code></td><td>Số POI tối đa cho Free plan</td></tr>
+            <tr><td><code>Seller.Localization.Enabled</code></td><td>CRUD <code>/api/seller/pois/{id}/localizations</code></td></tr>
+            <tr><td><code>Seller.Localization.Upsert.Enabled</code></td><td>Sub-flag upsert localization</td></tr>
+            <tr><td><code>Seller.Localization.Delete.Enabled</code></td><td>Sub-flag xóa localization</td></tr>
+            <tr><td><code>Seller.AudioUpload.Enabled</code></td><td><code>POST .../audio</code></td></tr>
+            <tr><td><code>Seller.AudioUpload.DeleteOldOnReplace.Enabled</code></td><td>Xóa audio Cloudinary cũ khi upload mới</td></tr>
+            <tr><td><code>Seller.AutoTranslate.Enabled</code></td><td><code>POST .../translate</code></td></tr>
+            <tr><td><code>Seller.AutoTranslate.SkipExistingManual.Enabled</code></td><td>Bỏ qua ngôn ngữ đã có bản thủ công</td></tr>
+            <tr><td><code>Seller.MediaManagement.Enabled</code></td><td>CRUD <code>/api/seller/pois/{id}/media</code></td></tr>
+            <tr><td><code>Seller.MediaManagement.Upload.Enabled</code></td><td>Upload media</td></tr>
+            <tr><td><code>Seller.MediaManagement.Upload.Image.Enabled</code></td><td>Cho phép upload ảnh</td></tr>
+            <tr><td><code>Seller.MediaManagement.Upload.Video.Enabled</code></td><td>Cho phép upload video</td></tr>
+            <tr><td><code>Seller.MediaManagement.Delete.Enabled</code></td><td>Xóa media</td></tr>
+            <tr><td><code>Seller.QnaManagement.Enabled</code></td><td>CRUD Q&A</td></tr>
+            <tr><td><code>Seller.QnaManagement.CreateQuestion.Enabled</code></td><td>Tạo câu hỏi</td></tr>
+            <tr><td><code>Seller.QnaManagement.UpsertAnswer.Enabled</code></td><td>Upsert câu trả lời</td></tr>
+            <tr><td><code>Seller.QnaManagement.DeleteQuestion.Enabled</code></td><td>Xóa câu hỏi</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Admin Flags -->
+    <div class="flag-group">
+      <div class="flag-group-title flag-admin">Admin</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Flag</th><th>Endpoint / Logic bảo vệ</th></tr></thead>
+          <tbody>
+            <tr><td><code>Admin.Dashboard.Enabled</code></td><td><code>GET /api/admin/stats</code></td></tr>
+            <tr><td><code>Admin.Dashboard.Top5Pois.Enabled</code></td><td>Tính <code>topPois</code></td></tr>
+            <tr><td><code>Admin.Dashboard.VisitChart7Days.Enabled</code></td><td>Tính <code>visitsByDay</code></td></tr>
+            <tr><td><code>Admin.SellerManagement.List.Enabled</code></td><td><code>GET /api/admin/sellers</code></td></tr>
+            <tr><td><code>Admin.SellerManagement.Create.Enabled</code></td><td><code>POST /api/admin/sellers</code></td></tr>
+            <tr><td><code>Admin.SellerManagement.Approve.Enabled</code></td><td><code>PUT /api/admin/sellers/{id}/approve</code></td></tr>
+            <tr><td><code>Admin.UserManagement.List.Enabled</code></td><td><code>GET /api/admin/users</code></td></tr>
+            <tr><td><code>Admin.UserManagement.ToggleLock.Enabled</code></td><td><code>PUT /api/admin/users/{id}/toggle</code></td></tr>
+            <tr><td><code>Admin.UserManagement.Delete.Enabled</code></td><td><code>DELETE /api/admin/users/{id}</code></td></tr>
+            <tr><td><code>Admin.ZoneManagement.Enabled</code></td><td><code>GET /api/admin/zones</code></td></tr>
+            <tr><td><code>Admin.ZoneManagement.Create.Enabled</code></td><td><code>POST /api/admin/zones</code></td></tr>
+            <tr><td><code>Admin.ZoneManagement.Update.Enabled</code></td><td><code>PUT /api/admin/zones/{id}</code></td></tr>
+            <tr><td><code>Admin.ZoneManagement.Delete.Enabled</code></td><td><code>DELETE /api/admin/zones/{id}</code></td></tr>
+            <tr><td><code>Admin.LanguageManagement.Enabled</code></td><td><code>GET /api/admin/languages</code></td></tr>
+            <tr><td><code>Admin.LanguageManagement.Create.Enabled</code></td><td><code>POST /api/admin/languages</code></td></tr>
+            <tr><td><code>Admin.LanguageManagement.Update.Enabled</code></td><td><code>PUT /api/admin/languages/{id}</code></td></tr>
+            <tr><td><code>Admin.MediaModeration.ViewAll.Enabled</code></td><td><code>GET /api/admin/media</code></td></tr>
+            <tr><td><code>Admin.MediaModeration.DeleteViolation.Enabled</code></td><td><code>DELETE /api/admin/media/{mediaId}</code></td></tr>
+            <tr><td><code>Admin.MediaModeration.DeleteViolation.CleanCloudinary.Enabled</code></td><td>Xóa file trên Cloudinary khi xóa media</td></tr>
+            <tr><td><code>Admin.PoiModeration.List.Enabled</code></td><td><code>GET /api/admin/pois</code></td></tr>
+            <tr><td><code>Admin.PoiModeration.Detail.Enabled</code></td><td><code>GET /api/admin/pois/{id}</code></td></tr>
+            <tr><td><code>Admin.PoiModeration.ToggleActive.Enabled</code></td><td><code>PUT /api/admin/pois/{id}/toggle</code></td></tr>
+            <tr><td><code>Admin.PoiModeration.Delete.Enabled</code></td><td><code>DELETE /api/admin/pois/{id}</code></td></tr>
+            <tr><td><code>Admin.PoiModeration.Delete.CleanCloudinary.Enabled</code></td><td>Dọn Cloudinary khi xóa POI</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

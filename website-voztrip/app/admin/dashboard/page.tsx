@@ -12,8 +12,12 @@ type Stats = {
   totalVisits: number;
   visitsToday: number;
   totalSessions: number;
+  totalQrScans: number;
+  totalAppOpens: number;
+  totalDeviceJoins: number;
   topPois: { poiId: string; poiName: string; count: number }[];
   visitsByDay: { date: string; count: number }[];
+  qrScansByDay: { date: string; count: number }[];
 };
 
 function StatCard({ label, value, sub, accent }: { label: string; value: number | string; sub?: string; accent?: boolean }) {
@@ -60,12 +64,14 @@ export default function AdminDashboardPage() {
   });
 
   const visitMap: Record<string, number> = {};
-  stats?.visitsByDay.forEach(v => {
-    visitMap[v.date.slice(0, 10)] = v.count;
-  });
-
+  stats?.visitsByDay.forEach(v => { visitMap[v.date.slice(0, 10)] = v.count; });
   const chartData = last7Days.map(date => ({ date, count: visitMap[date] ?? 0 }));
   const maxCount = Math.max(...chartData.map(d => d.count), 1);
+
+  const qrMap: Record<string, number> = {};
+  stats?.qrScansByDay?.forEach(v => { qrMap[v.date.slice(0, 10)] = v.count; });
+  const qrChartData = last7Days.map(date => ({ date, count: qrMap[date] ?? 0 }));
+  const qrMaxCount = Math.max(...qrChartData.map(d => d.count), 1);
 
   return (
     <div>
@@ -85,6 +91,9 @@ export default function AdminDashboardPage() {
             <StatCard label="Total POIs" value={stats.totalPois} sub={`${stats.activePois} active`} />
             <StatCard label="Total Visits" value={stats.totalVisits} sub="all time" />
             <StatCard label="Visits Today" value={stats.visitsToday} />
+            <StatCard label="Device Joins" value={stats.totalDeviceJoins} sub="đã thanh toán" accent />
+            <StatCard label="QR Scans" value={stats.totalQrScans} sub="all time" />
+            <StatCard label="App Opens" value={stats.totalAppOpens} sub="all time" />
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -154,6 +163,35 @@ export default function AdminDashboardPage() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* QR Scans chart — 7 ngày */}
+          <div
+            className="mt-6 p-6"
+            style={{ backgroundColor: "#fdfaf4", border: "1px solid #e8dfc8", borderRadius: "2px" }}
+          >
+            <div className="text-xs tracking-[0.25em] uppercase mb-5" style={{ color: "#8c7a5e" }}>
+              QR Scans — Last 7 Days
+            </div>
+            <div className="flex items-end gap-2 h-32">
+              {qrChartData.map(({ date, count }) => (
+                <div key={date} className="flex-1 flex flex-col items-center gap-1">
+                  <div className="text-xs" style={{ color: "#c8a96e" }}>{count > 0 ? count : ""}</div>
+                  <div
+                    style={{
+                      width: "100%",
+                      height: `${Math.max((count / qrMaxCount) * 96, count > 0 ? 4 : 2)}px`,
+                      backgroundColor: count > 0 ? "#2c2416" : "#e8dfc8",
+                      borderRadius: "1px",
+                      transition: "height 0.3s",
+                    }}
+                  />
+                  <div className="text-xs" style={{ color: "#b09878" }}>
+                    {new Date(date).toLocaleDateString("en", { weekday: "short" })}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

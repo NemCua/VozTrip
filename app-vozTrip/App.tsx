@@ -1,13 +1,15 @@
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Platform } from "react-native";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Linking, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { tr } from "./src/i18n/translations";
 import { useSession } from "./src/hooks/useSession";
 import { useQuery } from "@tanstack/react-query";
-import { getLanguages, Language } from "./src/services/api";
+import { getLanguages, Language, logUsage, joinDevice } from "./src/services/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import LanguagePickerScreen from "./src/screens/LanguagePickerScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import POIDetailScreen from "./src/screens/POIDetailScreen";
@@ -153,7 +155,8 @@ function TabBar({ activeTab, onTabPress, languageCode }: { activeTab: Tab; onTab
 
 function AppContent() {
   const { sessionId, languageId, saveLanguage, ready } = useSession();
-  const [screen, setScreen] = useState<"payment" | "main" | "detail" | "language">("payment");
+  const [screen, setScreen] = useState<"payment" | "main" | "detail" | "language" | "loading">("loading");
+  const joiningRef = useRef(false);
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
   const [showEmergency, setShowEmergency] = useState(false);
@@ -168,10 +171,35 @@ function AppContent() {
   const currentLang = languages.find((l) => l.languageId === languageId);
   const languageCode = currentLang?.languageCode ?? "vi";
 
-  if (!ready) return null;
+  useEffect(() => {
+    if (!ready || !sessionId) return;
+    (async () => {
+      logUsage("app_open", sessionId);
+      const joined = await AsyncStorage.getItem("device_joined");
+      if (joined === "true") {
+        setScreen("main");
+      } else {
+        setScreen("payment");
+      }
+    })();
+  }, [ready, sessionId]);
+
+  if (screen === "loading") return null;
 
   if (screen === "payment") {
-    return <PaymentScreen onPaid={() => setScreen("main")} />;
+    return (
+      <PaymentScreen
+        onPaid={async () => {
+          if (joiningRef.current) return;
+          joiningRef.current = true;
+          const deviceId = sessionId ?? "unknown";
+          await joinDevice(deviceId, Platform.OS, Platform.Version.toString());
+          await AsyncStorage.setItem("device_joined", "true");
+          joiningRef.current = false;
+          setScreen("main");
+        }}
+      />
+    );
   }
 
   // ── Maintenance toàn app ──────────────────────────────────────────────────
@@ -270,6 +298,7 @@ function AppContent() {
         return (
           <ScanScreen
             languageCode={languageCode}
+            sessionId={sessionId ?? ""}
             onPoiPress={handlePoiPress}
           />
         );

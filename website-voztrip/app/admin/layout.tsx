@@ -19,6 +19,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/media",     label: "Media",      show: f.mediaModeration.enabled },
     { href: "/admin/zones",     label: "Zones",      show: f.zoneManagement.enabled },
     { href: "/admin/languages", label: "Languages",  show: f.languageManagement.enabled },
+    { href: "/admin/devices",   label: "Devices",    show: f.deviceTracking?.enabled ?? true },
   ].filter(item => item.show);
 
   return (

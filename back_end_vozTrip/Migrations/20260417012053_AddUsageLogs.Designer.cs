@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using back_end_vozTrip.Services;
@@ -11,9 +12,11 @@ using back_end_vozTrip.Services;
 namespace back_end_vozTrip.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260417012053_AddUsageLogs")]
+    partial class AddUsageLogs
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -68,39 +71,6 @@ namespace back_end_vozTrip.Migrations
                         .IsUnique();
 
                     b.ToTable("answers", (string)null);
-                });
-
-            modelBuilder.Entity("back_end_vozTrip.Models.DeviceRecord", b =>
-                {
-                    b.Property<string>("DeviceId")
-                        .HasColumnType("text")
-                        .HasColumnName("device_id");
-
-                    b.Property<DateTime>("JoinedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("joined_at")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<DateTime?>("LastSeenAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_seen_at");
-
-                    b.Property<string>("OsVersion")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("os_version");
-
-                    b.Property<string>("Platform")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("platform");
-
-                    b.HasKey("DeviceId");
-
-                    b.ToTable("device_records", (string)null);
                 });
 
             modelBuilder.Entity("back_end_vozTrip.Models.GuestSession", b =>
@@ -430,6 +400,8 @@ namespace back_end_vozTrip.Migrations
 
                     b.HasKey("LogId");
 
+                    b.HasIndex("SessionId");
+
                     b.ToTable("usage_logs", (string)null);
                 });
 
@@ -657,6 +629,16 @@ namespace back_end_vozTrip.Migrations
                     b.Navigation("ApprovedByUser");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("back_end_vozTrip.Models.UsageLog", b =>
+                {
+                    b.HasOne("back_end_vozTrip.Models.GuestSession", "GuestSession")
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("GuestSession");
                 });
 
             modelBuilder.Entity("back_end_vozTrip.Models.VisitLog", b =>
