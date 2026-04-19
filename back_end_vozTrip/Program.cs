@@ -34,14 +34,14 @@ builder.Services.AddSingleton(features);
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
 
+var allowedOrigins = (builder.Configuration["AllowedOrigins"] ?? "http://localhost:3000,http://localhost:3001")
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins(
-                  "http://localhost:3000",
-                  "http://localhost:3001"
-              )
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
