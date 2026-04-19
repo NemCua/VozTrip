@@ -76,6 +76,9 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton<CloudinaryService>();
 builder.Services.AddHttpClient<LibreTranslateService>();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<VisitLogQueue>();
+builder.Services.AddHostedService<VisitLogWorker>();
 
 // ─── Swagger ─────────────────────────────────────────────────────────────────
 

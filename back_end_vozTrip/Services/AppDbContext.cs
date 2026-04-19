@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<VisitLog> VisitLogs => Set<VisitLog>();
     public DbSet<UsageLog> UsageLogs => Set<UsageLog>();
     public DbSet<DeviceRecord> DeviceRecords => Set<DeviceRecord>();
+    public DbSet<FeedbackReport> FeedbackReports => Set<FeedbackReport>();
 
     protected override void OnModelCreating(ModelBuilder model)
     {
@@ -250,6 +251,29 @@ public class AppDbContext : DbContext
             e.Property(d => d.OsVersion).HasColumnName("os_version").HasMaxLength(50);
             e.Property(d => d.JoinedAt).HasColumnName("joined_at").HasDefaultValueSql("NOW()");
             e.Property(d => d.LastSeenAt).HasColumnName("last_seen_at");
+            e.Property(d => d.Approved).HasColumnName("approved").HasDefaultValue(false);
+            e.Property(d => d.ApprovedAt).HasColumnName("approved_at");
+        });
+
+        // feedback_reports
+        model.Entity<FeedbackReport>(e =>
+        {
+            e.ToTable("feedback_reports");
+            e.HasKey(f => f.ReportId);
+            e.Property(f => f.ReportId).HasColumnName("report_id");
+            e.Property(f => f.SessionId).HasColumnName("session_id");
+            e.Property(f => f.DeviceId).HasColumnName("device_id");
+            e.Property(f => f.Type).HasColumnName("type").HasMaxLength(20).IsRequired();
+            e.Property(f => f.Message).HasColumnName("message").HasMaxLength(1000).IsRequired();
+            e.Property(f => f.PoiId).HasColumnName("poi_id");
+            e.Property(f => f.Platform).HasColumnName("platform").HasMaxLength(20).HasDefaultValue("web");
+            e.Property(f => f.Lang).HasColumnName("lang").HasMaxLength(10).HasDefaultValue("vi");
+            e.Property(f => f.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+            e.Property(f => f.Status).HasColumnName("status").HasMaxLength(20).HasDefaultValue("pending");
+            e.Property(f => f.AdminNote).HasColumnName("admin_note");
+            e.Property(f => f.ReviewedAt).HasColumnName("reviewed_at");
+            e.HasIndex(f => f.Status);
+            e.HasIndex(f => f.CreatedAt);
         });
 
         // usage_logs — session_id là metadata thuần, không có FK constraint

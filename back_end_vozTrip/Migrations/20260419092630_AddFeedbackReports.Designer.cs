@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using back_end_vozTrip.Services;
@@ -11,9 +12,11 @@ using back_end_vozTrip.Services;
 namespace back_end_vozTrip.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260419092630_AddFeedbackReports")]
+    partial class AddFeedbackReports
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -75,16 +78,6 @@ namespace back_end_vozTrip.Migrations
                     b.Property<string>("DeviceId")
                         .HasColumnType("text")
                         .HasColumnName("device_id");
-
-                    b.Property<bool>("Approved")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false)
-                        .HasColumnName("approved");
-
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("approved_at");
 
                     b.Property<DateTime>("JoinedAt")
                         .ValueGeneratedOnAdd()

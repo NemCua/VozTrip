@@ -118,8 +118,8 @@ public static class GuestRoutes
         })
         .WithFeatureFlag(f => f.Features.Guest.GpsVisitLog.Session.Enabled);
 
-        // POST /api/visitlogs — F07 (ghi lượt thăm)
-        app.MapPost("/api/visitlogs", async (VisitLogRequest req, AppDbContext db) =>
+        // POST /api/visitlogs — F07 (ghi lượt thăm, enqueue → batch write)
+        app.MapPost("/api/visitlogs", (VisitLogRequest req, VisitLogQueue queue) =>
         {
             var log = new VisitLog
             {
@@ -127,11 +127,18 @@ public static class GuestRoutes
                 PoiId       = req.PoiId,
                 TriggeredAt = DateTime.UtcNow
             };
-            db.VisitLogs.Add(log);
-            await db.SaveChangesAsync();
-            return Results.Ok(new { log.LogId });
+            queue.TryEnqueue(log);
+            return Results.Accepted();
         })
         .WithFeatureFlag(f => f.Features.Guest.GpsVisitLog.VisitLog.Enabled);
+
+        // GET /api/devices/{id}/status — kiểm tra thiết bị đã được duyệt chưa
+        app.MapGet("/api/devices/{id}/status", async (string id, AppDbContext db) =>
+        {
+            var device = await db.DeviceRecords.FindAsync(id);
+            if (device is null) return Results.Ok(new { approved = false });
+            return Results.Ok(new { approved = device.Approved });
+        });
 
         // POST /api/devices/join — đăng ký thiết bị lần đầu
         app.MapPost("/api/devices/join", async (DeviceJoinRequest req, AppDbContext db) =>
@@ -158,6 +165,30 @@ public static class GuestRoutes
         })
         .WithFeatureFlag(f => f.Features.Guest.UsageLog.Enabled);
 
+        // POST /api/feedback — gửi báo cáo / góp ý
+        app.MapPost("/api/feedback", async (FeedbackRequest req, AppDbContext db) =>
+        {
+            var validTypes = new[] { "bug", "suggestion", "content", "other" };
+            var type = validTypes.Contains(req.Type) ? req.Type : "other";
+
+            if (string.IsNullOrWhiteSpace(req.Message) || req.Message.Length > 1000)
+                return Results.BadRequest(new { message = "Message không hợp lệ (1–1000 ký tự)" });
+
+            var report = new FeedbackReport
+            {
+                SessionId = req.SessionId,
+                DeviceId  = req.DeviceId,
+                Type      = type,
+                Message   = req.Message.Trim(),
+                PoiId     = req.PoiId,
+                Platform  = req.Platform ?? "web",
+                Lang      = req.Lang ?? "vi",
+            };
+            db.FeedbackReports.Add(report);
+            await db.SaveChangesAsync();
+            return Results.Ok(new { report.ReportId });
+        });
+
         // POST /api/usagelogs — ghi sự kiện dùng app
         app.MapPost("/api/usagelogs", async (UsageLogRequest req, AppDbContext db) =>
         {
@@ -179,6 +210,7 @@ public static class GuestRoutes
     }
 }
 
+record FeedbackRequest(string? SessionId, string? DeviceId, string Type, string Message, string? PoiId, string? Platform, string? Lang);
 record SessionRequest(string SessionId, string? LanguageId);
 record VisitLogRequest(string SessionId, string PoiId);
 record UsageLogRequest(string? SessionId, string EventType);

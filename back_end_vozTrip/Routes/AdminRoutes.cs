@@ -429,14 +429,34 @@ public static class AdminRoutes
                 .OrderByDescending(d => d.LastSeenAt ?? d.JoinedAt)
                 .Select(d => new
                 {
-                    d.DeviceId,
-                    d.Platform,
-                    d.OsVersion,
-                    d.JoinedAt,
-                    d.LastSeenAt,
+                    d.DeviceId, d.Platform, d.OsVersion,
+                    d.JoinedAt, d.LastSeenAt,
+                    d.Approved, d.ApprovedAt,
                 })
                 .ToListAsync();
             return Results.Ok(devices);
+        })
+        .WithFeatureFlag(f => f.Features.Admin.DeviceTracking.Enabled);
+
+        group.MapPost("/devices/{id}/approve", async (string id, AppDbContext db) =>
+        {
+            var device = await db.DeviceRecords.FindAsync(id);
+            if (device is null) return Results.NotFound(new { message = "Thiết bị không tồn tại" });
+            device.Approved   = true;
+            device.ApprovedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+            return Results.Ok(new { device.DeviceId, device.Approved, device.ApprovedAt });
+        })
+        .WithFeatureFlag(f => f.Features.Admin.DeviceTracking.Enabled);
+
+        group.MapPost("/devices/{id}/revoke", async (string id, AppDbContext db) =>
+        {
+            var device = await db.DeviceRecords.FindAsync(id);
+            if (device is null) return Results.NotFound(new { message = "Thiết bị không tồn tại" });
+            device.Approved   = false;
+            device.ApprovedAt = null;
+            await db.SaveChangesAsync();
+            return Results.Ok(new { device.DeviceId, device.Approved });
         })
         .WithFeatureFlag(f => f.Features.Admin.DeviceTracking.Enabled);
 
@@ -449,9 +469,59 @@ public static class AdminRoutes
             return Results.Ok(new { message = "Đã xóa thiết bị" });
         })
         .WithFeatureFlag(f => f.Features.Admin.DeviceTracking.Delete.Enabled);
+
+        // ─── FEEDBACK ────────────────────────────────────────────────────────────
+
+        // GET /api/admin/feedback?status=pending
+        group.MapGet("/feedback", async (string? status, AppDbContext db) =>
+        {
+            var query = db.FeedbackReports.AsQueryable();
+            if (!string.IsNullOrEmpty(status))
+                query = query.Where(f => f.Status == status);
+
+            var reports = await query
+                .OrderByDescending(f => f.CreatedAt)
+                .Select(f => new
+                {
+                    f.ReportId, f.Type, f.Message, f.PoiId,
+                    f.SessionId, f.DeviceId, f.Platform, f.Lang,
+                    f.Status, f.AdminNote, f.CreatedAt, f.ReviewedAt,
+                })
+                .ToListAsync();
+            return Results.Ok(reports);
+        });
+
+        // PATCH /api/admin/feedback/{id} — đổi status + ghi note
+        group.MapPatch("/feedback/{id}", async (string id, FeedbackReviewRequest req, AppDbContext db) =>
+        {
+            var report = await db.FeedbackReports.FindAsync(id);
+            if (report is null) return Results.NotFound();
+
+            var validStatuses = new[] { "pending", "reviewed", "resolved" };
+            if (!string.IsNullOrEmpty(req.Status) && validStatuses.Contains(req.Status))
+                report.Status = req.Status;
+
+            if (req.AdminNote is not null)
+                report.AdminNote = req.AdminNote;
+
+            report.ReviewedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+            return Results.Ok(new { report.ReportId, report.Status, report.AdminNote });
+        });
+
+        // DELETE /api/admin/feedback/{id}
+        group.MapDelete("/feedback/{id}", async (string id, AppDbContext db) =>
+        {
+            var report = await db.FeedbackReports.FindAsync(id);
+            if (report is null) return Results.NotFound();
+            db.FeedbackReports.Remove(report);
+            await db.SaveChangesAsync();
+            return Results.Ok();
+        });
     }
 }
 
+record FeedbackReviewRequest(string? Status, string? AdminNote);
 record ZoneRequest(string ZoneName, string? Description);
 record LanguageRequest(string LanguageCode, string? LanguageName, bool? IsActive);
 record CreateSellerRequest(

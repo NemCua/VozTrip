@@ -7,4 +7,6 @@ public class DeviceRecord
     public string OsVersion { get; set; } = string.Empty;
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastSeenAt { get; set; }
+    public bool Approved { get; set; } = false;
+    public DateTime? ApprovedAt { get; set; }
 }
