@@ -638,7 +638,8 @@ function QATab({ poiId, authHeader }: { poiId: string; authHeader: object }) {
 // ── QR Modal ─────────────────────────────────────────────────────────────────
 
 function QRModal({ poiId, poiName, onClose }: { poiId: string; poiName: string; onClose: () => void }) {
-  const qrValue = `voztrip:poi:${poiId}`;
+  const webAppUrl = process.env.NEXT_PUBLIC_WEB_APP_URL ?? "https://voztrip-web.vercel.app";
+  const qrValue = `${webAppUrl}/poi/${poiId}`;
   const svgRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = () => {
@@ -691,7 +692,7 @@ function QRModal({ poiId, poiName, onClose }: { poiId: string; poiName: string; 
           <QRCode value={qrValue} size={200} bgColor="#ffffff" fgColor="#2c2416" level="M" />
         </div>
         <div className="text-center">
-          <div className="text-xs" style={{ color: "#b09878" }}>Quét bằng VozTrip app để xem thuyết minh</div>
+          <div className="text-xs" style={{ color: "#b09878" }}>Quét bằng camera điện thoại để vào VozTrip</div>
           <div className="text-xs mt-1 px-2 py-1 font-mono" style={{ color: "#8c7a5e", backgroundColor: "#f0e8d8", borderRadius: "2px" }}>{qrValue}</div>
         </div>
         <div className="flex gap-3 w-full">

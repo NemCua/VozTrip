@@ -27,6 +27,9 @@ function GateGuard({ children }: { children: ReactNode }) {
       const cachedApproved = localStorage.getItem("device_approved") === "true";
       if (cachedApproved) { setChecked(true); return; }
 
+      // Lưu path hiện tại để redirect về sau khi hoàn thành đăng ký
+      localStorage.setItem("redirect_after", pathname);
+
       try { await joinDevice(deviceId); } catch {}
       const result = await checkDeviceStatus(deviceId);
 

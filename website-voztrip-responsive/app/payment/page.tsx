@@ -18,6 +18,20 @@ export default function PaymentPage() {
     setDeviceId(id);
   }, []);
 
+  const navigateAfterApproval = () => {
+    const redirect = localStorage.getItem("redirect_after");
+    localStorage.removeItem("redirect_after");
+    const hasLang = !!localStorage.getItem("voz_lang");
+    if (!hasLang) {
+      // Chưa chọn ngôn ngữ — qua language picker (sẽ redirect tiếp)
+      router.replace("/language");
+    } else if (redirect && redirect !== "/payment") {
+      router.replace(redirect);
+    } else {
+      router.replace("/home");
+    }
+  };
+
   // Countdown timer for simulated approval
   useEffect(() => {
     if (countdown <= 0) return;
@@ -27,7 +41,7 @@ export default function PaymentPage() {
       setCountdown(next);
       if (next === 0) {
         localStorage.setItem("device_approved", "true");
-        router.replace("/language");
+        navigateAfterApproval();
       }
     }, 1000);
     return () => clearTimeout(t);

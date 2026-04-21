@@ -39,7 +39,9 @@ export default function LanguagePickerPage() {
   const handleSelect = (apiLang: Language) => {
     if (!agreed) { setShowWarning(true); return; }
     setLang(apiLang.languageCode as LangCode, apiLang.languageId);
-    router.push("/home");
+    const redirect = localStorage.getItem("redirect_after");
+    localStorage.removeItem("redirect_after");
+    router.push(redirect && redirect !== "/payment" && redirect !== "/language" ? redirect : "/home");
   };
 
   // Merge API languages with local flag/label metadata; fall back to static list if API empty
