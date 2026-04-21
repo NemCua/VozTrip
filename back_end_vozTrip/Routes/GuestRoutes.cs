@@ -132,6 +132,34 @@ public static class GuestRoutes
         })
         .WithFeatureFlag(f => f.Features.Guest.GpsVisitLog.VisitLog.Enabled);
 
+        // POST /api/webhook/sepay — SePay gọi khi có tiền vào
+        app.MapPost("/api/webhook/sepay", async (SepayWebhookPayload payload, AppDbContext db) =>
+        {
+            // Tìm "VOZTRIP XXXXXXXX" trong nội dung chuyển khoản
+            var content = (payload.Content ?? payload.Description ?? "").ToUpper();
+            var match = System.Text.RegularExpressions.Regex.Match(content, @"VOZTRIP\s+([A-F0-9]{8})");
+            if (!match.Success)
+                return Results.Ok(new { matched = false, reason = "no VOZTRIP code found" });
+
+            var shortCode = match.Groups[1].Value.ToLower(); // 8 ký tự đầu của deviceId
+
+            // Tìm device theo 8 ký tự đầu của deviceId
+            var device = await db.DeviceRecords
+                .FirstOrDefaultAsync(d => d.DeviceId.StartsWith(shortCode));
+
+            if (device is null)
+                return Results.Ok(new { matched = false, reason = "device not found" });
+
+            if (!device.Approved)
+            {
+                device.Approved   = true;
+                device.ApprovedAt = DateTime.UtcNow;
+                await db.SaveChangesAsync();
+            }
+
+            return Results.Ok(new { matched = true, deviceId = device.DeviceId, approved = true });
+        });
+
         // GET /api/devices/{id}/status — kiểm tra thiết bị đã được duyệt chưa
         app.MapGet("/api/devices/{id}/status", async (string id, AppDbContext db) =>
         {
@@ -210,6 +238,19 @@ public static class GuestRoutes
     }
 }
 
+record SepayWebhookPayload(
+    int? Id,
+    string? Gateway,
+    string? TransactionDate,
+    string? AccountNumber,
+    string? Content,
+    string? Description,
+    string? TransactionContent,
+    string? Code,
+    string? TransferType,
+    decimal? TransferAmount,
+    string? ReferenceCode
+);
 record FeedbackRequest(string? SessionId, string? DeviceId, string Type, string Message, string? PoiId, string? Platform, string? Lang);
 record SessionRequest(string SessionId, string? LanguageId);
 record VisitLogRequest(string SessionId, string PoiId);
