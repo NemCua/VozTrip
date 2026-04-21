@@ -4,7 +4,7 @@ import { useState, ReactNode, useEffect } from "react";
 import { LanguageProvider } from "@/context/LanguageContext";
 import AppShell from "@/components/layout/AppShell";
 import { usePathname, useRouter } from "next/navigation";
-import { checkDeviceStatus, joinDevice } from "@/services/api";
+import { checkDeviceStatus, joinDevice, pingDevice } from "@/services/api";
 
 const PUBLIC_PATHS = ["/", "/language", "/payment", "/privacy"];
 
@@ -13,6 +13,7 @@ function GateGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [checked, setChecked] = useState(false);
 
+  // Gate check — chạy mỗi khi đổi route
   useEffect(() => {
     if (PUBLIC_PATHS.includes(pathname)) { setChecked(true); return; }
 
@@ -28,11 +29,11 @@ function GateGuard({ children }: { children: ReactNode }) {
 
       try { await joinDevice(deviceId); } catch {}
       const result = await checkDeviceStatus(deviceId);
+
       if (result === "approved") {
         localStorage.setItem("device_approved", "true");
         setChecked(true);
       } else if (result === "unreachable") {
-        // Backend chưa sẵn sàng — cho qua trong dev
         setChecked(true);
       } else {
         router.replace("/payment");
@@ -41,6 +42,15 @@ function GateGuard({ children }: { children: ReactNode }) {
 
     run();
   }, [pathname, router]);
+
+  // Heartbeat — chạy 1 lần sau khi checked, ping mỗi 60s
+  useEffect(() => {
+    if (!checked) return;
+    const deviceId = localStorage.getItem("voz_session");
+    if (!deviceId) return;
+    const interval = setInterval(() => pingDevice(deviceId), 60_000);
+    return () => clearInterval(interval);
+  }, [checked]);
 
   if (!checked) return null;
   return <>{children}</>;

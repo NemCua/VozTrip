@@ -93,6 +93,12 @@ export const joinDevice = async (deviceId: string) => {
   });
 };
 
+export const pingDevice = async (deviceId: string) => {
+  try {
+    await fetch(`${API_URL}/api/devices/${deviceId}/ping`, { method: "POST" });
+  } catch {}
+};
+
 export const checkDeviceStatus = async (deviceId: string): Promise<"approved" | "pending" | "unreachable"> => {
   try {
     const res = await fetch(`${API_URL}/api/devices/${deviceId}/status`);

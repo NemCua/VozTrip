@@ -509,6 +509,32 @@ public static class AdminRoutes
             return Results.Ok(new { report.ReportId, report.Status, report.AdminNote });
         });
 
+        // GET /api/admin/map/pois — POI markers với visit counts cho admin map
+        group.MapGet("/map/pois", async (AppDbContext db) =>
+        {
+            var since24h = DateTime.UtcNow.AddHours(-24);
+            var visitCounts = await db.VisitLogs
+                .Where(v => v.TriggeredAt >= since24h)
+                .GroupBy(v => v.PoiId)
+                .Select(g => new { PoiId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var countMap = visitCounts.ToDictionary(x => x.PoiId, x => x.Count);
+
+            var pois = await db.Pois
+                .Where(p => p.IsActive)
+                .Select(p => new { p.PoiId, p.PoiName, p.Latitude, p.Longitude, p.TriggerRadius })
+                .ToListAsync();
+
+            var result = pois.Select(p => new
+            {
+                p.PoiId, p.PoiName, p.Latitude, p.Longitude, p.TriggerRadius,
+                visits24h = countMap.GetValueOrDefault(p.PoiId, 0),
+            });
+
+            return Results.Ok(result);
+        });
+
         // DELETE /api/admin/feedback/{id}
         group.MapDelete("/feedback/{id}", async (string id, AppDbContext db) =>
         {

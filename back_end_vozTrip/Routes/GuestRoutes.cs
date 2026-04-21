@@ -176,6 +176,16 @@ public static class GuestRoutes
             return Results.Ok(new { approved = device.Approved });
         });
 
+        // POST /api/devices/{id}/ping — heartbeat, cập nhật lastSeenAt
+        app.MapPost("/api/devices/{id}/ping", async (string id, AppDbContext db) =>
+        {
+            var device = await db.DeviceRecords.FindAsync(id);
+            if (device is null) return Results.NotFound();
+            device.LastSeenAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+            return Results.Ok();
+        });
+
         // POST /api/devices/join — đăng ký thiết bị lần đầu
         app.MapPost("/api/devices/join", async (DeviceJoinRequest req, AppDbContext db) =>
         {

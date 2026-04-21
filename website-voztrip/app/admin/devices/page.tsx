@@ -26,9 +26,9 @@ function timeAgo(dateStr: string | null): string {
   return `${days} ngày trước`;
 }
 
-function isRecentlyActive(lastSeenAt: string | null): boolean {
+function isOnline(lastSeenAt: string | null): boolean {
   if (!lastSeenAt) return false;
-  return Date.now() - new Date(lastSeenAt).getTime() < 60 * 60 * 1000;
+  return Date.now() - new Date(lastSeenAt).getTime() < 2 * 60 * 1000;
 }
 
 export default function AdminDevicesPage() {
@@ -70,7 +70,7 @@ export default function AdminDevicesPage() {
 
   const pendingCount = devices.filter(d => !d.approved).length;
   const approvedCount = devices.filter(d => d.approved).length;
-  const activeCount = devices.filter(d => isRecentlyActive(d.lastSeenAt)).length;
+  const activeCount = devices.filter(d => isOnline(d.lastSeenAt)).length;
 
   const filtered = devices.filter(d => {
     if (filter === "pending") return !d.approved;
@@ -157,7 +157,7 @@ export default function AdminDevicesPage() {
 
           {/* Rows */}
           {filtered.map((d, i) => {
-            const active = isRecentlyActive(d.lastSeenAt);
+            const active = isOnline(d.lastSeenAt);
             const isPending = approveMutation.isPending || revokeMutation.isPending;
             return (
               <div

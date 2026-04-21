@@ -20,6 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/zones",     label: "Zones",      show: f.zoneManagement.enabled },
     { href: "/admin/languages", label: "Languages",  show: f.languageManagement.enabled },
     { href: "/admin/devices",   label: "Devices",    show: f.deviceTracking?.enabled ?? true },
+    { href: "/admin/map",       label: "Map",        show: true },
   ].filter(item => item.show);
 
   return (
