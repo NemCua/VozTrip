@@ -102,7 +102,7 @@ export default function AdminDevicesPage() {
           <div className="text-3xl font-light" style={{ color: "#16a34a", fontFamily: "Georgia, serif" }}>{approvedCount}</div>
         </div>
         <div className="inline-block px-6 py-4" style={{ backgroundColor: "#f5f0e8", border: "1px solid #e8dfc8", borderRadius: "2px" }}>
-          <div className="text-xs tracking-[0.25em] uppercase mb-1" style={{ color: "#8c7a5e" }}>Online (1h)</div>
+          <div className="text-xs tracking-[0.25em] uppercase mb-1" style={{ color: "#8c7a5e" }}>Online now</div>
           <div className="text-3xl font-light" style={{ color: "#2c7a3c", fontFamily: "Georgia, serif" }}>{activeCount}</div>
         </div>
       </div>
@@ -184,25 +184,35 @@ export default function AdminDevicesPage() {
                 </span>
 
                 {/* Status + approve/revoke */}
-                <span>
+                <span className="flex flex-col gap-1">
                   {d.approved ? (
-                    <button
-                      onClick={() => revokeMutation.mutate(d.deviceId)}
-                      disabled={isPending}
-                      className="text-xs px-2.5 py-1"
-                      style={{ backgroundColor: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", borderRadius: "2px", cursor: "pointer" }}
-                    >
-                      ✓ Duyệt
-                    </button>
+                    <>
+                      <span className="text-xs px-2 py-0.5 inline-block" style={{ backgroundColor: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", borderRadius: "2px" }}>
+                        ✓ Đã duyệt
+                      </span>
+                      <button
+                        onClick={() => revokeMutation.mutate(d.deviceId)}
+                        disabled={isPending}
+                        className="text-xs px-2 py-0.5"
+                        style={{ backgroundColor: "transparent", color: "#b09878", border: "1px solid #e8dfc8", borderRadius: "2px", cursor: "pointer" }}
+                      >
+                        Thu hồi
+                      </button>
+                    </>
                   ) : (
-                    <button
-                      onClick={() => approveMutation.mutate(d.deviceId)}
-                      disabled={isPending}
-                      className="text-xs px-2.5 py-1"
-                      style={{ backgroundColor: "#ea580c", color: "#fff", border: "none", borderRadius: "2px", cursor: "pointer" }}
-                    >
-                      Duyệt ngay
-                    </button>
+                    <>
+                      <span className="text-xs px-2 py-0.5 inline-block" style={{ backgroundColor: "#fff7ed", color: "#ea580c", border: "1px solid #fed7aa", borderRadius: "2px" }}>
+                        Chờ TT
+                      </span>
+                      <button
+                        onClick={() => approveMutation.mutate(d.deviceId)}
+                        disabled={isPending}
+                        className="text-xs px-2 py-0.5"
+                        style={{ backgroundColor: "transparent", color: "#8c7a5e", border: "1px solid #e8dfc8", borderRadius: "2px", cursor: "pointer" }}
+                      >
+                        Override
+                      </button>
+                    </>
                   )}
                 </span>
 

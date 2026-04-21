@@ -43,11 +43,12 @@ function GateGuard({ children }: { children: ReactNode }) {
     run();
   }, [pathname, router]);
 
-  // Heartbeat — chạy 1 lần sau khi checked, ping mỗi 60s
+  // Heartbeat — ping ngay khi vào app, sau đó mỗi 60s
   useEffect(() => {
     if (!checked) return;
     const deviceId = localStorage.getItem("voz_session");
     if (!deviceId) return;
+    pingDevice(deviceId); // ping ngay lập tức
     const interval = setInterval(() => pingDevice(deviceId), 60_000);
     return () => clearInterval(interval);
   }, [checked]);

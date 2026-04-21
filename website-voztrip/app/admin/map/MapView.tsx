@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import { MapContainer, TileLayer, Circle, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -14,19 +14,20 @@ export type PoiMapItem = {
 };
 
 function getColor(visits: number): string {
-  if (visits >= 20) return "#dc2626"; // đỏ — rất đông
-  if (visits >= 10) return "#ea580c"; // cam — đông
-  if (visits >= 5)  return "#ca8a04"; // vàng — bình thường
-  if (visits >= 1)  return "#16a34a"; // xanh lá — ít
-  return "#94a3b8";                   // xám — chưa có ai
+  if (visits >= 20) return "#dc2626";
+  if (visits >= 10) return "#ea580c";
+  if (visits >= 5)  return "#ca8a04";
+  if (visits >= 1)  return "#16a34a";
+  return "#94a3b8";
 }
 
-function getRadius(visits: number): number {
-  if (visits >= 20) return 60;
-  if (visits >= 10) return 48;
-  if (visits >= 5)  return 38;
-  if (visits >= 1)  return 28;
-  return 18;
+// pixel radius — luôn nhìn thấy bất kể zoom
+function getPixelRadius(visits: number): number {
+  if (visits >= 20) return 22;
+  if (visits >= 10) return 18;
+  if (visits >= 5)  return 14;
+  if (visits >= 1)  return 11;
+  return 8;
 }
 
 function FitBounds({ pois }: { pois: PoiMapItem[] }) {
@@ -34,7 +35,7 @@ function FitBounds({ pois }: { pois: PoiMapItem[] }) {
   useEffect(() => {
     if (!pois.length) return;
     const bounds = L.latLngBounds(pois.map(p => [p.latitude, p.longitude]));
-    map.fitBounds(bounds, { padding: [48, 48] });
+    map.fitBounds(bounds, { padding: [60, 60] });
   }, [map, pois]);
   return null;
 }
@@ -55,15 +56,15 @@ export default function MapView({ pois }: { pois: PoiMapItem[] }) {
       />
       <FitBounds pois={pois} />
       {pois.map(poi => (
-        <Circle
+        <CircleMarker
           key={poi.poiId}
           center={[poi.latitude, poi.longitude]}
-          radius={poi.triggerRadius}
+          radius={getPixelRadius(poi.visits24h)}
           pathOptions={{
-            color: getColor(poi.visits24h),
-            fillColor: getColor(poi.visits24h),
-            fillOpacity: 0.35,
+            color: "#fff",
             weight: 2,
+            fillColor: getColor(poi.visits24h),
+            fillOpacity: 0.9,
           }}
         >
           <Popup>
@@ -80,7 +81,7 @@ export default function MapView({ pois }: { pois: PoiMapItem[] }) {
               </div>
             </div>
           </Popup>
-        </Circle>
+        </CircleMarker>
       ))}
     </MapContainer>
   );
