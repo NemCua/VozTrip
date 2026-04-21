@@ -509,6 +509,28 @@ public static class AdminRoutes
             return Results.Ok(new { report.ReportId, report.Status, report.AdminNote });
         });
 
+        // ─── FEATURE FLAGS ────────────────────────────────────────────────────────
+
+        // GET /api/admin/features — danh sách tất cả flags
+        group.MapGet("/features", async (AppDbContext db) =>
+        {
+            var flags = await db.FeatureFlags.OrderBy(f => f.Key).ToListAsync();
+            return Results.Ok(flags.Select(f => new { f.Key, f.Enabled, f.Label, f.UpdatedAt }));
+        });
+
+        // PATCH /api/admin/features/{key} — bật/tắt flag
+        group.MapPatch("/features/{key}", async (string key, ToggleFlagRequest req, AppDbContext db, IFeaturesService featSvc) =>
+        {
+            var flag = await db.FeatureFlags.FindAsync(key);
+            if (flag is null) return Results.NotFound(new { message = "Flag không tồn tại" });
+            flag.Enabled   = req.Enabled;
+            flag.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+            // Xóa cache để request tiếp theo lấy config mới
+            await (featSvc as FeaturesService)!.RefreshCacheAsync(db);
+            return Results.Ok(new { flag.Key, flag.Enabled });
+        });
+
         // GET /api/admin/map/pois — POI markers với visit counts cho admin map
         group.MapGet("/map/pois", async (AppDbContext db) =>
         {
@@ -548,6 +570,7 @@ public static class AdminRoutes
 }
 
 record FeedbackReviewRequest(string? Status, string? AdminNote);
+record ToggleFlagRequest(bool Enabled);
 record ZoneRequest(string ZoneName, string? Description);
 record LanguageRequest(string LanguageCode, string? LanguageName, bool? IsActive);
 record CreateSellerRequest(

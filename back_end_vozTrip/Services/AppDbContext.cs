@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<UsageLog> UsageLogs => Set<UsageLog>();
     public DbSet<DeviceRecord> DeviceRecords => Set<DeviceRecord>();
     public DbSet<FeedbackReport> FeedbackReports => Set<FeedbackReport>();
+    public DbSet<FeatureFlag>    FeatureFlags     => Set<FeatureFlag>();
 
     protected override void OnModelCreating(ModelBuilder model)
     {
@@ -274,6 +275,17 @@ public class AppDbContext : DbContext
             e.Property(f => f.ReviewedAt).HasColumnName("reviewed_at");
             e.HasIndex(f => f.Status);
             e.HasIndex(f => f.CreatedAt);
+        });
+
+        // feature_flags
+        model.Entity<FeatureFlag>(e =>
+        {
+            e.ToTable("feature_flags");
+            e.HasKey(f => f.Key);
+            e.Property(f => f.Key).HasColumnName("key").HasMaxLength(80).IsRequired();
+            e.Property(f => f.Enabled).HasColumnName("enabled").HasDefaultValue(true);
+            e.Property(f => f.Label).HasColumnName("label").HasMaxLength(120);
+            e.Property(f => f.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
         });
 
         // usage_logs — session_id là metadata thuần, không có FK constraint
