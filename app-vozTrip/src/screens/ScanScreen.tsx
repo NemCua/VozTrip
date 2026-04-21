@@ -60,6 +60,7 @@ export default function ScanScreen({ languageCode, sessionId, onPoiPress }: Prop
       <CameraView
         style={StyleSheet.absoluteFillObject}
         facing="back"
+        barcodeScannerEnabled
         barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
         onBarcodeScanned={scanned ? undefined : handleBarcode}
       />
