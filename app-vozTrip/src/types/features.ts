@@ -42,6 +42,7 @@ export interface PoiDetailCfg {
 
 export interface GpsVisitLogCfg {
   enabled: boolean;
+  qrScan: EnabledCfg;
   session: EnabledCfg;
   visitLog: EnabledCfg;
 }

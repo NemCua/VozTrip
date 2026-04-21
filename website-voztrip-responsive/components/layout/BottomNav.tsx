@@ -4,18 +4,21 @@ import { usePathname } from "next/navigation";
 import { Compass, MapPin, Map, QrCode, Settings } from "lucide-react";
 import { tr } from "@/lib/translations";
 import { useLanguage } from "@/context/LanguageContext";
-
-const NAV_ITEMS = [
-  { href: "/home",    icon: Compass,  key: "tab_explore" },
-  { href: "/nearby",  icon: MapPin,   key: "tab_nearby"  },
-  { href: "/map",     icon: Map,      key: "tab_map"     },
-  { href: "/scan",    icon: QrCode,   key: "tab_scan"    },
-  { href: "/profile", icon: Settings, key: "tab_settings" },
-];
+import { useFeatures } from "@/context/FeaturesContext";
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { lang } = useLanguage();
+  const features = useFeatures();
+  const qrEnabled = features.features.guest.gpsVisitLog.qrScan.enabled;
+
+  const NAV_ITEMS = [
+    { href: "/home",    icon: Compass,  key: "tab_explore",  show: true },
+    { href: "/nearby",  icon: MapPin,   key: "tab_nearby",   show: true },
+    { href: "/map",     icon: Map,      key: "tab_map",      show: true },
+    { href: "/scan",    icon: QrCode,   key: "tab_scan",     show: qrEnabled },
+    { href: "/profile", icon: Settings, key: "tab_settings", show: true },
+  ].filter(item => item.show);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#fdfaf4] border-t border-[#e8dcc8] max-w-md mx-auto">

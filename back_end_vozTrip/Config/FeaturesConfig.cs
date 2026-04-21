@@ -78,6 +78,7 @@ public class PoiDetailCfg
 public class GpsVisitLogCfg
 {
     public bool       Enabled  { get; set; } = true;
+    public EnabledCfg QrScan   { get; set; } = new();
     public EnabledCfg Session  { get; set; } = new();
     public EnabledCfg VisitLog { get; set; } = new();
 }

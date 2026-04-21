@@ -52,9 +52,10 @@
 
       "gpsVisitLog": {
         "enabled": true,
+        "qrScan": { "enabled": true },
         "session": { "enabled": true },
         "visitLog": { "enabled": true },
-        "note": "F07 — tạo session, ghi lượt thăm khi GPS trigger"
+        "note": "F07 — tạo session, ghi lượt thăm khi GPS trigger. qrScan: tab quét QR trong app"
       }
     },
 

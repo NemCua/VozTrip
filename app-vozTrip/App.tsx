@@ -293,7 +293,7 @@ function AppContent() {
           />
         );
       case "scan":
-        if (!features.features.guest.gpsVisitLog.enabled)
+        if (!features.features.guest.gpsVisitLog.qrScan?.enabled)
           return <MaintenanceScreen featureName="Quét QR" onBack={() => setActiveTab("home")} />;
         return (
           <ScanScreen

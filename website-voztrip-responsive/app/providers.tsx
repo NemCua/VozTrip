@@ -2,6 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, ReactNode, useEffect } from "react";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { FeaturesProvider } from "@/context/FeaturesContext";
 import AppShell from "@/components/layout/AppShell";
 import { usePathname, useRouter } from "next/navigation";
 import { checkDeviceStatus, joinDevice, pingDevice } from "@/services/api";
@@ -73,11 +74,13 @@ export default function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <GateGuard>
-          <ShellWrapper>{children}</ShellWrapper>
-        </GateGuard>
-      </LanguageProvider>
+      <FeaturesProvider>
+        <LanguageProvider>
+          <GateGuard>
+            <ShellWrapper>{children}</ShellWrapper>
+          </GateGuard>
+        </LanguageProvider>
+      </FeaturesProvider>
     </QueryClientProvider>
   );
 }
