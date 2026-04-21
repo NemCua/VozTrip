@@ -133,8 +133,16 @@ public static class GuestRoutes
         .WithFeatureFlag(f => f.Features.Guest.GpsVisitLog.VisitLog.Enabled);
 
         // POST /api/webhook/sepay — SePay gọi khi có tiền vào
-        app.MapPost("/api/webhook/sepay", async (SepayWebhookPayload payload, AppDbContext db) =>
+        app.MapPost("/api/webhook/sepay", async (SepayWebhookPayload payload, AppDbContext db, HttpContext ctx, IConfiguration config) =>
         {
+            // Verify API key từ SePay
+            var secret = config["SePay:WebhookSecret"];
+            if (!string.IsNullOrEmpty(secret))
+            {
+                var auth = ctx.Request.Headers["Authorization"].ToString();
+                if (auth != $"Apikey {secret}")
+                    return Results.Unauthorized();
+            }
             // Tìm "VOZTRIP XXXXXXXX" trong nội dung chuyển khoản
             var content = (payload.Content ?? payload.Description ?? "").ToUpper();
             var match = System.Text.RegularExpressions.Regex.Match(content, @"VOZTRIP\s+([A-F0-9]{8})");
