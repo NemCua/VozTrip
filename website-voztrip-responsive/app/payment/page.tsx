@@ -73,7 +73,7 @@ export default function PaymentPage() {
         {deviceId ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={`https://qr.sepay.vn/img?bank=Sacombank&acc=060310094611&template=compact&amount=50000&des=${encodeURIComponent(transferContent)}`}
+            src={`https://qr.sepay.vn/img?bank=Sacombank&acc=060310094611&template=compact&amount=3000&des=${encodeURIComponent(transferContent)}`}
             alt="QR Payment"
             width={260}
             height={260}
