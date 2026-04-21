@@ -106,6 +106,9 @@ using (var scope = app.Services.CreateScope())
     var db      = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var featSvc = scope.ServiceProvider.GetRequiredService<IFeaturesService>();
 
+    // Tự apply migration khi khởi động (an toàn khi chạy nhiều lần)
+    await db.Database.MigrateAsync();
+
     // Seed admin user
     if (!db.Users.Any(u => u.Role == "admin"))
     {
