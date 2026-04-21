@@ -68,15 +68,22 @@ export default function PaymentPage() {
       <p className="text-xl font-bold text-[#2c2416] tracking-wide">NGUYỄN QUỐC HUY</p>
       <p className="text-sm text-[#8c7a5e] mb-2">*******085</p>
 
-      {/* QR card */}
+      {/* QR card — dynamic QR từ SePay */}
       <div className="bg-white rounded-2xl p-6 shadow-lg mb-2">
-        <Image
-          src="/qr-payment.jpg"
-          alt="QR Payment"
-          width={260}
-          height={320}
-          className="object-contain"
-        />
+        {deviceId ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={`https://qr.sepay.vn/img?bank=Sacombank&acc=060310094611&template=compact&amount=50000&des=${encodeURIComponent(transferContent)}`}
+            alt="QR Payment"
+            width={260}
+            height={260}
+            className="object-contain"
+          />
+        ) : (
+          <div className="w-65 h-65 flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-[#c8a96e] border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
       </div>
 
       {/* Transfer content */}
