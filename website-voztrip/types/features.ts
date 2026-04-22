@@ -24,7 +24,8 @@ export interface GuestCfg {
 
 export interface SellerCfg {
   profile: EnabledCfg;
-  vipUpgrade: { enabled: boolean; mockPayment: EnabledCfg };
+  vipUpgrade: { enabled: boolean; mockPayment: EnabledCfg; sePayQr: EnabledCfg };
+  poiBoost: { enabled: boolean; boostDays: number; boostPrice: number };
   dashboard: { enabled: boolean; totalVisits: EnabledCfg; top5Pois: EnabledCfg; visitChart7Days: EnabledCfg };
   poiManagement: { enabled: boolean; create: EnabledCfg; update: EnabledCfg; delete: EnabledCfg; planLimit: { enabled: boolean; freePlanMaxPois: number } };
   localization: EnabledCfg;
