@@ -1,5 +1,6 @@
 "use client";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
@@ -26,6 +27,7 @@ function groupKey(key: string) {
 export default function AdminFeaturesPage() {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const authHeader = { Authorization: `Bearer ${session?.accessToken}` };
 
   const { data: flags = [], isLoading } = useQuery<Flag[]>({
@@ -37,7 +39,11 @@ export default function AdminFeaturesPage() {
   const toggleMutation = useMutation({
     mutationFn: ({ key, enabled }: { key: string; enabled: boolean }) =>
       api.patch(`/api/admin/features/${encodeURIComponent(key)}`, { enabled }, { headers: authHeader }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-features"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-features"] });
+      // Re-render server components để FeaturesContext và sidebar cập nhật ngay
+      router.refresh();
+    },
   });
 
   const grouped = flags.reduce<Record<string, Flag[]>>((acc, f) => {
@@ -115,7 +121,7 @@ export default function AdminFeaturesPage() {
       )}
 
       <p className="text-xs mt-6" style={{ color: "#b09878" }}>
-        Cache backend 30 giây — sau khi toggle, app cập nhật trong vòng 30s.
+        Thay đổi có hiệu lực ngay lập tức trên web. Mobile app cập nhật khi khởi động lại.
       </p>
     </div>
   );

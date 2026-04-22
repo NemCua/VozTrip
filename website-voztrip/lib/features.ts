@@ -16,7 +16,7 @@ export async function getFeatures(): Promise<FeaturesConfig> {
       "http://localhost:5000";
 
     const res = await fetch(`${apiUrl}/api/features`, {
-      next: { revalidate: 30 },
+      cache: "no-store",
     });
 
     if (!res.ok) throw new Error(`/api/features returned ${res.status}`);
