@@ -51,7 +51,7 @@ public static class SellerRoutes
             db.PaymentOrders.RemoveRange(oldOrders);
 
             var orderCode = GenerateOrderCode();
-            var amount    = 299_000L;
+            var amount    = 3_000L;
             var order     = new PaymentOrder
             {
                 SellerId  = sellerId,

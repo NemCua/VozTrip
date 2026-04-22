@@ -247,7 +247,7 @@ function BoostModal({ poi, session, onClose, onSuccess }: {
 
         <div className="text-xs" style={{ color: "#8c7a5e" }}>
           Boost đánh dấu POI là <span style={{ color: "#c8a96e" }}>nổi bật</span> trong {order?.boostDays ?? 30} ngày.
-          Giá: <strong style={{ color: "#2c2416" }}>{(99_000).toLocaleString("vi-VN")}đ</strong>
+          Giá: <strong style={{ color: "#2c2416" }}>{(3_000).toLocaleString("vi-VN")}đ</strong>
         </div>
 
         {!order ? (

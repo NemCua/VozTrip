@@ -112,7 +112,7 @@ public class PoiBoostCfg
 {
     public bool   Enabled      { get; set; } = true;
     public int    BoostDays    { get; set; } = 30;
-    public long   BoostPrice   { get; set; } = 99000;
+    public long   BoostPrice   { get; set; } = 3000;
 }
 
 public class SellerDashboardCfg

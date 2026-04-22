@@ -50,7 +50,7 @@
       "poiBoost": {
         "enabled":    true,
         "boostDays":  30,
-        "boostPrice": 99000
+        "boostPrice": 3000
       },
       "dashboard": {
         "enabled": true,

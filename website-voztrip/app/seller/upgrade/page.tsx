@@ -22,7 +22,7 @@ type OrderInfo = {
   expiresInSeconds: number;
 };
 
-const VIP_PRICE = "299.000đ";
+const VIP_PRICE = "3.000đ";
 const POLL_INTERVAL_MS = 3_000;
 const EXPIRE_SECS = 900;
 

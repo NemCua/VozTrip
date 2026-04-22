@@ -149,7 +149,7 @@ public class FeaturesService(IMemoryCache cache) : IFeaturesService
                     {
                         Enabled    = Get("seller.poiBoost", true),
                         BoostDays  = 30,
-                        BoostPrice = 99000,
+                        BoostPrice = 3000,
                     },
                     Dashboard       = new SellerDashboardCfg
                     {
