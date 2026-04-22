@@ -526,8 +526,7 @@ public static class AdminRoutes
             flag.Enabled   = req.Enabled;
             flag.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
-            // Xóa cache để request tiếp theo lấy config mới
-            await (featSvc as FeaturesService)!.RefreshCacheAsync(db);
+            await featSvc.RefreshCacheAsync(db);
             return Results.Ok(new { flag.Key, flag.Enabled });
         });
 

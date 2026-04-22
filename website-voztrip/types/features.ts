@@ -16,7 +16,8 @@ export interface GuestCfg {
   explorePois: { enabled: boolean; localizedName: EnabledCfg; thumbnail: EnabledCfg };
   poiDetail: { enabled: boolean; media: EnabledCfg; localization: EnabledCfg; audio: EnabledCfg };
   qna: EnabledCfg;
-  gpsVisitLog: { enabled: boolean; session: EnabledCfg; visitLog: EnabledCfg };
+  gpsVisitLog: { enabled: boolean; qrScan: EnabledCfg; session: EnabledCfg; visitLog: EnabledCfg };
+  usageLog: EnabledCfg;
 }
 
 export interface SellerCfg {

@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { getFeatures } from "../lib/features";
 import MaintenancePage from "./maintenance/page";
+import { headers } from "next/headers";
 
 function StaticMaintenancePage({ message }: { message?: string }) {
   return (
@@ -29,10 +30,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const features = await getFeatures();
+  const reqHeaders = await headers();
+  // middleware.ts đặt x-admin: 1 cho admin routes để bypass maintenance gate
+  const isAdminRoute = reqHeaders.get("x-admin") === "1";
 
   // ── Maintenance gate ─────────────────────────────────────────────────────
-  // Chặn toàn bộ website, render thẳng trang bảo trì (không cần redirect)
-  if (features.app.maintenance.enabled) {
+  // Admin bypass: admin luôn vào được panel để tắt maintenance mode
+  if (features.app.maintenance.enabled && !isAdminRoute) {
     return (
       <html lang="vi" className="h-full">
         <body className="min-h-full">

@@ -53,6 +53,7 @@ export interface GuestCfg {
   poiDetail: PoiDetailCfg;
   qna: EnabledCfg;
   gpsVisitLog: GpsVisitLogCfg;
+  usageLog: EnabledCfg;
 }
 
 // ─── Seller ──────────────────────────────────────────────────────────────────

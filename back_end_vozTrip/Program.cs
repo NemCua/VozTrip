@@ -82,7 +82,9 @@ app.Use(async (ctx, next) =>
     var cfg     = featSvc.GetConfig();
 
     if (cfg.App.Maintenance.Enabled
-        && !ctx.Request.Path.StartsWithSegments("/api/features"))
+        && !ctx.Request.Path.StartsWithSegments("/api/features")
+        && !ctx.Request.Path.StartsWithSegments("/api/admin/features")
+        && !ctx.Request.Path.StartsWithSegments("/api/auth"))
     {
         ctx.Response.StatusCode  = 503;
         ctx.Response.ContentType = "application/json";

@@ -48,6 +48,13 @@ export default withAuth(
     // Feature flag gate — redirect to /maintenance when disabled
     const check = checkFeatureFlag(pathname);
     if (!check.enabled) {
+      // Admin routes bypass maintenance so admin can always access the panel
+      // to toggle maintenance off — layout.tsx reads the x-admin header to skip gate
+      if (pathname.startsWith("/admin")) {
+        const res = NextResponse.next();
+        res.headers.set("x-admin", "1");
+        return res;
+      }
       const url = req.nextUrl.clone();
       url.pathname = "/maintenance";
       url.searchParams.delete("callbackUrl");
