@@ -93,10 +93,15 @@ export const joinDevice = async (deviceId: string) => {
   });
 };
 
-export const pingDevice = async (deviceId: string) => {
+// Returns false khi device bị xóa (404) — caller dùng để kick user ra
+export const pingDevice = async (deviceId: string): Promise<boolean> => {
   try {
-    await fetch(`${API_URL}/api/devices/${deviceId}/ping`, { method: "POST" });
-  } catch {}
+    const res = await fetch(`${API_URL}/api/devices/${deviceId}/ping`, { method: "POST" });
+    if (res.status === 404) return false;
+    return true;
+  } catch {
+    return true; // network error → assume still valid, không kick nhầm
+  }
 };
 
 export const checkDeviceStatus = async (deviceId: string): Promise<"approved" | "pending" | "unreachable"> => {
