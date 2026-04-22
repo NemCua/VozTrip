@@ -47,7 +47,7 @@ function GateGuard({ children }: { children: ReactNode }) {
     run();
   }, [pathname, router]);
 
-  // Heartbeat — ping ngay khi vào app, sau đó mỗi 60s
+  // Heartbeat — ping ngay khi vào app, sau đó mỗi 20s
   // Nếu device bị xóa (ping trả về false) → clear cache và kick ra /payment
   useEffect(() => {
     if (!checked) return;
@@ -64,7 +64,7 @@ function GateGuard({ children }: { children: ReactNode }) {
     };
 
     ping();
-    const interval = setInterval(ping, 60_000);
+    const interval = setInterval(ping, 20_000);
     return () => clearInterval(interval);
   }, [checked, router]);
 

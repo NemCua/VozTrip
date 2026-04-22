@@ -44,7 +44,7 @@ export default function AdminDevicesPage() {
     queryFn: () =>
       api.get("/api/admin/devices", { headers: authHeader }).then(r => r.data),
     enabled: !!session?.accessToken,
-    refetchInterval: 30000,
+    refetchInterval: 10000,
   });
 
   const approveMutation = useMutation({
