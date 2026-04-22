@@ -62,7 +62,7 @@ public static class SellerRoutes
             db.PaymentOrders.Add(order);
             await db.SaveChangesAsync();
 
-            var qrUrl = BuildVietQrUrl(amount, orderCode);
+            var qrUrl = BuildQrUrl(amount, orderCode);
             return Results.Ok(new
             {
                 orderId   = order.OrderId,
@@ -126,7 +126,7 @@ public static class SellerRoutes
             db.PaymentOrders.Add(order);
             await db.SaveChangesAsync();
 
-            var qrUrl = BuildVietQrUrl(amount, orderCode);
+            var qrUrl = BuildQrUrl(amount, orderCode);
             return Results.Ok(new
             {
                 orderId   = order.OrderId,
@@ -157,7 +157,7 @@ public static class SellerRoutes
                 featuredUntil = poi.FeaturedUntil,
                 pendingOrderId = pendingOrder?.OrderId,
                 pendingOrderCode = pendingOrder?.OrderCode,
-                pendingOrderQrUrl = pendingOrder != null ? BuildVietQrUrl(pendingOrder.Amount, pendingOrder.OrderCode) : null,
+                pendingOrderQrUrl = pendingOrder != null ? BuildQrUrl(pendingOrder.Amount, pendingOrder.OrderCode) : null,
             });
         })
         .WithFeatureFlag(f => f.Features.Seller.PoiBoost.Enabled);
@@ -715,14 +715,13 @@ public static class SellerRoutes
         return $"VOZ{ts}{rnd}";
     }
 
-    private static string BuildVietQrUrl(long amount, string orderCode)
+    private static string BuildQrUrl(long amount, string orderCode)
     {
-        var bankId      = Environment.GetEnvironmentVariable("VIETQR_BANK_ID")      ?? "970422";
-        var accountNo   = Environment.GetEnvironmentVariable("VIETQR_ACCOUNT_NO")   ?? "0000000000";
-        var accountName = Uri.EscapeDataString(
-            Environment.GetEnvironmentVariable("VIETQR_ACCOUNT_NAME") ?? "VOZTRIP");
-        return $"https://img.vietqr.io/image/{bankId}-{accountNo}-compact.png" +
-               $"?amount={amount}&addInfo={Uri.EscapeDataString(orderCode)}&accountName={accountName}";
+        var bank    = Environment.GetEnvironmentVariable("SEPAY_BANK")       ?? "Sacombank";
+        var account = Environment.GetEnvironmentVariable("SEPAY_ACCOUNT_NO") ?? "060310094611";
+        return $"https://qr.sepay.vn/img?bank={Uri.EscapeDataString(bank)}" +
+               $"&acc={account}&template=compact" +
+               $"&amount={amount}&des={Uri.EscapeDataString(orderCode)}";
     }
 }
 
