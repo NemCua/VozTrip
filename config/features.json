@@ -2,7 +2,6 @@
   "app": {
     "name": "VozTrip",
     "version": "1.0.0",
-    "description": "VozTrip — Smart Tourism Guide",
     "maintenance": {
       "enabled": false,
       "message": "VozTrip đang bảo trì. Vui lòng quay lại sau."
@@ -10,75 +9,55 @@
   },
 
   "auth": {
-    "login": {
-      "enabled": true
-    },
-    "register": {
-      "enabled": true,
-      "note": "Seller tự đăng ký, chờ admin duyệt"
-    },
-    "jwt": {
-      "accessTokenTTL": "7d"
-    }
+    "login":    { "enabled": true },
+    "register": { "enabled": true },
+    "jwt": { "accessTokenTTL": "7d" }
   },
 
   "features": {
-
     "guest": {
-      "languagePicker": {
-        "enabled": true,
-        "note": "F03 — lấy danh sách ngôn ngữ active"
-      },
-
+      "languagePicker": { "enabled": true },
       "explorePois": {
         "enabled": true,
         "localizedName": { "enabled": true },
-        "thumbnail": { "enabled": true },
-        "note": "F04 — danh sách POI active + tên đã dịch + thumbnail"
+        "thumbnail":     { "enabled": true }
       },
-
+      "nearbyPois": { "enabled": true },
+      "map":        { "enabled": true },
       "poiDetail": {
         "enabled": true,
-        "media": { "enabled": true },
+        "media":        { "enabled": true },
         "localization": { "enabled": true },
-        "audio": { "enabled": true },
-        "note": "F05 — media, mô tả, audio theo ngôn ngữ"
+        "audio":        { "enabled": true }
       },
-
-      "qna": {
-        "enabled": true,
-        "note": "F06 — câu hỏi + câu trả lời theo ngôn ngữ tại POI"
-      },
-
+      "qna": { "enabled": true },
       "gpsVisitLog": {
         "enabled": true,
-        "qrScan": { "enabled": true },
-        "session": { "enabled": true },
-        "visitLog": { "enabled": true },
-        "note": "F07 — tạo session, ghi lượt thăm khi GPS trigger. qrScan: tab quét QR trong app"
-      }
+        "qrScan":   { "enabled": true },
+        "session":  { "enabled": true },
+        "visitLog": { "enabled": true }
+      },
+      "usageLog": { "enabled": true }
     },
 
     "seller": {
-      "profile": {
-        "enabled": true,
-        "note": "F08 — xem thông tin shop, plan free/vip, giới hạn POI"
-      },
-
+      "profile": { "enabled": true },
       "vipUpgrade": {
         "enabled": true,
         "mockPayment": { "enabled": true },
-        "note": "F09 — mock payment, mở khoá giới hạn POI"
+        "sePayQr":     { "enabled": true }
       },
-
+      "poiBoost": {
+        "enabled":    true,
+        "boostDays":  30,
+        "boostPrice": 99000
+      },
       "dashboard": {
         "enabled": true,
-        "totalVisits": { "enabled": true },
-        "top5Pois": { "enabled": true },
-        "visitChart7Days": { "enabled": true },
-        "note": "F10 — thống kê: total visits, top 5 POI, biểu đồ 7 ngày"
+        "totalVisits":     { "enabled": true },
+        "top5Pois":        { "enabled": true },
+        "visitChart7Days": { "enabled": true }
       },
-
       "poiManagement": {
         "enabled": true,
         "create": { "enabled": true },
@@ -87,31 +66,23 @@
         "planLimit": {
           "enabled": true,
           "freePlanMaxPois": 1
-        },
-        "note": "F11 — CRUD POI, check PLAN_LIMIT khi tạo"
+        }
       },
-
       "localization": {
         "enabled": true,
         "upsert": { "enabled": true },
-        "delete": { "enabled": true },
-        "note": "F12 — upsert text (title, description) theo từng ngôn ngữ"
+        "delete": { "enabled": true }
       },
-
       "audioUpload": {
         "enabled": true,
         "uploadToCloudinary": { "enabled": true },
-        "deleteOldOnReplace": { "enabled": true },
-        "note": "F13 — upload mp3 lên Cloudinary, xoá audio cũ"
+        "deleteOldOnReplace": { "enabled": true }
       },
-
       "autoTranslate": {
         "enabled": true,
         "provider": "LibreTranslate",
-        "skipExistingManual": { "enabled": true },
-        "note": "F14 — auto-translate từ ngôn ngữ gốc sang các ngôn ngữ còn thiếu"
+        "skipExistingManual": { "enabled": true }
       },
-
       "mediaManagement": {
         "enabled": true,
         "upload": {
@@ -120,93 +91,75 @@
           "video": { "enabled": true }
         },
         "reorder": { "enabled": true },
-        "delete": { "enabled": true },
-        "note": "F15 — upload, sắp xếp, xoá media Cloudinary"
+        "delete":  { "enabled": true }
       },
-
       "qnaManagement": {
         "enabled": true,
         "createQuestion": { "enabled": true },
-        "upsertAnswer": { "enabled": true },
-        "deleteQuestion": { "enabled": true },
-        "note": "F16 — tạo câu hỏi, upsert câu trả lời, xoá"
+        "upsertAnswer":   { "enabled": true },
+        "deleteQuestion": { "enabled": true }
       }
     },
 
     "admin": {
       "dashboard": {
         "enabled": true,
-        "systemStats": { "enabled": true },
-        "top5Pois": { "enabled": true },
-        "visitChart7Days": { "enabled": true },
-        "note": "F17 — stats toàn hệ thống, top POI, 7 ngày"
+        "systemStats":     { "enabled": true },
+        "top5Pois":        { "enabled": true },
+        "visitChart7Days": { "enabled": true }
       },
-
       "sellerManagement": {
         "enabled": true,
-        "list": { "enabled": true },
+        "list":    { "enabled": true },
         "approve": { "enabled": true },
-        "create": { "enabled": true },
-        "note": "F18 — xem danh sách, duyệt đăng ký, tạo mới"
+        "create":  { "enabled": true }
       },
-
       "userManagement": {
         "enabled": true,
-        "list": { "enabled": true },
+        "list":       { "enabled": true },
         "toggleLock": { "enabled": true },
-        "delete": { "enabled": true },
-        "note": "F19 — xem tất cả, khóa/mở khóa, xoá"
+        "delete":     { "enabled": true }
       },
-
       "mediaModeration": {
         "enabled": true,
         "viewAll": { "enabled": true },
         "deleteViolation": {
           "enabled": true,
           "cleanCloudinary": { "enabled": true }
-        },
-        "note": "F20 — gallery toàn hệ thống, xem POI detail + chủ, xoá ảnh vi phạm"
+        }
       },
-
       "poiModeration": {
         "enabled": true,
-        "list": { "enabled": true },
-        "detail": { "enabled": true },
+        "list":         { "enabled": true },
+        "detail":       { "enabled": true },
         "toggleActive": { "enabled": true },
         "delete": {
           "enabled": true,
           "cleanCloudinary": { "enabled": true }
-        },
-        "note": "F21 — xem tất cả, toggle active, xoá + dọn Cloudinary"
+        }
       },
-
       "zoneManagement": {
         "enabled": true,
         "create": { "enabled": true },
         "update": { "enabled": true },
-        "delete": { "enabled": true },
-        "note": "F22 — CRUD khu vực"
+        "delete": { "enabled": true }
       },
-
       "languageManagement": {
         "enabled": true,
-        "create": { "enabled": true },
-        "update": { "enabled": true },
-        "toggleActive": { "enabled": true },
-        "note": "F23 — thêm, sửa, bật/tắt ngôn ngữ"
+        "create":       { "enabled": true },
+        "update":       { "enabled": true },
+        "toggleActive": { "enabled": true }
+      },
+      "deviceTracking": {
+        "enabled": true,
+        "delete":  { "enabled": true }
       }
     }
   },
 
   "pages": {
-    "privacy": {
-      "enabled": true,
-      "note": "Trang chính sách bảo mật — không phải feature nghiệp vụ"
-    },
-    "emergency": {
-      "enabled": false,
-      "message": "Hệ thống đang xử lý sự cố khẩn cấp.",
-      "note": "Trang thông báo khẩn cấp — bật khi cần thiết"
-    }
+    "privacy":   { "enabled": true },
+    "emergency": { "enabled": false, "message": "Hệ thống đang xử lý sự cố khẩn cấp." },
+    "feedback":  { "enabled": true }
   }
 }
