@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import featuresJson from "../config/features.json";
 import type { FeaturesConfig } from "./types/features";
 
-const features = featuresJson as FeaturesConfig;
+const features = featuresJson as unknown as FeaturesConfig;
 
 // Returns { enabled, message? } for the given pathname.
 // Checked top-to-bottom; first match wins.
