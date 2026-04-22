@@ -11,16 +11,18 @@ const GROUP_LABELS: Record<string, string> = {
   "guest":  "Tính năng khách",
   "seller": "Tính năng seller",
   "admin":  "Tính năng admin",
+  "pages":  "Trang & tiện ích",
   "other":  "Khác",
 };
 
-const GROUP_ORDER = ["app", "guest", "seller", "admin", "other"];
+const GROUP_ORDER = ["app", "guest", "seller", "admin", "pages", "other"];
 
 function groupKey(key: string) {
   if (key.startsWith("app."))    return "app";
   if (key.startsWith("guest."))  return "guest";
   if (key.startsWith("seller.")) return "seller";
   if (key.startsWith("admin."))  return "admin";
+  if (key.startsWith("pages."))  return "pages";
   return "other";
 }
 

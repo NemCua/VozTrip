@@ -54,6 +54,8 @@ public class GuestCfg
 {
     public EnabledCfg      LanguagePicker { get; set; } = new();
     public ExplorePoisCfg  ExplorePois    { get; set; } = new();
+    public EnabledCfg      NearbyPois     { get; set; } = new();
+    public EnabledCfg      Map            { get; set; } = new();
     public PoiDetailCfg    PoiDetail      { get; set; } = new();
     public EnabledCfg      Qna            { get; set; } = new();
     public GpsVisitLogCfg  GpsVisitLog    { get; set; } = new();
@@ -257,8 +259,9 @@ public class DeviceTrackingCfg
 
 public class PagesCfg
 {
-    public EnabledCfg      Privacy   { get; set; } = new();
+    public EnabledCfg       Privacy   { get; set; } = new();
     public EmergencyPageCfg Emergency { get; set; } = new();
+    public EnabledCfg       Feedback  { get; set; } = new();
 }
 
 public class EmergencyPageCfg

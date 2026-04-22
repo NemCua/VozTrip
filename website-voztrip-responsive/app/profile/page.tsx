@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { tr } from "@/lib/translations";
 import FeedbackModal from "@/components/ui/FeedbackModal";
+import { useFeatures } from "@/context/FeaturesContext";
 
 const LANGUAGES = [
   { code: "vi", label: "Tiếng Việt", flag: "🇻🇳" },
@@ -40,6 +41,9 @@ export default function ProfilePage() {
   const { lang } = useLanguage();
   const currentLang = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0];
   const [showFeedback, setShowFeedback] = useState(false);
+  const features = useFeatures();
+  const feedbackEnabled  = features.pages.feedback.enabled;
+  const langPickerEnabled = features.features.guest.languagePicker.enabled;
 
   return (
     <div className="min-h-screen bg-[#fdfaf4] overflow-y-auto pb-8">
@@ -169,39 +173,45 @@ export default function ProfilePage() {
       </div>
 
       {/* Section: Feedback */}
-      <div className="px-5 mb-6">
-        <SectionTitle label={lang === "en" ? "Support" : "Hỗ trợ"} />
-        <button
-          onClick={() => setShowFeedback(true)}
-          className="w-full flex items-center gap-3 bg-white border border-[#e8dfc8] rounded-2xl p-3.5"
-        >
-          <IconBox><MessageSquarePlus size={20} color="#c8a96e" /></IconBox>
-          <div className="flex-1 text-left">
-            <p className="text-xs text-[#b09878]">
-              {lang === "en" ? "Feedback & Report" : "Phản hồi & Báo cáo"}
-            </p>
-            <p className="text-[15px] text-[#2c2416] font-medium mt-0.5">
-              {lang === "en" ? "Send suggestion or report a bug" : "Gửi góp ý hoặc báo lỗi"}
-            </p>
-          </div>
-          <ChevronRight size={18} color="#d8cbb0" />
-        </button>
-      </div>
+      {feedbackEnabled && (
+        <div className="px-5 mb-6">
+          <SectionTitle label={lang === "en" ? "Support" : "Hỗ trợ"} />
+          <button
+            onClick={() => setShowFeedback(true)}
+            className="w-full flex items-center gap-3 bg-white border border-[#e8dfc8] rounded-2xl p-3.5"
+          >
+            <IconBox><MessageSquarePlus size={20} color="#c8a96e" /></IconBox>
+            <div className="flex-1 text-left">
+              <p className="text-xs text-[#b09878]">
+                {lang === "en" ? "Feedback & Report" : "Phản hồi & Báo cáo"}
+              </p>
+              <p className="text-[15px] text-[#2c2416] font-medium mt-0.5">
+                {lang === "en" ? "Send suggestion or report a bug" : "Gửi góp ý hoặc báo lỗi"}
+              </p>
+            </div>
+            <ChevronRight size={18} color="#d8cbb0" />
+          </button>
+        </div>
+      )}
 
-      {/* CTA button */}
-      <div className="px-5">
-        <button
-          onClick={() => router.push("/language")}
-          className="w-full flex items-center justify-center gap-2 bg-[#2c2416] rounded-2xl py-4"
-        >
-          <Languages size={18} color="#fdfaf4" />
-          <span className="text-[15px] font-semibold text-[#fdfaf4]">
-            {tr("profile_change_lang", lang)}
-          </span>
-        </button>
-      </div>
+      {/* CTA button: đổi ngôn ngữ — chỉ hiện khi languagePicker bật */}
+      {langPickerEnabled && (
+        <div className="px-5">
+          <button
+            onClick={() => router.push("/language")}
+            className="w-full flex items-center justify-center gap-2 bg-[#2c2416] rounded-2xl py-4"
+          >
+            <Languages size={18} color="#fdfaf4" />
+            <span className="text-[15px] font-semibold text-[#fdfaf4]">
+              {tr("profile_change_lang", lang)}
+            </span>
+          </button>
+        </div>
+      )}
 
-      <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
+      {feedbackEnabled && (
+        <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
+      )}
     </div>
   );
 }

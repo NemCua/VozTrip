@@ -14,6 +14,8 @@ export interface AuthCfg {
 export interface GuestCfg {
   languagePicker: EnabledCfg;
   explorePois: { enabled: boolean; localizedName: EnabledCfg; thumbnail: EnabledCfg };
+  nearbyPois: EnabledCfg;
+  map: EnabledCfg;
   poiDetail: { enabled: boolean; media: EnabledCfg; localization: EnabledCfg; audio: EnabledCfg };
   qna: EnabledCfg;
   gpsVisitLog: { enabled: boolean; qrScan: EnabledCfg; session: EnabledCfg; visitLog: EnabledCfg };
@@ -40,7 +42,7 @@ export interface AdminCfg {
   poiModeration: EnabledCfg;
   zoneManagement: EnabledCfg;
   languageManagement: EnabledCfg;
-  deviceTracking?: EnabledCfg;
+  deviceTracking: EnabledCfg;
 }
 
 export interface FeaturesCfg { guest: GuestCfg; seller: SellerCfg; admin: AdminCfg }
@@ -49,5 +51,5 @@ export interface FeaturesConfig {
   app: AppCfg;
   auth: AuthCfg;
   features: FeaturesCfg;
-  pages: { privacy: EnabledCfg; emergency: { enabled: boolean; message: string } };
+  pages: { privacy: EnabledCfg; emergency: { enabled: boolean; message: string }; feedback: EnabledCfg };
 }

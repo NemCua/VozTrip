@@ -10,13 +10,13 @@ export default function BottomNav() {
   const pathname = usePathname();
   const { lang } = useLanguage();
   const features = useFeatures();
-  const qrEnabled = features.features.guest.gpsVisitLog.qrScan.enabled;
+  const g = features.features.guest;
 
   const NAV_ITEMS = [
-    { href: "/home",    icon: Compass,  key: "tab_explore",  show: true },
-    { href: "/nearby",  icon: MapPin,   key: "tab_nearby",   show: true },
-    { href: "/map",     icon: Map,      key: "tab_map",      show: true },
-    { href: "/scan",    icon: QrCode,   key: "tab_scan",     show: qrEnabled },
+    { href: "/home",    icon: Compass,  key: "tab_explore",  show: g.explorePois.enabled },
+    { href: "/nearby",  icon: MapPin,   key: "tab_nearby",   show: g.nearbyPois.enabled },
+    { href: "/map",     icon: Map,      key: "tab_map",      show: g.map.enabled },
+    { href: "/scan",    icon: QrCode,   key: "tab_scan",     show: g.gpsVisitLog.qrScan.enabled },
     { href: "/profile", icon: Settings, key: "tab_settings", show: true },
   ].filter(item => item.show);
 

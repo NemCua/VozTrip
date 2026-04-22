@@ -14,6 +14,8 @@ public static class KnownFlags
 
         ("guest.languagePicker",               true,  "Chọn ngôn ngữ"),
         ("guest.explorePois",                  true,  "Khám phá POI (danh sách)"),
+        ("guest.nearbyPois",                   true,  "Tab POI gần đây"),
+        ("guest.map",                          true,  "Tab bản đồ"),
         ("guest.poiDetail",                    true,  "Chi tiết POI"),
         ("guest.poiDetail.media",              true,  "Media trong POI detail"),
         ("guest.poiDetail.audio",              true,  "Audio thuyết minh"),
@@ -21,6 +23,10 @@ public static class KnownFlags
         ("guest.gpsVisitLog",                  true,  "GPS trigger & visit log"),
         ("guest.gpsVisitLog.qrScan",           true,  "Tab quét QR (web + mobile)"),
         ("guest.usageLog",                     true,  "Ghi sự kiện dùng app"),
+
+        ("pages.privacy",                      true,  "Trang chính sách bảo mật"),
+        ("pages.emergency",                    true,  "Nút SOS khẩn cấp"),
+        ("pages.feedback",                     true,  "Gửi phản hồi / báo lỗi"),
 
         ("seller.profile",                     true,  "Seller: xem thông tin shop"),
         ("seller.vipUpgrade",                  true,  "Seller: nâng cấp VIP"),
@@ -109,6 +115,8 @@ public class FeaturesService(IMemoryCache cache) : IFeaturesService
                         LocalizedName = new EnabledCfg { Enabled = true },
                         Thumbnail     = new EnabledCfg { Enabled = true },
                     },
+                    NearbyPois = new EnabledCfg { Enabled = Get("guest.nearbyPois", true) },
+                    Map        = new EnabledCfg { Enabled = Get("guest.map", true) },
                     PoiDetail = new PoiDetailCfg
                     {
                         Enabled      = Get("guest.poiDetail", true),
@@ -252,6 +260,12 @@ public class FeaturesService(IMemoryCache cache) : IFeaturesService
                     },
                 },
             }
+        };
+        config.Pages = new PagesCfg
+        {
+            Privacy   = new EnabledCfg       { Enabled = Get("pages.privacy",   true) },
+            Emergency = new EmergencyPageCfg  { Enabled = Get("pages.emergency", true) },
+            Feedback  = new EnabledCfg        { Enabled = Get("pages.feedback",  true) },
         };
 
         cache.Set(CacheKey, config, CacheTtl);

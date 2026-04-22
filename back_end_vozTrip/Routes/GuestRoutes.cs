@@ -233,7 +233,8 @@ public static class GuestRoutes
             db.FeedbackReports.Add(report);
             await db.SaveChangesAsync();
             return Results.Ok(new { report.ReportId });
-        });
+        })
+        .WithFeatureFlag(f => f.Pages.Feedback.Enabled);
 
         // POST /api/usagelogs — ghi sự kiện dùng app
         app.MapPost("/api/usagelogs", async (UsageLogRequest req, AppDbContext db) =>
