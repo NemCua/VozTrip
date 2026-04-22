@@ -132,7 +132,7 @@ public static class GuestRoutes
         })
         .WithFeatureFlag(f => f.Features.Guest.GpsVisitLog.VisitLog.Enabled);
 
-        // POST /api/webhook/sepay — SePay gọi khi có tiền vào
+        // POST /api/webhook/sepay — SePay gọi khi có tiền vào (dùng chung cho du khách và seller)
         app.MapPost("/api/webhook/sepay", async (SepayWebhookPayload payload, AppDbContext db, HttpContext ctx, IConfiguration config) =>
         {
             // Verify API key từ SePay
@@ -143,15 +143,62 @@ public static class GuestRoutes
                 if (auth != $"Apikey {secret}")
                     return Results.Unauthorized();
             }
-            // Tìm "VOZTRIP XXXXXXXX" trong nội dung chuyển khoản
+
+            if (payload.TransferType != "in")
+                return Results.Ok(new { success = true });
+
             var content = (payload.Content ?? payload.Description ?? "").ToUpper();
-            var match = System.Text.RegularExpressions.Regex.Match(content, @"VOZTRIP\s+([A-F0-9]{8})");
-            if (!match.Success)
-                return Results.Ok(new { matched = false, reason = "no VOZTRIP code found" });
 
-            var shortCode = match.Groups[1].Value.ToLower(); // 8 ký tự đầu của deviceId
+            // ── Seller: order code có dạng VOZ + 9 chữ số ─────────────────
+            var sellerMatch = System.Text.RegularExpressions.Regex.Match(content, @"\bVOZ\d{9}\b");
+            if (sellerMatch.Success)
+            {
+                var orderCode = sellerMatch.Value; // uppercase đã match
+                // OrderCode trong DB được tạo uppercase, so sánh trực tiếp
+                var order = await db.PaymentOrders
+                    .Where(o => o.Status == "pending" && o.OrderCode == orderCode)
+                    .FirstOrDefaultAsync();
 
-            // Tìm device theo 8 ký tự đầu của deviceId
+                if (order is not null && payload.TransferAmount >= order.Amount)
+                {
+                    order.Status = "paid";
+                    order.PaidAt = DateTime.UtcNow;
+
+                    if (order.Type == "seller_vip")
+                    {
+                        var seller = await db.Sellers.FindAsync(order.SellerId);
+                        if (seller is not null)
+                        {
+                            seller.Plan           = "vip";
+                            seller.PlanUpgradedAt = DateTime.UtcNow;
+                        }
+                    }
+                    else if (order.Type == "poi_boost" && order.PoiId is not null)
+                    {
+                        var poi = await db.Pois.FindAsync(order.PoiId);
+                        if (poi is not null)
+                        {
+                            var boostDays = int.Parse(Environment.GetEnvironmentVariable("POI_BOOST_DAYS") ?? "30");
+                            var from = poi.IsFeatured && poi.FeaturedUntil > DateTime.UtcNow
+                                ? poi.FeaturedUntil.Value : DateTime.UtcNow;
+                            poi.IsFeatured    = true;
+                            poi.FeaturedUntil = from.AddDays(boostDays);
+                        }
+                    }
+
+                    await db.SaveChangesAsync();
+                    return Results.Ok(new { matched = true, type = order.Type });
+                }
+
+                return Results.Ok(new { matched = false, reason = "order not found or amount insufficient" });
+            }
+
+            // ── Du khách: "VOZTRIP XXXXXXXX" ──────────────────────────────
+            var deviceMatch = System.Text.RegularExpressions.Regex.Match(content, @"VOZTRIP\s+([A-F0-9]{8})");
+            if (!deviceMatch.Success)
+                return Results.Ok(new { matched = false, reason = "no recognizable code found" });
+
+            var shortCode = deviceMatch.Groups[1].Value.ToLower();
             var device = await db.DeviceRecords
                 .FirstOrDefaultAsync(d => d.DeviceId.StartsWith(shortCode));
 
@@ -165,7 +212,7 @@ public static class GuestRoutes
                 await db.SaveChangesAsync();
             }
 
-            return Results.Ok(new { matched = true, deviceId = device.DeviceId, approved = true });
+            return Results.Ok(new { matched = true, type = "device", deviceId = device.DeviceId });
         });
 
         // GET /api/devices/{id}/status — kiểm tra thiết bị đã được duyệt chưa

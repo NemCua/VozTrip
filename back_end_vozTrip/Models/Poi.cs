@@ -10,6 +10,8 @@ public class Poi
     public double Longitude { get; set; }
     public double TriggerRadius { get; set; } = 10.0; // met
     public bool IsActive { get; set; } = true;
+    public bool IsFeatured { get; set; } = false;
+    public DateTime? FeaturedUntil { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation

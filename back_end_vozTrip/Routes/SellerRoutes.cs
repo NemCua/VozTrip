@@ -35,8 +35,8 @@ public static class SellerRoutes
 
         // ─── VIP UPGRADE ─────────────────────────────────────────────────────
 
-        // POST /api/seller/upgrade — F09
-        group.MapPost("/upgrade", async (UpgradeRequest req, AppDbContext db, HttpContext ctx, FeaturesConfig features) =>
+        // POST /api/seller/upgrade/order — tạo đơn thanh toán VIP qua SePay QR
+        group.MapPost("/upgrade/order", async (AppDbContext db, HttpContext ctx, FeaturesConfig features) =>
         {
             var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var seller   = await db.Sellers.FindAsync(sellerId);
@@ -44,19 +44,123 @@ public static class SellerRoutes
             if (seller.Plan == "vip")
                 return Results.BadRequest(new { message = "Bạn đã là VIP rồi." });
 
-            // Sub-flag: mock payment validation
-            if (features.Features.Seller.VipUpgrade.MockPayment.Enabled)
-            {
-                if (req.CardNumber is null || req.CardNumber.Replace(" ", "").Length != 16)
-                    return Results.BadRequest(new { message = "Số thẻ không hợp lệ." });
-            }
+            // Hủy các đơn pending cũ của seller này (tránh rác)
+            var oldOrders = await db.PaymentOrders
+                .Where(o => o.SellerId == sellerId && o.Type == "seller_vip" && o.Status == "pending")
+                .ToListAsync();
+            db.PaymentOrders.RemoveRange(oldOrders);
 
-            seller.Plan           = "vip";
-            seller.PlanUpgradedAt = DateTime.UtcNow;
+            var orderCode = GenerateOrderCode();
+            var amount    = 299_000L;
+            var order     = new PaymentOrder
+            {
+                SellerId  = sellerId,
+                Type      = "seller_vip",
+                Amount    = amount,
+                OrderCode = orderCode,
+            };
+            db.PaymentOrders.Add(order);
             await db.SaveChangesAsync();
-            return Results.Ok(new { message = "Nâng cấp VIP thành công!", plan = "vip" });
+
+            var qrUrl = BuildVietQrUrl(amount, orderCode);
+            return Results.Ok(new
+            {
+                orderId   = order.OrderId,
+                orderCode,
+                amount,
+                qrUrl,
+                expiresInSeconds = 900, // 15 phút
+            });
         })
         .WithFeatureFlag(f => f.Features.Seller.VipUpgrade.Enabled);
+
+        // GET /api/seller/upgrade/order/{orderId} — kiểm tra trạng thái thanh toán VIP
+        group.MapGet("/upgrade/order/{orderId}", async (string orderId, AppDbContext db, HttpContext ctx) =>
+        {
+            var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var order    = await db.PaymentOrders
+                .FirstOrDefaultAsync(o => o.OrderId == orderId && o.SellerId == sellerId && o.Type == "seller_vip");
+            if (order is null) return Results.NotFound();
+            return Results.Ok(new { order.Status, order.PaidAt });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.VipUpgrade.Enabled);
+
+        // GET /api/seller/orders/{orderId} — trạng thái bất kỳ đơn hàng nào của seller
+        group.MapGet("/orders/{orderId}", async (string orderId, AppDbContext db, HttpContext ctx) =>
+        {
+            var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var order    = await db.PaymentOrders
+                .FirstOrDefaultAsync(o => o.OrderId == orderId && o.SellerId == sellerId);
+            if (order is null) return Results.NotFound();
+            return Results.Ok(new { order.Status, order.Type, order.PaidAt });
+        });
+
+        // ─── POI BOOST ───────────────────────────────────────────────────────
+
+        // POST /api/seller/pois/{id}/boost/order — tạo đơn boost POI qua SePay QR
+        group.MapPost("/pois/{id}/boost/order", async (string id, AppDbContext db, HttpContext ctx, FeaturesConfig features) =>
+        {
+            var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var poi      = await db.Pois.FirstOrDefaultAsync(p => p.PoiId == id && p.SellerId == sellerId);
+            if (poi is null) return Results.NotFound();
+
+            var cfg       = features.Features.Seller.PoiBoost;
+            var amount    = cfg.BoostPrice;
+            var boostDays = cfg.BoostDays;
+
+            // Hủy đơn pending cũ cho POI này
+            var oldOrders = await db.PaymentOrders
+                .Where(o => o.SellerId == sellerId && o.PoiId == id && o.Type == "poi_boost" && o.Status == "pending")
+                .ToListAsync();
+            db.PaymentOrders.RemoveRange(oldOrders);
+
+            var orderCode = GenerateOrderCode();
+            var order     = new PaymentOrder
+            {
+                SellerId  = sellerId,
+                Type      = "poi_boost",
+                PoiId     = id,
+                Amount    = amount,
+                OrderCode = orderCode,
+            };
+            db.PaymentOrders.Add(order);
+            await db.SaveChangesAsync();
+
+            var qrUrl = BuildVietQrUrl(amount, orderCode);
+            return Results.Ok(new
+            {
+                orderId   = order.OrderId,
+                orderCode,
+                amount,
+                boostDays,
+                qrUrl,
+                expiresInSeconds = 900,
+            });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.PoiBoost.Enabled);
+
+        // GET /api/seller/pois/{id}/boost/status — trạng thái boost hiện tại
+        group.MapGet("/pois/{id}/boost/status", async (string id, AppDbContext db, HttpContext ctx) =>
+        {
+            var sellerId = ctx.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var poi      = await db.Pois.FirstOrDefaultAsync(p => p.PoiId == id && p.SellerId == sellerId);
+            if (poi is null) return Results.NotFound();
+
+            var pendingOrder = await db.PaymentOrders
+                .Where(o => o.SellerId == sellerId && o.PoiId == id && o.Type == "poi_boost" && o.Status == "pending")
+                .OrderByDescending(o => o.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            return Results.Ok(new
+            {
+                isFeatured   = poi.IsFeatured && (poi.FeaturedUntil == null || poi.FeaturedUntil > DateTime.UtcNow),
+                featuredUntil = poi.FeaturedUntil,
+                pendingOrderId = pendingOrder?.OrderId,
+                pendingOrderCode = pendingOrder?.OrderCode,
+                pendingOrderQrUrl = pendingOrder != null ? BuildVietQrUrl(pendingOrder.Amount, pendingOrder.OrderCode) : null,
+            });
+        })
+        .WithFeatureFlag(f => f.Features.Seller.PoiBoost.Enabled);
 
         // ─── DASHBOARD ───────────────────────────────────────────────────────
 
@@ -120,7 +224,7 @@ public static class SellerRoutes
                 .Select(p => new
                 {
                     p.PoiId, p.PoiName, p.Latitude, p.Longitude,
-                    p.TriggerRadius, p.IsActive, p.CreatedAt,
+                    p.TriggerRadius, p.IsActive, p.IsFeatured, p.FeaturedUntil, p.CreatedAt,
                     zoneName           = p.Zone != null ? p.Zone.ZoneName : null,
                     localizationCount  = p.Localizations.Count
                 })
@@ -603,13 +707,28 @@ public static class SellerRoutes
         })
         .WithFeatureFlag(f => f.Features.Seller.QnaManagement.Enabled);
     }
+
+    private static string GenerateOrderCode()
+    {
+        var ts  = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()[^6..]; // last 6 digits of unix ts
+        var rnd = Random.Shared.Next(100, 999);
+        return $"VOZ{ts}{rnd}";
+    }
+
+    private static string BuildVietQrUrl(long amount, string orderCode)
+    {
+        var bankId      = Environment.GetEnvironmentVariable("VIETQR_BANK_ID")      ?? "970422";
+        var accountNo   = Environment.GetEnvironmentVariable("VIETQR_ACCOUNT_NO")   ?? "0000000000";
+        var accountName = Uri.EscapeDataString(
+            Environment.GetEnvironmentVariable("VIETQR_ACCOUNT_NAME") ?? "VOZTRIP");
+        return $"https://img.vietqr.io/image/{bankId}-{accountNo}-compact.png" +
+               $"?amount={amount}&addInfo={Uri.EscapeDataString(orderCode)}&accountName={accountName}";
+    }
 }
 
 record CreatePoiRequest(
     string PoiName, double Latitude, double Longitude,
     string? ZoneId, double? TriggerRadius, bool? IsActive);
-
-record UpgradeRequest(string? CardNumber, string? CardHolder);
 
 record UpsertLocalizationRequest(
     string? Title, string? Description,

@@ -22,6 +22,7 @@ public class AppDbContext : DbContext
     public DbSet<DeviceRecord> DeviceRecords => Set<DeviceRecord>();
     public DbSet<FeedbackReport> FeedbackReports => Set<FeedbackReport>();
     public DbSet<FeatureFlag>    FeatureFlags     => Set<FeatureFlag>();
+    public DbSet<PaymentOrder>   PaymentOrders    => Set<PaymentOrder>();
 
     protected override void OnModelCreating(ModelBuilder model)
     {
@@ -89,6 +90,8 @@ public class AppDbContext : DbContext
             e.Property(p => p.Longitude).HasColumnName("longitude").IsRequired();
             e.Property(p => p.TriggerRadius).HasColumnName("trigger_radius").HasDefaultValue(10.0);
             e.Property(p => p.IsActive).HasColumnName("is_active").HasDefaultValue(true);
+            e.Property(p => p.IsFeatured).HasColumnName("is_featured").HasDefaultValue(false);
+            e.Property(p => p.FeaturedUntil).HasColumnName("featured_until");
             e.Property(p => p.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
 
             e.HasOne(p => p.Seller)
@@ -286,6 +289,34 @@ public class AppDbContext : DbContext
             e.Property(f => f.Enabled).HasColumnName("enabled").HasDefaultValue(true);
             e.Property(f => f.Label).HasColumnName("label").HasMaxLength(120);
             e.Property(f => f.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
+        });
+
+        // payment_orders
+        model.Entity<PaymentOrder>(e =>
+        {
+            e.ToTable("payment_orders");
+            e.HasKey(p => p.OrderId);
+            e.Property(p => p.OrderId).HasColumnName("order_id");
+            e.Property(p => p.SellerId).HasColumnName("seller_id").IsRequired();
+            e.Property(p => p.Type).HasColumnName("type").HasMaxLength(20).IsRequired();
+            e.Property(p => p.PoiId).HasColumnName("poi_id");
+            e.Property(p => p.Amount).HasColumnName("amount").IsRequired();
+            e.Property(p => p.OrderCode).HasColumnName("order_code").HasMaxLength(30).IsRequired();
+            e.HasIndex(p => p.OrderCode).IsUnique();
+            e.Property(p => p.Status).HasColumnName("status").HasMaxLength(20).HasDefaultValue("pending");
+            e.HasIndex(p => p.Status);
+            e.Property(p => p.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+            e.Property(p => p.PaidAt).HasColumnName("paid_at");
+
+            e.HasOne(p => p.Seller)
+             .WithMany()
+             .HasForeignKey(p => p.SellerId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(p => p.Poi)
+             .WithMany()
+             .HasForeignKey(p => p.PoiId)
+             .OnDelete(DeleteBehavior.SetNull);
         });
 
         // usage_logs — session_id là metadata thuần, không có FK constraint

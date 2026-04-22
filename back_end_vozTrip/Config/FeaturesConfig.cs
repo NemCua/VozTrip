@@ -91,6 +91,7 @@ public class SellerCfg
 {
     public EnabledCfg          Profile         { get; set; } = new();
     public VipUpgradeCfg       VipUpgrade      { get; set; } = new();
+    public PoiBoostCfg         PoiBoost        { get; set; } = new();
     public SellerDashboardCfg  Dashboard       { get; set; } = new();
     public PoiManagementCfg    PoiManagement   { get; set; } = new();
     public LocalizationCfg     Localization    { get; set; } = new();
@@ -104,6 +105,14 @@ public class VipUpgradeCfg
 {
     public bool       Enabled     { get; set; } = true;
     public EnabledCfg MockPayment { get; set; } = new();
+    public EnabledCfg SePayQr     { get; set; } = new();
+}
+
+public class PoiBoostCfg
+{
+    public bool   Enabled      { get; set; } = true;
+    public int    BoostDays    { get; set; } = 30;
+    public long   BoostPrice   { get; set; } = 99000;
 }
 
 public class SellerDashboardCfg

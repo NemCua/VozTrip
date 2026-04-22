@@ -37,6 +37,8 @@ public static class KnownFlags
         ("seller.autoTranslate",               true,  "Seller: tự động dịch"),
         ("seller.mediaManagement",             true,  "Seller: quản lý media"),
         ("seller.qnaManagement",               true,  "Seller: quản lý Q&A"),
+        ("seller.poiBoost",                    true,  "Seller: tăng hiện diện POI (boost)"),
+        ("seller.vipUpgrade.sePayQr",          true,  "Seller: thanh toán qua SePay QR"),
 
         ("admin.dashboard",                    true,  "Admin: dashboard hệ thống"),
         ("admin.sellerManagement",             true,  "Admin: quản lý seller"),
@@ -141,6 +143,13 @@ public class FeaturesService(IMemoryCache cache) : IFeaturesService
                     {
                         Enabled     = Get("seller.vipUpgrade", true),
                         MockPayment = new EnabledCfg { Enabled = true },
+                        SePayQr     = new EnabledCfg { Enabled = Get("seller.vipUpgrade.sePayQr", true) },
+                    },
+                    PoiBoost        = new PoiBoostCfg
+                    {
+                        Enabled    = Get("seller.poiBoost", true),
+                        BoostDays  = 30,
+                        BoostPrice = 99000,
                     },
                     Dashboard       = new SellerDashboardCfg
                     {
