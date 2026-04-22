@@ -6,13 +6,20 @@ import { api } from "@/lib/api";
 type Flag = { key: string; enabled: boolean; label: string; updatedAt: string };
 
 const GROUP_LABELS: Record<string, string> = {
-  "app":     "Ứng dụng",
-  "guest":   "Tính năng khách",
+  "app":    "Ứng dụng",
+  "guest":  "Tính năng khách",
+  "seller": "Tính năng seller",
+  "admin":  "Tính năng admin",
+  "other":  "Khác",
 };
 
+const GROUP_ORDER = ["app", "guest", "seller", "admin", "other"];
+
 function groupKey(key: string) {
-  if (key.startsWith("app."))   return "app";
-  if (key.startsWith("guest.")) return "guest";
+  if (key.startsWith("app."))    return "app";
+  if (key.startsWith("guest."))  return "guest";
+  if (key.startsWith("seller.")) return "seller";
+  if (key.startsWith("admin."))  return "admin";
   return "other";
 }
 
@@ -55,19 +62,19 @@ export default function AdminFeaturesPage() {
         <div className="text-xs tracking-widest" style={{ color: "#8c7a5e" }}>Loading...</div>
       ) : (
         <div className="flex flex-col gap-6">
-          {Object.entries(grouped).map(([group, items]) => (
+          {GROUP_ORDER.filter(g => grouped[g]?.length).map(group => (
             <div key={group}>
               <div className="text-xs tracking-[0.25em] uppercase mb-3" style={{ color: "#b09878" }}>
                 {GROUP_LABELS[group] ?? group}
               </div>
               <div style={{ border: "1px solid #e8dfc8", borderRadius: "2px", overflow: "hidden" }}>
-                {items.map((flag, i) => (
+                {grouped[group].map((flag, i) => (
                   <div
                     key={flag.key}
                     className="flex items-center justify-between px-5 py-3.5"
                     style={{
                       backgroundColor: i % 2 === 0 ? "#fdfaf4" : "#faf7f0",
-                      borderBottom: i < items.length - 1 ? "1px solid #e8dfc8" : "none",
+                      borderBottom: i < grouped[group].length - 1 ? "1px solid #e8dfc8" : "none",
                     }}
                   >
                     <div className="flex flex-col gap-0.5">

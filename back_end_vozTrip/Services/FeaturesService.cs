@@ -59,8 +59,6 @@ public class FeaturesService(IMemoryCache cache) : IFeaturesService
     public FeaturesConfig GetConfig() =>
         cache.Get<FeaturesConfig>(CacheKey) ?? new FeaturesConfig();
 
-    public void InvalidateCache() => cache.Remove(CacheKey);
-
     // Được gọi từ background task khi app khởi động
     public async Task SeedDefaultsAsync(AppDbContext db)
     {

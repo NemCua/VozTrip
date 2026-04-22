@@ -45,16 +45,19 @@ export default withAuth(
     const { pathname } = req.nextUrl;
     const token = req.nextauth.token;
 
+    // Role-based auth guard
+    if (pathname.startsWith("/admin") && token?.role !== "admin") {
+      return NextResponse.redirect(new URL("/seller", req.url));
+    }
+    if (pathname.startsWith("/seller") && token?.role !== "seller") {
+      return NextResponse.redirect(new URL("/admin", req.url));
+    }
+
     // Feature flag gate — redirect to /maintenance when disabled
+    // Note: middleware uses bundled JSON (Edge-compatible). Real-time maintenance
+    // enforcement for public routes is handled in layout.tsx via API fetch.
     const check = checkFeatureFlag(pathname);
-    if (!check.enabled) {
-      // Admin routes bypass maintenance so admin can always access the panel
-      // to toggle maintenance off — layout.tsx reads the x-admin header to skip gate
-      if (pathname.startsWith("/admin")) {
-        const res = NextResponse.next();
-        res.headers.set("x-admin", "1");
-        return res;
-      }
+    if (!check.enabled && !pathname.startsWith("/admin")) {
       const url = req.nextUrl.clone();
       url.pathname = "/maintenance";
       url.searchParams.delete("callbackUrl");
@@ -62,12 +65,13 @@ export default withAuth(
       return NextResponse.redirect(url);
     }
 
-    // Role-based auth guard (only for authenticated routes)
-    if (pathname.startsWith("/admin") && token?.role !== "admin") {
-      return NextResponse.redirect(new URL("/seller", req.url));
-    }
-    if (pathname.startsWith("/seller") && token?.role !== "seller") {
-      return NextResponse.redirect(new URL("/admin", req.url));
+    // Always tag admin routes so layout.tsx can bypass the maintenance gate.
+    // This header is the only reliable signal because layout.tsx has no access
+    // to the request pathname — middleware runs in Edge, layout in Node.
+    if (pathname.startsWith("/admin")) {
+      const res = NextResponse.next();
+      res.headers.set("x-admin", "1");
+      return res;
     }
   },
   {
