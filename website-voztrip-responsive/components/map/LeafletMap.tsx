@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -32,30 +32,42 @@ function makeIcon(selected: boolean) {
   });
 }
 
-function RecenterControl({ coords }: { coords: { lat: number; lng: number } | null }) {
+// Handles auto-center on first GPS fix + manual flyTo triggered from outside
+function MapController({
+  userCoords,
+  flyToTrigger,
+}: {
+  userCoords: { lat: number; lng: number } | null;
+  flyToTrigger: number;
+}) {
   const map = useMap();
-  return (
-    <button
-      onClick={() => coords && map.flyTo([coords.lat, coords.lng], 16, { duration: 0.5 })}
-      className="absolute right-4 bottom-32 z-[1000] w-11 h-11 rounded-full bg-white border border-[#e8dfc8] shadow-md flex items-center justify-center"
-      title="Vị trí của tôi"
-    >
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2c2416" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-        <path d="M12 2a10 10 0 0 1 10 10A10 10 0 0 1 12 22 10 10 0 0 1 2 12 10 10 0 0 1 12 2z" opacity=".2"/>
-      </svg>
-    </button>
-  );
+  const hasCenteredRef = useRef(false);
+
+  useEffect(() => {
+    if (userCoords && !hasCenteredRef.current) {
+      hasCenteredRef.current = true;
+      map.flyTo([userCoords.lat, userCoords.lng], 16, { duration: 1 });
+    }
+  }, [userCoords, map]);
+
+  useEffect(() => {
+    if (flyToTrigger > 0 && userCoords) {
+      map.flyTo([userCoords.lat, userCoords.lng], 16, { duration: 0.5 });
+    }
+  }, [flyToTrigger, map]);
+
+  return null;
 }
 
 type Props = {
   pois: Poi[];
   selectedPoiId: string | null;
   userCoords: { lat: number; lng: number } | null;
+  flyToTrigger: number;
   onMarkerClick: (poi: Poi) => void;
 };
 
-export default function LeafletMap({ pois, selectedPoiId, userCoords, onMarkerClick }: Props) {
+export default function LeafletMap({ pois, selectedPoiId, userCoords, flyToTrigger, onMarkerClick }: Props) {
   const center = pois.length
     ? {
         lat: pois.reduce((s, p) => s + p.latitude, 0) / pois.length,
@@ -98,7 +110,7 @@ export default function LeafletMap({ pois, selectedPoiId, userCoords, onMarkerCl
           })}
         />
       )}
-      <RecenterControl coords={userCoords} />
+      <MapController userCoords={userCoords} flyToTrigger={flyToTrigger} />
     </MapContainer>
   );
 }

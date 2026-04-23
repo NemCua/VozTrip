@@ -34,6 +34,7 @@ export default function MapPage() {
   const [panelVisible, setPanelVisible] = useState(false);
   const [panelIn, setPanelIn] = useState(false);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [flyToTrigger, setFlyToTrigger] = useState(0);
 
   const sessionId =
     typeof window !== "undefined"
@@ -103,8 +104,22 @@ export default function MapPage() {
         pois={pois}
         selectedPoiId={selectedPoi?.poiId ?? null}
         userCoords={userCoords}
+        flyToTrigger={flyToTrigger}
         onMarkerClick={handleMarkerClick}
       />
+
+      {/* Recenter button — rendered outside MapContainer so it's positioned correctly */}
+      <button
+        onClick={() => setFlyToTrigger(t => t + 1)}
+        className="absolute right-4 bottom-36 z-1100 w-11 h-11 rounded-full bg-white border border-[#e8dfc8] shadow-md flex items-center justify-center"
+        title="Vị trí của tôi"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2c2416" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+          <circle cx="12" cy="12" r="10" opacity=".15" fill="#2c2416" stroke="none"/>
+        </svg>
+      </button>
 
       {/* GPS Trigger Banner */}
       {currentPoi && (
