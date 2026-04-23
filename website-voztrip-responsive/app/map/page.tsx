@@ -35,6 +35,7 @@ export default function MapPage() {
   const [panelIn, setPanelIn] = useState(false);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [flyToTrigger, setFlyToTrigger] = useState(0);
+  const [gpsStatus, setGpsStatus] = useState<"searching" | "active" | "denied">("searching");
 
   const sessionId =
     typeof window !== "undefined"
@@ -49,13 +50,16 @@ export default function MapPage() {
     queryFn: () => getPois(langId || undefined),
   });
 
-  // Separate watchPosition only for showing user dot on map
+  // Watch GPS for showing user dot on map
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) { setGpsStatus("denied"); return; }
     const id = navigator.geolocation.watchPosition(
-      (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => {},
-      { enableHighAccuracy: true, maximumAge: 10_000 }
+      (pos) => {
+        setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGpsStatus("active");
+      },
+      () => setGpsStatus("denied"),
+      { enableHighAccuracy: true, maximumAge: 10_000, timeout: 15_000 }
     );
     return () => navigator.geolocation.clearWatch(id);
   }, []);
@@ -108,18 +112,48 @@ export default function MapPage() {
         onMarkerClick={handleMarkerClick}
       />
 
-      {/* Recenter button — rendered outside MapContainer so it's positioned correctly */}
-      <button
-        onClick={() => setFlyToTrigger(t => t + 1)}
-        className="absolute right-4 bottom-36 z-1100 w-11 h-11 rounded-full bg-white border border-[#e8dfc8] shadow-md flex items-center justify-center"
-        title="Vị trí của tôi"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2c2416" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-          <circle cx="12" cy="12" r="10" opacity=".15" fill="#2c2416" stroke="none"/>
-        </svg>
-      </button>
+      {/* GPS status + Recenter button — outside MapContainer */}
+      <div className="absolute right-4 bottom-36 z-1100 flex flex-col items-center gap-2">
+        {/* Status chip */}
+        <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium shadow-sm border ${
+          gpsStatus === "active"
+            ? "bg-[#f0fdf4] border-[#bbf7d0] text-[#16a34a]"
+            : gpsStatus === "denied"
+            ? "bg-[#fef2f2] border-[#fecaca] text-[#dc2626]"
+            : "bg-white border-[#e8dfc8] text-[#8c7a5e]"
+        }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${
+            gpsStatus === "active" ? "bg-[#16a34a]" :
+            gpsStatus === "denied" ? "bg-[#dc2626]" :
+            "bg-[#c8a96e] animate-pulse"
+          }`} />
+          {gpsStatus === "active" ? "GPS" : gpsStatus === "denied" ? "GPS tắt" : "Đang tìm..."}
+        </div>
+
+        {/* Recenter button */}
+        <button
+          onClick={() => {
+            if (gpsStatus === "denied") {
+              alert("Vui lòng bật GPS và cấp quyền vị trí cho trình duyệt.");
+              return;
+            }
+            setFlyToTrigger(t => t + 1);
+          }}
+          className={`w-11 h-11 rounded-full bg-white border shadow-md flex items-center justify-center transition-opacity ${
+            gpsStatus === "denied" ? "border-[#fecaca] opacity-50" : "border-[#e8dfc8]"
+          }`}
+          title="Về vị trí của tôi"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke={gpsStatus === "denied" ? "#dc2626" : "#2c2416"}
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+            <circle cx="12" cy="12" r="10" opacity=".15"
+              fill={gpsStatus === "denied" ? "#dc2626" : "#2c2416"} stroke="none"/>
+          </svg>
+        </button>
+      </div>
 
       {/* GPS Trigger Banner */}
       {currentPoi && (
