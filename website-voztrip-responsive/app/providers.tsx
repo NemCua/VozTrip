@@ -40,9 +40,7 @@ function GateGuard({ children }: { children: ReactNode }) {
       } else if (result === "unreachable") {
         setChecked(true);
       } else {
-        // Chưa approved: chọn ngôn ngữ trước nếu chưa có, rồi mới thanh toán
-        const hasLang = !!localStorage.getItem("voz_lang");
-        router.replace(hasLang ? "/payment" : "/language");
+        router.replace("/language");
       }
     };
 
