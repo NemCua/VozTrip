@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import {
   User, Languages, ChevronRight, Map, Headphones,
-  Radio, Globe, ShieldCheck, FileText, ExternalLink, CheckCircle, MessageSquarePlus,
+  Radio, Globe, ShieldCheck, FileText, ExternalLink, CheckCircle, MessageSquarePlus, BookOpen,
 } from "lucide-react";
 import { useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -157,6 +157,18 @@ export default function ProfilePage() {
               <p className="text-xs text-[#8c7a5e] mt-0.5 leading-snug">{tr("profile_no_gps_note", lang)}</p>
             </div>
           </div>
+          <Separator />
+          <button
+            onClick={() => window.open("/guide", "_blank")}
+            className="w-full flex items-center gap-3 p-3.5"
+          >
+            <IconBox><BookOpen size={20} color="#c8a96e" /></IconBox>
+            <div className="flex-1 text-left">
+              <p className="text-xs text-[#b09878]">{tr("profile_guide_sub", lang)}</p>
+              <p className="text-[15px] text-[#2c2416] font-medium mt-0.5">{tr("profile_guide", lang)}</p>
+            </div>
+            <ExternalLink size={18} color="#d8cbb0" />
+          </button>
           <Separator />
           <button
             onClick={() => window.open("/privacy", "_blank")}

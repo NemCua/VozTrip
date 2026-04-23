@@ -136,6 +136,22 @@ const t: Record<string, Record<LangCode, string>> = {
   },
   privacy_back:     { vi: "← Quay về ứng dụng",  en: "← Back to app",       zh: "← 返回应用", ko: "← 앱으로 돌아가기", ja: "← アプリに戻る" },
 
+  guide_title:    { vi: "Hướng dẫn sử dụng",    en: "User Guide",          zh: "使用指南",    ko: "사용 가이드",        ja: "使い方ガイド" },
+  guide_updated:  { vi: "Cập nhật: 23/04/2026",  en: "Updated: 23/04/2026", zh: "更新: 2026/04/23", ko: "업데이트: 2026/04/23", ja: "更新: 2026/04/23" },
+  guide_back:     { vi: "← Quay về ứng dụng",    en: "← Back to app",       zh: "← 返回应用",  ko: "← 앱으로 돌아가기", ja: "← アプリに戻る" },
+  guide_tip:      { vi: "Mẹo",                    en: "Tip",                  zh: "提示",        ko: "팁",                 ja: "ヒント" },
+  guide_note:     { vi: "Lưu ý",                  en: "Note",                 zh: "注意",        ko: "참고",               ja: "注意" },
+  guide_badge:    {
+    vi: "Không cần đăng nhập · Mở trình duyệt là dùng được",
+    en: "No login required · Works directly in browser",
+    zh: "无需登录 · 浏览器直接使用",
+    ko: "로그인 불필요 · 브라우저에서 바로 사용",
+    ja: "ログイン不要 · ブラウザですぐ使える",
+  },
+
+  profile_guide:      { vi: "Hướng dẫn sử dụng", en: "User Guide",      zh: "使用指南",  ko: "사용 가이드",   ja: "使い方ガイド" },
+  profile_guide_sub:  { vi: "Xem hướng dẫn chi tiết", en: "View full guide", zh: "查看详细指南", ko: "자세한 가이드 보기", ja: "詳細ガイドを見る" },
+
   common_no_image: { vi: "Không có ảnh", en: "No image", zh: "无图片", ko: "이미지 없음", ja: "画像なし" },
 
   feedback_title:       { vi: "Góp ý & Báo cáo",                    en: "Feedback",                           zh: "反馈与报告",          ko: "피드백 & 신고",         ja: "フィードバック" },
