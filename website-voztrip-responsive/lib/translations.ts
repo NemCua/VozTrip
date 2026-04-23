@@ -140,6 +140,6 @@ const t: Record<string, Record<LangCode, string>> = {
 };
 
 export function tr(key: string, lang: string = "vi"): string {
-  const validLang = (["vi", "en", "zh", "ko", "ja"].includes(lang) ? lang : "vi") as LangCode;
+  const validLang = (["vi", "en", "zh", "ko", "ja"].includes(lang) ? lang : "en") as LangCode;
   return t[key]?.[validLang] ?? t[key]?.["en"] ?? key;
 }

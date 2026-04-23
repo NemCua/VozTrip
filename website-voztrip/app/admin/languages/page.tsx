@@ -7,7 +7,36 @@ import { api } from "@/lib/api";
 
 type Language = { languageId: string; languageCode: string; languageName: string; isActive: boolean };
 
-const FLAGS: Record<string, string> = { vi: "🇻🇳", en: "🇬🇧", zh: "🇨🇳", ko: "🇰🇷", ja: "🇯🇵" };
+const FLAGS: Record<string, string> = {
+  vi: "🇻🇳", en: "🇬🇧", zh: "🇨🇳", ko: "🇰🇷", ja: "🇯🇵",
+  fr: "🇫🇷", de: "🇩🇪", es: "🇪🇸", it: "🇮🇹", pt: "🇵🇹",
+  ru: "🇷🇺", ar: "🇸🇦", th: "🇹🇭", id: "🇮🇩", ms: "🇲🇾",
+  nl: "🇳🇱", pl: "🇵🇱", tr: "🇹🇷", sv: "🇸🇪", hi: "🇮🇳",
+};
+
+// Preset list of common languages
+const PRESET_LANGUAGES: { code: string; name: string }[] = [
+  { code: "vi", name: "Tiếng Việt" },
+  { code: "en", name: "English" },
+  { code: "zh", name: "中文 (Chinese)" },
+  { code: "ko", name: "한국어 (Korean)" },
+  { code: "ja", name: "日本語 (Japanese)" },
+  { code: "fr", name: "Français (French)" },
+  { code: "de", name: "Deutsch (German)" },
+  { code: "es", name: "Español (Spanish)" },
+  { code: "it", name: "Italiano (Italian)" },
+  { code: "pt", name: "Português (Portuguese)" },
+  { code: "ru", name: "Русский (Russian)" },
+  { code: "ar", name: "العربية (Arabic)" },
+  { code: "th", name: "ภาษาไทย (Thai)" },
+  { code: "id", name: "Bahasa Indonesia" },
+  { code: "ms", name: "Bahasa Melayu (Malay)" },
+  { code: "nl", name: "Nederlands (Dutch)" },
+  { code: "pl", name: "Polski (Polish)" },
+  { code: "tr", name: "Türkçe (Turkish)" },
+  { code: "sv", name: "Svenska (Swedish)" },
+  { code: "hi", name: "हिन्दी (Hindi)" },
+];
 
 export default function LanguagesPage() {
   const { data: session } = useSession();
@@ -78,29 +107,55 @@ export default function LanguagesPage() {
       {showCreate && (
         <div className="p-5 mb-5 space-y-3" style={{ border: "1px solid #c8a96e", backgroundColor: "#fdfaf4" }}>
           <div className="text-xs tracking-widest uppercase mb-1" style={{ color: "#b09060" }}>Thêm ngôn ngữ mới</div>
-          <div className="grid grid-cols-2 gap-3 max-w-sm">
-            <div>
-              <label className="block text-xs tracking-widest uppercase mb-1" style={{ color: "#8c7a5e" }}>Mã (ISO 639-1)</label>
-              <input
-                className="w-full px-3 py-2 text-sm outline-none"
-                style={{ border: "1px solid #d8cbb0", backgroundColor: "#fff", color: "#2c2416" }}
-                value={form.languageCode}
-                onChange={e => setForm(f => ({ ...f, languageCode: e.target.value }))}
-                placeholder="vd: fr"
-                maxLength={5}
-              />
-            </div>
-            <div>
-              <label className="block text-xs tracking-widest uppercase mb-1" style={{ color: "#8c7a5e" }}>Tên ngôn ngữ</label>
-              <input
-                className="w-full px-3 py-2 text-sm outline-none"
-                style={{ border: "1px solid #d8cbb0", backgroundColor: "#fff", color: "#2c2416" }}
-                value={form.languageName}
-                onChange={e => setForm(f => ({ ...f, languageName: e.target.value }))}
-                placeholder="vd: Français"
-              />
-            </div>
+
+          {/* Dropdown picker */}
+          <div className="max-w-sm">
+            <label className="block text-xs tracking-widest uppercase mb-1" style={{ color: "#8c7a5e" }}>Chọn ngôn ngữ</label>
+            <select
+              className="w-full px-3 py-2 text-sm outline-none appearance-none"
+              style={{ border: "1px solid #d8cbb0", backgroundColor: "#fff", color: form.languageCode ? "#2c2416" : "#a09080", borderRadius: "1px", cursor: "pointer" }}
+              value={form.languageCode}
+              onChange={e => {
+                const preset = PRESET_LANGUAGES.find(p => p.code === e.target.value);
+                if (preset) setForm({ languageCode: preset.code, languageName: preset.name.split(" (")[0] });
+                else setForm({ languageCode: "", languageName: "" });
+              }}
+            >
+              <option value="">— Chọn từ danh sách —</option>
+              {PRESET_LANGUAGES.filter(p => !languages.some(l => l.languageCode === p.code)).map(p => (
+                <option key={p.code} value={p.code}>
+                  {FLAGS[p.code] ?? "🌐"} {p.name}
+                </option>
+              ))}
+            </select>
           </div>
+
+          {/* Preview + name override */}
+          {form.languageCode && (
+            <div className="flex items-center gap-3 max-w-sm">
+              <span className="text-2xl">{FLAGS[form.languageCode] ?? "🌐"}</span>
+              <div className="flex-1">
+                <label className="block text-xs tracking-widest uppercase mb-1" style={{ color: "#8c7a5e" }}>Tên hiển thị</label>
+                <input
+                  className="w-full px-3 py-2 text-sm outline-none"
+                  style={{ border: "1px solid #d8cbb0", backgroundColor: "#fff", color: "#2c2416", borderRadius: "1px" }}
+                  value={form.languageName}
+                  onChange={e => setForm(f => ({ ...f, languageName: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-xs tracking-widest uppercase mb-1" style={{ color: "#8c7a5e" }}>Mã</label>
+                <div className="px-3 py-2 text-sm font-mono" style={{ border: "1px solid #e8dfc8", backgroundColor: "#f5f0e8", color: "#8c7a5e", borderRadius: "1px" }}>
+                  {form.languageCode}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <p className="text-[11px]" style={{ color: "#b09878" }}>
+            Nội dung POI (tiêu đề, mô tả, audio) nhập riêng qua form localization của từng POI. UI app sẽ tự hiển thị tiếng Anh cho ngôn ngữ chưa có bản dịch giao diện.
+          </p>
+
           <div className="flex gap-2">
             <button
               onClick={() => createMutation.mutate()}
