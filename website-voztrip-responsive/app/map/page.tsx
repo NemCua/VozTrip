@@ -1,12 +1,13 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
-import { X, Play, Pause, BookOpen, Navigation, ImageIcon } from "lucide-react";
-import { getPois, getPoiDetail, Poi, PoiDetail } from "@/services/api";
+import { X, Play, Pause, BookOpen, Navigation, ImageIcon, Radio } from "lucide-react";
+import { getPois, getPoiDetail, logVisit, Poi, PoiDetail } from "@/services/api";
 import { useAudio } from "@/hooks/useAudio";
+import { useGPS } from "@/hooks/useGPS";
 import { useLanguage } from "@/context/LanguageContext";
 import { tr } from "@/lib/translations";
 
@@ -35,11 +36,35 @@ export default function MapPage() {
   const [panelVisible, setPanelVisible] = useState(false);
   const [panelIn, setPanelIn] = useState(false);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [triggeredPoi, setTriggeredPoi] = useState<Poi | null>(null);
+  const [bannerVisible, setBannerVisible] = useState(false);
+  const bannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: pois = [] } = useQuery({
     queryKey: ["pois", langId],
     queryFn: () => getPois(langId || undefined),
   });
+
+  const sessionId =
+    typeof window !== "undefined"
+      ? (localStorage.getItem("voz_session") ?? "guest")
+      : "guest";
+
+  const hideBanner = useCallback(() => {
+    setBannerVisible(false);
+    setTimeout(() => setTriggeredPoi(null), 300);
+  }, []);
+
+  useGPS(pois, async (poi) => {
+    setTriggeredPoi(poi);
+    setBannerVisible(true);
+    play(poi.poiId, null, poi.localizedName ?? poi.poiName, lang);
+    try { await logVisit(sessionId, poi.poiId); } catch {}
+    if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
+    bannerTimerRef.current = setTimeout(hideBanner, 8000);
+  });
+
+  useEffect(() => () => { if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current); }, []);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -97,6 +122,38 @@ export default function MapPage() {
         userCoords={userCoords}
         onMarkerClick={handleMarkerClick}
       />
+
+      {/* GPS Trigger Banner */}
+      {triggeredPoi && (
+        <div
+          className={`absolute top-4 left-4 right-4 max-w-md mx-auto bg-[#2c2416] rounded-2xl px-4 py-3.5 flex items-center justify-between shadow-xl transition-all duration-300 z-1100 ${
+            bannerVisible ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
+          }`}
+        >
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-9 h-9 rounded-full bg-[rgba(200,169,110,0.15)] border border-[rgba(200,169,110,0.4)] flex items-center justify-center shrink-0">
+              <Radio size={18} color="#c8a96e" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-[#b09878] tracking-wide">{tr("banner_near", lang)}</p>
+              <p className="text-sm text-[#f5f0e8] font-medium truncate">
+                {triggeredPoi.localizedName ?? triggeredPoi.poiName}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 ml-3 shrink-0">
+            <button
+              onClick={() => { hideBanner(); handleMarkerClick(triggeredPoi); }}
+              className="bg-[#c8a96e] rounded-lg px-3.5 py-1.5 text-xs font-semibold text-[#2c2416]"
+            >
+              {tr("banner_view", lang)}
+            </button>
+            <button onClick={hideBanner}>
+              <X size={18} color="#8c7a5e" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Slide-up panel */}
       {panelVisible && (

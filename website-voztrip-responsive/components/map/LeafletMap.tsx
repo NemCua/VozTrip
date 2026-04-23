@@ -87,9 +87,14 @@ export default function LeafletMap({ pois, selectedPoiId, userCoords, onMarkerCl
           position={[userCoords.lat, userCoords.lng]}
           icon={L.divIcon({
             className: "",
-            html: `<div style="width:14px;height:14px;border-radius:50%;background:#3b82f6;border:3px solid #fff;box-shadow:0 0 0 3px rgba(59,130,246,0.3)"></div>`,
-            iconSize: [14, 14],
-            iconAnchor: [7, 7],
+            html: `
+              <div style="position:relative;width:44px;height:44px;display:flex;align-items:center;justify-content:center">
+                <div style="position:absolute;width:44px;height:44px;border-radius:50%;background:rgba(59,130,246,0.25);animation:userPulse 1.8s ease-out infinite"></div>
+                <div style="position:absolute;width:44px;height:44px;border-radius:50%;background:rgba(59,130,246,0.12);animation:userPulse 1.8s ease-out 0.6s infinite"></div>
+                <div style="width:20px;height:20px;border-radius:50%;background:#3b82f6;border:3px solid #fff;box-shadow:0 2px 10px rgba(59,130,246,0.6);position:relative;z-index:1"></div>
+              </div>`,
+            iconSize: [44, 44],
+            iconAnchor: [22, 22],
           })}
         />
       )}
