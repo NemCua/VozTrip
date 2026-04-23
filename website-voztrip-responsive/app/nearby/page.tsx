@@ -75,7 +75,7 @@ export default function NearbyPage() {
         {locError ? (
           <div className="flex items-center gap-1.5 bg-[#fdf6e8] border border-[#e8d5a8] rounded-full px-3 py-1.5">
             <MapPin size={13} color="#c8a96e" />
-            <span className="text-[11px] text-[#8c7a5e]">GPS off</span>
+            <span className="text-[11px] text-[#8c7a5e]">{tr("map_gps_off", lang)}</span>
           </div>
         ) : userCoords ? (
           <div className="flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] rounded-full px-3 py-1.5">

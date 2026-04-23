@@ -127,14 +127,14 @@ export default function MapPage() {
             gpsStatus === "denied" ? "bg-[#dc2626]" :
             "bg-[#c8a96e] animate-pulse"
           }`} />
-          {gpsStatus === "active" ? "GPS" : gpsStatus === "denied" ? "GPS tắt" : "Đang tìm..."}
+          {gpsStatus === "active" ? tr("map_gps_on", lang) : gpsStatus === "denied" ? tr("map_gps_off", lang) : tr("map_gps_searching", lang)}
         </div>
 
         {/* Recenter button */}
         <button
           onClick={() => {
             if (gpsStatus === "denied") {
-              alert("Vui lòng bật GPS và cấp quyền vị trí cho trình duyệt.");
+              alert(tr("map_gps_alert", lang));
               return;
             }
             setFlyToTrigger(t => t + 1);

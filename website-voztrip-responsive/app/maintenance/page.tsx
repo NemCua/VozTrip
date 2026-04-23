@@ -1,6 +1,11 @@
+"use client";
 import { Wrench } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+import { tr } from "@/lib/translations";
 
 export default function MaintenancePage({ message }: { message?: string }) {
+  const { lang } = useLanguage();
+
   return (
     <>
       <style>{`
@@ -25,7 +30,6 @@ export default function MaintenancePage({ message }: { message?: string }) {
 
           {/* Floating icon */}
           <div className="relative flex items-center justify-center maintenance-float" style={{ width: 140, height: 140 }}>
-            {/* Outer circle */}
             <div
               className="absolute flex items-center justify-center rounded-full"
               style={{
@@ -35,7 +39,6 @@ export default function MaintenancePage({ message }: { message?: string }) {
                 boxShadow: "0 8px 24px rgba(200,169,110,0.18)",
               }}
             >
-              {/* Inner circle */}
               <div
                 className="flex items-center justify-center rounded-full"
                 style={{
@@ -48,7 +51,6 @@ export default function MaintenancePage({ message }: { message?: string }) {
               </div>
             </div>
 
-            {/* Decorative dots */}
             <span className="absolute rounded-full" style={{ width: 12, height: 12, backgroundColor: "#c8a96e", top: 10, right: 10 }} />
             <span className="absolute rounded-full" style={{ width: 12, height: 12, backgroundColor: "#c8a96e", bottom: 8, left: 14 }} />
             <span className="absolute rounded-full" style={{ width: 7,  height: 7,  backgroundColor: "#d8cbb0", top: 20, left: 6  }} />
@@ -57,13 +59,13 @@ export default function MaintenancePage({ message }: { message?: string }) {
           {/* Text block */}
           <div className="flex flex-col items-center gap-3 text-center">
             <p className="text-xs font-semibold tracking-[0.3em]" style={{ color: "#c8a96e" }}>
-              ĐANG BẢO TRÌ
+              {tr("maintenance_label", lang)}
             </p>
             <h1 className="text-2xl font-light leading-snug" style={{ color: "#2c2416", letterSpacing: "0.3px" }}>
-              Tính năng tạm thời<br />không khả dụng
+              {tr("maintenance_title", lang)}
             </h1>
             <p className="text-sm leading-relaxed max-w-xs" style={{ color: "#8c7a5e" }}>
-              {message ?? "Chúng tôi đang nâng cấp để mang lại\ntrải nghiệm tốt hơn. Vui lòng quay lại sau."}
+              {message ?? tr("maintenance_desc", lang)}
             </p>
           </div>
 
@@ -77,7 +79,7 @@ export default function MaintenancePage({ message }: { message?: string }) {
               style={{ width: 7, height: 7, backgroundColor: "#f59e0b" }}
             />
             <span className="text-xs font-medium" style={{ color: "#92400e" }}>
-              Hệ thống đang cập nhật
+              {tr("maintenance_status", lang)}
             </span>
           </div>
 

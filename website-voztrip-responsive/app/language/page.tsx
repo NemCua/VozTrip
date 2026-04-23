@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Check } from "lucide-react";
 import { getLanguages, Language } from "@/services/api";
 import { useLanguage } from "@/context/LanguageContext";
-import { LangCode } from "@/lib/translations";
+import { LangCode, tr } from "@/lib/translations";
 
 const LANG_META: Record<string, { flag: string; label: string }> = {
   vi: { flag: "🇻🇳", label: "Tiếng Việt" },
@@ -62,8 +62,8 @@ export default function LanguagePickerPage() {
         <p className="text-[10px] tracking-[3px] text-[#b09060] uppercase mb-1.5">Tourism Guide</p>
         <p className="text-4xl text-[#2c2416] font-light tracking-wide">VozTrip</p>
         <div className="w-10 h-px bg-[#c8a96e] my-5" />
-        <p className="text-lg text-[#2c2416]">Chọn ngôn ngữ</p>
-        <p className="text-sm text-[#b09878] mt-1.5">Select your language</p>
+        <p className="text-lg text-[#2c2416]">{tr("lang_title", lang)}</p>
+        <p className="text-sm text-[#b09878] mt-1.5">{tr("lang_subtitle", lang)}</p>
       </div>
 
       {/* Language list */}
@@ -102,7 +102,7 @@ export default function LanguagePickerPage() {
         <div className="border-t border-[#e8dfc8] py-5 flex flex-col gap-2.5">
           {showWarning && !agreed && (
             <p className="text-[11px] text-[#c0392b] bg-[#fdf2f2] border border-[#f5c6c6] rounded-lg px-3 py-2">
-              Vui lòng đồng ý với chính sách bảo mật để tiếp tục.
+              {tr("lang_consent_warning", lang)}
             </p>
           )}
 
@@ -120,21 +120,21 @@ export default function LanguagePickerPage() {
               {agreed && <Check size={13} color="#fdfaf4" />}
             </div>
             <p className="flex-1 text-[13px] text-[#5c4a30] leading-5">
-              Tôi đã đọc và đồng ý với{" "}
+              {tr("lang_consent_text", lang)}{" "}
               <a
                 href="/privacy"
                 target="_blank"
                 onClick={(e) => e.stopPropagation()}
                 className="text-[#c8a96e] underline"
               >
-                Chính sách bảo mật
+                {tr("lang_consent_link", lang)}
               </a>{" "}
-              của VozTrip.
+              {tr("lang_consent_suffix", lang)}
             </p>
           </button>
 
           <p className="text-[11px] text-[#b09878] pl-8">
-            By continuing, you agree to VozTrip's Privacy Policy.
+            {tr("lang_consent_sub", lang)}
           </p>
         </div>
       )}

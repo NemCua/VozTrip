@@ -175,18 +175,16 @@ export default function ProfilePage() {
       {/* Section: Feedback */}
       {feedbackEnabled && (
         <div className="px-5 mb-6">
-          <SectionTitle label={lang === "en" ? "Support" : "Hỗ trợ"} />
+          <SectionTitle label={tr("profile_support_section", lang)} />
           <button
             onClick={() => setShowFeedback(true)}
             className="w-full flex items-center gap-3 bg-white border border-[#e8dfc8] rounded-2xl p-3.5"
           >
             <IconBox><MessageSquarePlus size={20} color="#c8a96e" /></IconBox>
             <div className="flex-1 text-left">
-              <p className="text-xs text-[#b09878]">
-                {lang === "en" ? "Feedback & Report" : "Phản hồi & Báo cáo"}
-              </p>
+              <p className="text-xs text-[#b09878]">{tr("profile_feedback_sub", lang)}</p>
               <p className="text-[15px] text-[#2c2416] font-medium mt-0.5">
-                {lang === "en" ? "Send suggestion or report a bug" : "Gửi góp ý hoặc báo lỗi"}
+                {tr("profile_feedback_desc", lang)}
               </p>
             </div>
             <ChevronRight size={18} color="#d8cbb0" />

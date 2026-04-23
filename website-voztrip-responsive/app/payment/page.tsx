@@ -1,12 +1,14 @@
 "use client";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { RefreshCw, Copy, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
 import { checkDeviceStatus } from "@/services/api";
+import { useLanguage } from "@/context/LanguageContext";
+import { tr } from "@/lib/translations";
 
 export default function PaymentPage() {
   const router = useRouter();
+  const { lang } = useLanguage();
   const [deviceId, setDeviceId] = useState("");
   const [checking, setChecking] = useState(false);
   const [status, setStatus] = useState<"idle" | "pending" | "simulating">("idle");
@@ -23,7 +25,6 @@ export default function PaymentPage() {
     localStorage.removeItem("redirect_after");
     const hasLang = !!localStorage.getItem("voz_lang");
     if (!hasLang) {
-      // Chưa chọn ngôn ngữ — qua language picker (sẽ redirect tiếp)
       router.replace("/language");
     } else if (redirect && redirect !== "/payment") {
       router.replace(redirect);
@@ -32,10 +33,8 @@ export default function PaymentPage() {
     }
   };
 
-  // Countdown timer for simulated approval
   useEffect(() => {
     if (countdown <= 0) return;
-    if (countdown === 0) return;
     const t = setTimeout(() => {
       const next = countdown - 1;
       setCountdown(next);
@@ -68,11 +67,9 @@ export default function PaymentPage() {
       localStorage.setItem("device_approved", "true");
       router.replace("/language");
     } else if (result === "unreachable") {
-      // Backend chưa sẵn sàng — giả lập admin duyệt sau 3 giây
       setStatus("simulating");
       setCountdown(3);
     } else {
-      // pending — admin chưa duyệt
       setStatus("pending");
     }
   };
@@ -82,7 +79,7 @@ export default function PaymentPage() {
       <p className="text-xl font-bold text-[#2c2416] tracking-wide">NGUYỄN QUỐC HUY</p>
       <p className="text-sm text-[#8c7a5e] mb-2">*******085</p>
 
-      {/* QR card — dynamic QR từ SePay */}
+      {/* QR card */}
       <div className="bg-white rounded-2xl p-6 shadow-lg mb-2">
         {deviceId ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -102,7 +99,9 @@ export default function PaymentPage() {
 
       {/* Transfer content */}
       <div className="w-full max-w-xs bg-white rounded-2xl px-4 py-3 shadow-sm">
-        <p className="text-[10px] text-[#b09878] tracking-wider uppercase mb-1">Nội dung chuyển khoản</p>
+        <p className="text-[10px] text-[#b09878] tracking-wider uppercase mb-1">
+          {tr("payment_transfer_label", lang)}
+        </p>
         <div className="flex items-center justify-between gap-2">
           <p className="text-base font-bold text-[#2c2416] tracking-wider">{transferContent}</p>
           <button
@@ -110,17 +109,17 @@ export default function PaymentPage() {
             className="flex items-center gap-1 bg-[#f5f0e8] rounded-lg px-2.5 py-1.5 text-xs text-[#8c7a5e]"
           >
             <Copy size={12} />
-            {copied ? "Đã copy" : "Copy"}
+            {copied ? tr("payment_copied", lang) : tr("payment_copy", lang)}
           </button>
         </div>
-        <p className="text-[10px] text-[#b09878] mt-1">Vui lòng ghi đúng nội dung để được duyệt tự động</p>
+        <p className="text-[10px] text-[#b09878] mt-1">{tr("payment_transfer_note", lang)}</p>
       </div>
 
       {/* Status messages */}
       {status === "pending" && (
         <div className="w-full max-w-xs bg-[#fff7ed] border border-[#fed7aa] rounded-xl px-4 py-3 text-center">
-          <p className="text-sm text-[#ea580c] font-medium">Chưa được duyệt</p>
-          <p className="text-xs text-[#9a3412] mt-0.5">Vui lòng chờ sau khi chuyển khoản</p>
+          <p className="text-sm text-[#ea580c] font-medium">{tr("payment_pending_title", lang)}</p>
+          <p className="text-xs text-[#9a3412] mt-0.5">{tr("payment_pending_sub", lang)}</p>
         </div>
       )}
 
@@ -128,10 +127,12 @@ export default function PaymentPage() {
         <div className="w-full max-w-xs bg-[#f0fdf4] border border-[#bbf7d0] rounded-xl px-4 py-3 text-center">
           <div className="flex items-center justify-center gap-2 mb-1">
             <Clock size={14} color="#16a34a" />
-            <p className="text-sm text-[#16a34a] font-medium">Admin đang duyệt...</p>
+            <p className="text-sm text-[#16a34a] font-medium">{tr("payment_approving", lang)}</p>
           </div>
           <p className="text-2xl font-bold text-[#16a34a]">{countdown}</p>
-          <p className="text-xs text-[#166534] mt-0.5">Tự động vào app sau {countdown}s</p>
+          <p className="text-xs text-[#166534] mt-0.5">
+            {tr("payment_auto_enter", lang).replace("{n}", String(countdown))}
+          </p>
         </div>
       )}
 
@@ -143,7 +144,11 @@ export default function PaymentPage() {
       >
         <RefreshCw size={18} color="#c8a96e" className={checking ? "animate-spin" : ""} />
         <span className="text-[15px] font-semibold text-white">
-          {checking ? "Đang kiểm tra..." : countdown > 0 ? `Vào app sau ${countdown}s...` : "Tôi đã chuyển khoản"}
+          {checking
+            ? tr("payment_checking", lang)
+            : countdown > 0
+            ? tr("payment_enter_btn", lang).replace("{n}", String(countdown))
+            : tr("payment_check_btn", lang)}
         </span>
       </button>
     </div>
