@@ -137,6 +137,24 @@ const t: Record<string, Record<LangCode, string>> = {
   privacy_back:     { vi: "← Quay về ứng dụng",  en: "← Back to app",       zh: "← 返回应用", ko: "← 앱으로 돌아가기", ja: "← アプリに戻る" },
 
   common_no_image: { vi: "Không có ảnh", en: "No image", zh: "无图片", ko: "이미지 없음", ja: "画像なし" },
+
+  sos_title:       { vi: "Số khẩn cấp",           en: "Emergency Contacts",      zh: "紧急联系",          ko: "긴급 연락처",        ja: "緊急連絡先" },
+  sos_tap_to_call: { vi: "Bấm vào số để gọi ngay", en: "Tap to call immediately", zh: "点击号码立即拨打",   ko: "번호를 눌러 즉시 전화", ja: "番号をタップしてすぐ電話" },
+
+  sos_group_national:   { vi: "Khẩn cấp quốc gia",       en: "National Emergency",      zh: "全国紧急",          ko: "국가 긴급",          ja: "国家緊急" },
+  sos_group_tourism:    { vi: "Hỗ trợ du lịch",           en: "Tourism Support",         zh: "旅游支持",          ko: "관광 지원",          ja: "観光支援" },
+  sos_group_local:      { vi: "Công an khu vực (Demo)",   en: "Local Police (Demo)",     zh: "地方警察（演示）",  ko: "지역 경찰 (데모)",   ja: "地域警察（デモ）" },
+
+  sos_police:      { vi: "Công an",            en: "Police",              zh: "警察",         ko: "경찰",           ja: "警察" },
+  sos_ambulance:   { vi: "Cứu thương",         en: "Ambulance",           zh: "救护车",       ko: "구급차",         ja: "救急車" },
+  sos_fire:        { vi: "Cứu hỏa",            en: "Fire Brigade",        zh: "消防",         ko: "소방서",         ja: "消防署" },
+  sos_general:     { vi: "Cấp cứu tổng hợp",  en: "General Emergency",   zh: "综合急救",     ko: "종합 긴급",      ja: "総合緊急" },
+  sos_hotline:     { vi: "Đường dây du lịch",  en: "Tourism Hotline",     zh: "旅游热线",     ko: "관광 핫라인",    ja: "観光ホットライン" },
+  sos_voztrip:     { vi: "Hỗ trợ VozTrip",     en: "VozTrip Support",     zh: "VozTrip支持",  ko: "VozTrip 지원",   ja: "VozTripサポート" },
+  sos_local_hcm:   { vi: "CA Quận 1 – TP.HCM",    en: "Police Dist.1 – HCMC",    zh: "胡志明市第1区警察", ko: "호찌민 1군 경찰",  ja: "ホーチミン1区警察" },
+  sos_local_hn:    { vi: "CA Hoàn Kiếm – Hà Nội", en: "Police Hoàn Kiếm – Hanoi", zh: "河内还剑区警察",   ko: "하노이 환끼엠 경찰", ja: "ハノイ還剣区警察" },
+  sos_local_hoian: { vi: "CA TP. Hội An",          en: "Police – Hội An City",    zh: "会安市警察",       ko: "호이안 경찰",      ja: "ホイアン警察" },
+  sos_local_dalat: { vi: "CA TP. Đà Lạt",          en: "Police – Đà Lạt City",    zh: "大叻市警察",       ko: "달랏 경찰",        ja: "ダラット警察" },
 };
 
 export function tr(key: string, lang: string = "vi"): string {

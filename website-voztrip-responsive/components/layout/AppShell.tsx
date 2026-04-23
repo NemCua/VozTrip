@@ -5,11 +5,13 @@ import BottomNav from "./BottomNav";
 import EmergencyModal from "@/components/ui/EmergencyModal";
 import FeedbackModal from "@/components/ui/FeedbackModal";
 import { useFeatures } from "@/context/FeaturesContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const [showSOS, setShowSOS] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const features = useFeatures();
+  const { lang } = useLanguage();
   const sosEnabled      = features.pages.emergency.enabled;
   const feedbackEnabled = features.pages.feedback.enabled;
 
@@ -29,7 +31,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </button>
       )}
 
-      <EmergencyModal open={showSOS} onClose={() => setShowSOS(false)} />
+      <EmergencyModal open={showSOS} onClose={() => setShowSOS(false)} lang={lang} />
       {feedbackEnabled && (
         <FeedbackModal open={showFeedback} onClose={() => setShowFeedback(false)} />
       )}
