@@ -1,12 +1,11 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { Search, X, Languages, MapPin, Play, Pause, Radio, ChevronRight } from "lucide-react";
-import { getPois, logVisit, Poi } from "@/services/api";
-import { useAudio } from "@/hooks/useAudio";
-import { useGPS } from "@/hooks/useGPS";
+import { getPois, Poi } from "@/services/api";
+import { useGpsTriggerQueue } from "@/hooks/useGpsTriggerQueue";
 import { useLanguage } from "@/context/LanguageContext";
 import { tr } from "@/lib/translations";
 
@@ -17,36 +16,19 @@ export default function HomePage() {
   const { lang, langId } = useLanguage();
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
-  const [triggeredPoi, setTriggeredPoi] = useState<Poi | null>(null);
-  const [bannerVisible, setBannerVisible] = useState(false);
-  const bannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { play, currentId, playing } = useAudio();
-
-  const { data: pois = [], isLoading } = useQuery<Poi[]>({
-    queryKey: ["pois", langId],
-    queryFn: () => getPois(langId || undefined),
-  });
 
   const sessionId =
     typeof window !== "undefined"
       ? (localStorage.getItem("voz_session") ?? "guest")
       : "guest";
 
-  useGPS(pois, async (poi) => {
-    setTriggeredPoi(poi);
-    setBannerVisible(true);
-    play(poi.poiId, null, poi.localizedName ?? poi.poiName, lang);
-    try { await logVisit(sessionId, poi.poiId); } catch {}
-    if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
-    bannerTimerRef.current = setTimeout(hideBanner, 8000);
+  const { currentPoi, bannerVisible, queueCount, dismiss, play, playing, currentId } =
+    useGpsTriggerQueue(langId, lang, sessionId);
+
+  const { data: pois = [], isLoading } = useQuery<Poi[]>({
+    queryKey: ["pois", langId],
+    queryFn: () => getPois(langId || undefined),
   });
-
-  const hideBanner = () => {
-    setBannerVisible(false);
-    setTimeout(() => setTriggeredPoi(null), 300);
-  };
-
-  useEffect(() => () => { if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current); }, []);
 
   const filtered = pois.filter((p) =>
     search.length === 0 ||
@@ -226,7 +208,7 @@ export default function HomePage() {
       </div>
 
       {/* ── GPS Trigger Banner ── */}
-      {triggeredPoi && (
+      {currentPoi && (
         <div
           className={`fixed bottom-20 left-4 right-4 max-w-md mx-auto bg-[#2c2416] rounded-2xl px-4 py-3.5 flex items-center justify-between shadow-xl transition-all duration-300 z-40 ${
             bannerVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
@@ -238,19 +220,20 @@ export default function HomePage() {
             </div>
             <div className="min-w-0">
               <p className="text-[10px] text-[#b09878] tracking-wide">{tr("banner_near", lang)}</p>
-              <p className="text-sm text-[#f5f0e8] font-medium truncate">
-                {triggeredPoi.localizedName ?? triggeredPoi.poiName}
-              </p>
+              <p className="text-sm text-[#f5f0e8] font-medium truncate">{currentPoi.poiName}</p>
+              {queueCount > 0 && (
+                <p className="text-[10px] text-[#8c7a5e]">+{queueCount} {tr("banner_queued", lang)}</p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-3 ml-3 shrink-0">
             <button
-              onClick={() => { hideBanner(); router.push(`/poi/${triggeredPoi.poiId}`); }}
+              onClick={() => { dismiss(); router.push(`/poi/${currentPoi.poiId}`); }}
               className="bg-[#c8a96e] rounded-lg px-3.5 py-1.5 text-xs font-semibold text-[#2c2416]"
             >
               {tr("banner_view", lang)}
             </button>
-            <button onClick={hideBanner}>
+            <button onClick={dismiss}>
               <X size={18} color="#8c7a5e" />
             </button>
           </div>

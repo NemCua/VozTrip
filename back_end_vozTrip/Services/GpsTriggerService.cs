@@ -9,18 +9,20 @@ public record TriggerResult(
     string? AudioUrl,
     int?   AudioDuration,
     bool   IsVipAudio,
-    double Distance,   // metres from user
-    int    Priority    // 1 = VIP+audio, 2 = VIP no audio, 3 = free
+    bool   IsBoosted,
+    double Distance,
+    int    Priority
 );
 
-// Cached snapshot of a POI — lightweight, language-independent
 internal record PoiSnapshot(
-    string  PoiId,
-    string  PoiName,
-    double  Latitude,
-    double  Longitude,
-    double  TriggerRadius,
-    bool    IsVip
+    string    PoiId,
+    string    PoiName,
+    double    Latitude,
+    double    Longitude,
+    double    TriggerRadius,
+    bool      IsVip,
+    bool      IsFeatured,
+    DateTime? FeaturedUntil
 );
 
 public class GpsTriggerService(AppDbContext db, IMemoryCache cache)
@@ -53,7 +55,9 @@ public class GpsTriggerService(AppDbContext db, IMemoryCache cache)
                 p.Latitude,
                 p.Longitude,
                 p.TriggerRadius,
-                p.Seller.Plan == "vip"))
+                p.Seller.Plan == "vip",
+                p.IsFeatured,
+                p.FeaturedUntil))
             .ToListAsync();
 
         cache.Set(CACHE_KEY, snapshots, CACHE_TTL);
@@ -61,44 +65,54 @@ public class GpsTriggerService(AppDbContext db, IMemoryCache cache)
     }
 
     /// <summary>
-    /// Returns all POIs within trigger range, ordered by priority then distance.
-    /// Client plays index 0; may queue the rest.
-    /// Priority: 1 = VIP with audio, 2 = VIP no audio, 3 = free plan.
-    /// POI geometry is cached for 30s — localization is fetched only for matched POIs.
+    /// Returns POIs within trigger range that haven't been triggered yet, ordered by priority then distance.
+    /// Priority: 1=boosted+audio, 2=boosted, 3=vip+audio, 4=vip, 5=free.
     /// </summary>
     public async Task<List<TriggerResult>> ResolveTriggerAsync(
-        double guestLat, double guestLon, string languageId)
+        double guestLat, double guestLon,
+        string languageId,
+        IReadOnlySet<string> alreadyTriggered)
     {
         var candidates = await GetCandidatesAsync();
+        var now = DateTime.UtcNow;
 
-        // Step 1: geometry filter (in-memory, no DB)
         var inRange = candidates
+            .Where(p => !alreadyTriggered.Contains(p.PoiId))
             .Select(p => (poi: p, dist: MetresBetween(guestLat, guestLon, p.Latitude, p.Longitude)))
             .Where(x => x.dist <= x.poi.TriggerRadius)
             .ToList();
 
         if (inRange.Count == 0) return [];
 
-        // Step 2: fetch localization only for matched POIs
         var matchedIds = inRange.Select(x => x.poi.PoiId).ToList();
         var locales = await db.PoiLocalizations
             .Where(l => matchedIds.Contains(l.PoiId) && l.LanguageId == languageId)
             .ToDictionaryAsync(l => l.PoiId);
 
-        // Step 3: build results
         var results = inRange.Select(x =>
         {
             var (poi, dist) = x;
             locales.TryGetValue(poi.PoiId, out var locale);
-            var hasAudio = poi.IsVip && locale?.AudioUrl != null;
-            var priority = hasAudio ? 1 : poi.IsVip ? 2 : 3;
+
+            var isBoosted = poi.IsFeatured && poi.FeaturedUntil.HasValue && poi.FeaturedUntil.Value > now;
+            var hasAudio  = locale?.AudioUrl != null;
+
+            int priority = (isBoosted, hasAudio, poi.IsVip) switch
+            {
+                (true,  true,  _)     => 1,
+                (true,  false, _)     => 2,
+                (false, true,  true)  => 3,
+                (false, false, true)  => 4,
+                _                     => 5,
+            };
 
             return new TriggerResult(
                 poi.PoiId,
                 locale?.Title ?? poi.PoiName,
-                hasAudio ? locale!.AudioUrl      : null,
-                hasAudio ? locale!.AudioDuration : null,
-                hasAudio,
+                locale?.AudioUrl,
+                locale?.AudioDuration,
+                hasAudio && poi.IsVip,
+                isBoosted,
                 Math.Round(dist, 1),
                 priority
             );

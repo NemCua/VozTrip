@@ -36,6 +36,17 @@ export type Question = {
   answer: { answerText: string; audioUrl: string | null } | null;
 };
 
+export type TriggerResult = {
+  poiId: string;
+  poiName: string;
+  audioUrl: string | null;
+  audioDuration: number | null;
+  isVipAudio: boolean;
+  isBoosted: boolean;
+  distance: number;
+  priority: number;
+};
+
 async function apiFetch<T>(path: string, params?: Record<string, string>): Promise<T> {
   const url = new URL(`${API_URL}${path}`);
   if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
@@ -54,6 +65,29 @@ export const getLanguages = () => apiFetch<Language[]>("/api/languages");
 
 export const getQuestions = (poiId: string, languageId?: string) =>
   apiFetch<Question[]>(`/api/pois/${poiId}/questions`, languageId ? { languageId } : undefined);
+
+export const resolveGpsTrigger = async (params: {
+  lat: number; lon: number;
+  languageId: string; sessionId: string;
+  alreadyTriggered: string[];
+}): Promise<TriggerResult[]> => {
+  try {
+    const res = await fetch(`${API_URL}/api/gps/trigger`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lat: params.lat, lon: params.lon,
+        languageId: params.languageId,
+        sessionId: params.sessionId,
+        alreadyTriggered: params.alreadyTriggered,
+      }),
+    });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+};
 
 export const logVisit = async (sessionId: string, poiId: string) => {
   try {

@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { Poi } from "@/services/api";
+import { useEffect, useRef } from "react";
+import { resolveGpsTrigger, TriggerResult } from "@/services/api";
 
-function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371000;
+function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6_371_000;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -14,32 +14,48 @@ function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export function useGPS(pois: Poi[], onTrigger: (poi: Poi) => void) {
-  const triggeredIds = useRef<Set<string>>(new Set());
-  const [hasPermission, setHasPermission] = useState(false);
-  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+export function useGPS(
+  langId: string | null,
+  sessionId: string,
+  onTriggers: (results: TriggerResult[]) => void
+) {
+  const triggeredIdsRef = useRef<Set<string>>(new Set());
+  const lastCallRef = useRef<{ lat: number; lon: number; time: number } | null>(null);
+  const onTriggersRef = useRef(onTriggers);
+  useEffect(() => { onTriggersRef.current = onTriggers; });
 
   useEffect(() => {
-    if (!navigator.geolocation || pois.length === 0) return;
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setHasPermission(true);
-        setUserCoords({ lat: latitude, lng: longitude });
-        for (const poi of pois) {
-          if (triggeredIds.current.has(poi.poiId)) continue;
-          const dist = haversineDistance(latitude, longitude, poi.latitude, poi.longitude);
-          if (dist <= (poi.triggerRadius ?? 10)) {
-            triggeredIds.current.add(poi.poiId);
-            onTrigger(poi);
-          }
-        }
-      },
-      () => setHasPermission(false),
-      { enableHighAccuracy: true, maximumAge: 5000 }
-    );
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, [pois]);
+    if (!langId) return;
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
 
-  return { hasPermission, userCoords };
+    const watchId = navigator.geolocation.watchPosition(
+      async (pos) => {
+        const { latitude: lat, longitude: lon } = pos.coords;
+        const now = Date.now();
+        const last = lastCallRef.current;
+
+        // Throttle: skip if moved <10m AND <8s elapsed
+        if (last) {
+          const moved = haversine(last.lat, last.lon, lat, lon);
+          if (moved < 10 && now - last.time < 8_000) return;
+        }
+        lastCallRef.current = { lat, lon, time: now };
+
+        const results = await resolveGpsTrigger({
+          lat, lon,
+          languageId: langId,
+          sessionId,
+          alreadyTriggered: [...triggeredIdsRef.current],
+        });
+
+        if (results.length === 0) return;
+        results.forEach(r => triggeredIdsRef.current.add(r.poiId));
+        onTriggersRef.current(results);
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 5_000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [langId, sessionId]);
 }

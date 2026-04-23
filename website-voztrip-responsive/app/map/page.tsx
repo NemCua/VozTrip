@@ -1,13 +1,12 @@
 "use client";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { X, Play, Pause, BookOpen, Navigation, ImageIcon, Radio } from "lucide-react";
-import { getPois, getPoiDetail, logVisit, Poi, PoiDetail } from "@/services/api";
-import { useAudio } from "@/hooks/useAudio";
-import { useGPS } from "@/hooks/useGPS";
+import { getPois, getPoiDetail, Poi, PoiDetail } from "@/services/api";
+import { useGpsTriggerQueue } from "@/hooks/useGpsTriggerQueue";
 import { useLanguage } from "@/context/LanguageContext";
 import { tr } from "@/lib/translations";
 
@@ -28,7 +27,6 @@ function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
 export default function MapPage() {
   const router = useRouter();
   const { lang, langId } = useLanguage();
-  const { play, stop, playing, currentId } = useAudio();
 
   const [selectedPoi, setSelectedPoi] = useState<Poi | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<PoiDetail | null>(null);
@@ -36,42 +34,27 @@ export default function MapPage() {
   const [panelVisible, setPanelVisible] = useState(false);
   const [panelIn, setPanelIn] = useState(false);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [triggeredPoi, setTriggeredPoi] = useState<Poi | null>(null);
-  const [bannerVisible, setBannerVisible] = useState(false);
-  const bannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const { data: pois = [] } = useQuery({
-    queryKey: ["pois", langId],
-    queryFn: () => getPois(langId || undefined),
-  });
 
   const sessionId =
     typeof window !== "undefined"
       ? (localStorage.getItem("voz_session") ?? "guest")
       : "guest";
 
-  const hideBanner = useCallback(() => {
-    setBannerVisible(false);
-    setTimeout(() => setTriggeredPoi(null), 300);
-  }, []);
+  const { currentPoi, bannerVisible, queueCount, dismiss, play, stop, playing, currentId } =
+    useGpsTriggerQueue(langId, lang, sessionId);
 
-  useGPS(pois, async (poi) => {
-    setTriggeredPoi(poi);
-    setBannerVisible(true);
-    play(poi.poiId, null, poi.localizedName ?? poi.poiName, lang);
-    try { await logVisit(sessionId, poi.poiId); } catch {}
-    if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
-    bannerTimerRef.current = setTimeout(hideBanner, 8000);
+  const { data: pois = [] } = useQuery({
+    queryKey: ["pois", langId],
+    queryFn: () => getPois(langId || undefined),
   });
 
-  useEffect(() => () => { if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current); }, []);
-
+  // Separate watchPosition only for showing user dot on map
   useEffect(() => {
     if (!navigator.geolocation) return;
     const id = navigator.geolocation.watchPosition(
       (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       () => {},
-      { enableHighAccuracy: true, maximumAge: 10000 }
+      { enableHighAccuracy: true, maximumAge: 10_000 }
     );
     return () => navigator.geolocation.clearWatch(id);
   }, []);
@@ -124,7 +107,7 @@ export default function MapPage() {
       />
 
       {/* GPS Trigger Banner */}
-      {triggeredPoi && (
+      {currentPoi && (
         <div
           className={`absolute top-4 left-4 right-4 max-w-md mx-auto bg-[#2c2416] rounded-2xl px-4 py-3.5 flex items-center justify-between shadow-xl transition-all duration-300 z-1100 ${
             bannerVisible ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
@@ -136,19 +119,25 @@ export default function MapPage() {
             </div>
             <div className="min-w-0">
               <p className="text-[10px] text-[#b09878] tracking-wide">{tr("banner_near", lang)}</p>
-              <p className="text-sm text-[#f5f0e8] font-medium truncate">
-                {triggeredPoi.localizedName ?? triggeredPoi.poiName}
-              </p>
+              <p className="text-sm text-[#f5f0e8] font-medium truncate">{currentPoi.poiName}</p>
+              {queueCount > 0 && (
+                <p className="text-[10px] text-[#8c7a5e]">+{queueCount} {tr("banner_queued", lang)}</p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-3 ml-3 shrink-0">
             <button
-              onClick={() => { hideBanner(); handleMarkerClick(triggeredPoi); }}
+              onClick={() => {
+                dismiss();
+                const poi = pois.find(p => p.poiId === currentPoi.poiId);
+                if (poi) handleMarkerClick(poi);
+                else router.push(`/poi/${currentPoi.poiId}`);
+              }}
               className="bg-[#c8a96e] rounded-lg px-3.5 py-1.5 text-xs font-semibold text-[#2c2416]"
             >
               {tr("banner_view", lang)}
             </button>
-            <button onClick={hideBanner}>
+            <button onClick={dismiss}>
               <X size={18} color="#8c7a5e" />
             </button>
           </div>
@@ -162,24 +151,17 @@ export default function MapPage() {
             panelIn ? "translate-y-0" : "translate-y-full"
           } z-1000`}
         >
-          {/* Handle */}
           <div className="flex justify-center pt-2.5 pb-1">
             <div className="w-10 h-1 rounded-full bg-[#d8cbb0]" />
           </div>
 
-          {/* Close */}
-          <button
-            onClick={hidePanel}
-            className="absolute top-2.5 right-4 p-1"
-          >
+          <button onClick={hidePanel} className="absolute top-2.5 right-4 p-1">
             <X size={20} color="#b09878" />
           </button>
 
           {selectedPoi && (
             <div className="px-5 pt-2 pb-6 flex flex-col gap-3">
-              {/* Info row */}
               <div className="flex gap-3.5 items-center">
-                {/* Thumbnail */}
                 <div className="w-19 h-19 rounded-xl bg-[#f0e8d8] overflow-hidden shrink-0 flex items-center justify-center">
                   {loadingDetail ? (
                     <div className="w-5 h-5 border-2 border-[#c8a96e] border-t-transparent rounded-full animate-spin" />
@@ -190,7 +172,6 @@ export default function MapPage() {
                   )}
                 </div>
 
-                {/* Text */}
                 <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                   <p className="text-base font-semibold text-[#2c2416] leading-snug line-clamp-2">
                     {localization?.title ?? selectedPoi.poiName}
@@ -209,25 +190,21 @@ export default function MapPage() {
                 </div>
               </div>
 
-              {/* Description preview */}
               {!loadingDetail && localization?.description && (
                 <p className="text-[13px] text-[#6b5c45] leading-snug line-clamp-2">
                   {localization.description}
                 </p>
               )}
 
-              {/* Actions */}
               <div className="flex gap-2.5">
                 <button
                   disabled={loadingDetail}
-                  onClick={() =>
-                    play(
-                      selectedPoi.poiId,
-                      localization?.audioUrl,
-                      localization?.description ?? selectedPoi.poiName,
-                      lang
-                    )
-                  }
+                  onClick={() => play(
+                    selectedPoi.poiId,
+                    localization?.audioUrl,
+                    localization?.description ?? selectedPoi.poiName,
+                    lang
+                  )}
                   className="flex-1 flex items-center justify-center gap-2 bg-[#c8a96e] rounded-xl py-3 disabled:opacity-50"
                 >
                   {isCurrentPlaying ? <Pause size={18} color="#fff" /> : <Play size={18} color="#fff" />}

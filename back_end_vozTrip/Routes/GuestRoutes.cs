@@ -118,6 +118,24 @@ public static class GuestRoutes
         })
         .WithFeatureFlag(f => f.Features.Guest.GpsVisitLog.Session.Enabled);
 
+        // POST /api/gps/trigger — resolve POIs in range, enqueue visit logs, return prioritised list
+        app.MapPost("/api/gps/trigger", async (GpsTriggerRequest req, GpsTriggerService svc, VisitLogQueue queue) =>
+        {
+            var already = req.AlreadyTriggered?.ToHashSet() ?? new HashSet<string>();
+            var results = await svc.ResolveTriggerAsync(req.Lat, req.Lon, req.LanguageId, already);
+
+            foreach (var r in results)
+                queue.TryEnqueue(new VisitLog
+                {
+                    SessionId   = req.SessionId,
+                    PoiId       = r.PoiId,
+                    TriggeredAt = DateTime.UtcNow
+                });
+
+            return Results.Ok(results);
+        })
+        .WithFeatureFlag(f => f.Features.Guest.GpsVisitLog.Enabled);
+
         // POST /api/visitlogs — F07 (ghi lượt thăm, enqueue → batch write)
         app.MapPost("/api/visitlogs", (VisitLogRequest req, VisitLogQueue queue) =>
         {
@@ -322,3 +340,4 @@ record SessionRequest(string SessionId, string? LanguageId);
 record VisitLogRequest(string SessionId, string PoiId);
 record UsageLogRequest(string? SessionId, string EventType);
 record DeviceJoinRequest(string DeviceId, string Platform, string? OsVersion);
+record GpsTriggerRequest(double Lat, double Lon, string LanguageId, string SessionId, List<string>? AlreadyTriggered);

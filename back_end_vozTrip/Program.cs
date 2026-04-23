@@ -57,6 +57,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<VisitLogQueue>();
 builder.Services.AddHostedService<VisitLogWorker>();
 builder.Services.AddSingleton<IFeaturesService, FeaturesService>();
+builder.Services.AddScoped<GpsTriggerService>();
 
 // FeaturesConfig được resolve mỗi request từ cache của FeaturesService
 builder.Services.AddScoped<FeaturesConfig>(sp =>
