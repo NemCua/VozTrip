@@ -7,7 +7,7 @@ import AppShell from "@/components/layout/AppShell";
 import { usePathname, useRouter } from "next/navigation";
 import { checkDeviceStatus, joinDevice, pingDevice } from "@/services/api";
 
-const PUBLIC_PATHS = ["/", "/language", "/payment", "/privacy"];
+const PUBLIC_PATHS = ["/", "/language", "/payment", "/privacy", "/guide"];
 
 function GateGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -40,7 +40,9 @@ function GateGuard({ children }: { children: ReactNode }) {
       } else if (result === "unreachable") {
         setChecked(true);
       } else {
-        router.replace("/payment");
+        // Chưa approved: chọn ngôn ngữ trước nếu chưa có, rồi mới thanh toán
+        const hasLang = !!localStorage.getItem("voz_lang");
+        router.replace(hasLang ? "/payment" : "/language");
       }
     };
 

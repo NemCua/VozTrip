@@ -26,14 +26,7 @@ export default function PaymentPage() {
   const navigateAfterApproval = () => {
     const redirect = localStorage.getItem("redirect_after");
     localStorage.removeItem("redirect_after");
-    const hasLang = !!localStorage.getItem("voz_lang");
-    if (!hasLang) {
-      router.replace("/language");
-    } else if (redirect && redirect !== "/payment") {
-      router.replace(redirect);
-    } else {
-      router.replace("/home");
-    }
+    router.replace(redirect && redirect !== "/payment" && redirect !== "/language" ? redirect : "/home");
   };
 
   useEffect(() => {
@@ -76,7 +69,7 @@ export default function PaymentPage() {
 
     if (result === "approved") {
       localStorage.setItem("device_approved", "true");
-      router.replace("/language");
+      navigateAfterApproval();
     } else if (result === "unreachable") {
       setStatus("simulating");
       setCountdown(3);

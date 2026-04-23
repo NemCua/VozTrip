@@ -26,6 +26,9 @@ export default function LanguagePickerPage() {
 
   const handleSelect = (apiLang: Language) => {
     setLang(apiLang.languageCode as LangCode, apiLang.languageId);
+    // Nếu device chưa approved → đi payment (mang redirect_after theo để payment dùng sau)
+    const deviceApproved = localStorage.getItem("device_approved") === "true";
+    if (!deviceApproved) { router.push("/payment"); return; }
     const redirect = localStorage.getItem("redirect_after");
     localStorage.removeItem("redirect_after");
     router.push(redirect && redirect !== "/payment" && redirect !== "/language" ? redirect : "/home");
