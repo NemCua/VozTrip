@@ -1,7 +1,8 @@
 "use client";
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5183";
+const CACHE_KEY = "voz_features_cache";
 
 type E = { enabled: boolean };
 
@@ -45,17 +46,40 @@ const DEFAULT: FeaturesShape = {
   },
 };
 
+function loadCached(): FeaturesShape {
+  if (typeof window === "undefined") return DEFAULT;
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (raw) return JSON.parse(raw) as FeaturesShape;
+  } catch {}
+  return DEFAULT;
+}
+
 const FeaturesContext = createContext<FeaturesShape>(DEFAULT);
 
 export function FeaturesProvider({ children }: { children: ReactNode }) {
-  const [features, setFeatures] = useState<FeaturesShape>(DEFAULT);
+  // Start with localStorage cache so there's no flicker on reload
+  const [features, setFeatures] = useState<FeaturesShape>(loadCached);
+
+  const fetchFeatures = useCallback(() => {
+    fetch(`${API_URL}/api/features`)
+      .then(r => r.json())
+      .then(data => {
+        setFeatures(data);
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
+      })
+      .catch(() => {
+        // keep last cached value on error — don't reset to DEFAULT
+      });
+  }, []);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/features`)
-      .then((r) => r.json())
-      .then((data) => setFeatures(data))
-      .catch(() => {});
-  }, []);
+    fetchFeatures();
+
+    // Refetch when user switches back to the tab — catches admin flag changes
+    window.addEventListener("focus", fetchFeatures);
+    return () => window.removeEventListener("focus", fetchFeatures);
+  }, [fetchFeatures]);
 
   return (
     <FeaturesContext.Provider value={features}>

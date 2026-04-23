@@ -62,7 +62,10 @@ public interface IFeaturesService
 public class FeaturesService(IMemoryCache cache) : IFeaturesService
 {
     private const string CacheKey = "features_config";
-    private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(30);
+    // Cache không tự hết hạn — chỉ bị invalidate khi admin đổi flag hoặc app restart.
+    // TTL 30s cũ gây lỗi: khi hết hạn, GetConfig() trả về new FeaturesConfig() với
+    // tất cả bool = false (C# default), làm toàn bộ flag tắt giữa chừng.
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(24);
 
     public FeaturesConfig GetConfig() =>
         cache.Get<FeaturesConfig>(CacheKey) ?? new FeaturesConfig();

@@ -138,6 +138,20 @@ const t: Record<string, Record<LangCode, string>> = {
 
   common_no_image: { vi: "Không có ảnh", en: "No image", zh: "无图片", ko: "이미지 없음", ja: "画像なし" },
 
+  feedback_title:       { vi: "Góp ý & Báo cáo",                    en: "Feedback",                           zh: "反馈与报告",          ko: "피드백 & 신고",         ja: "フィードバック" },
+  feedback_subtitle:    { vi: "Giúp chúng tôi cải thiện VozTrip",    en: "Help us improve VozTrip",            zh: "帮助我们改进VozTrip",  ko: "VozTrip 개선에 도움 주세요", ja: "VozTripの改善にご協力を" },
+  feedback_type_label:  { vi: "Loại phản hồi",                       en: "Type",                               zh: "反馈类型",            ko: "피드백 유형",           ja: "フィードバック種類" },
+  feedback_type_bug:    { vi: "Lỗi kỹ thuật",                        en: "Bug",                                zh: "技术错误",            ko: "버그",                  ja: "バグ" },
+  feedback_type_suggest:{ vi: "Góp ý cải thiện",                     en: "Suggestion",                         zh: "改进建议",            ko: "제안",                  ja: "提案" },
+  feedback_type_content:{ vi: "Nội dung sai",                        en: "Content",                            zh: "内容有误",            ko: "콘텐츠 오류",           ja: "コンテンツ誤り" },
+  feedback_type_other:  { vi: "Khác",                                 en: "Other",                              zh: "其他",                ko: "기타",                  ja: "その他" },
+  feedback_msg_label:   { vi: "Nội dung",                             en: "Message",                            zh: "内容",                ko: "내용",                  ja: "メッセージ" },
+  feedback_placeholder: { vi: "Mô tả vấn đề hoặc góp ý của bạn...", en: "Describe the issue or suggestion...", zh: "描述问题或建议...",   ko: "문제나 제안을 설명해 주세요...", ja: "問題や提案を説明してください..." },
+  feedback_send:        { vi: "Gửi phản hồi",                        en: "Send Feedback",                      zh: "发送反馈",            ko: "피드백 전송",           ja: "フィードバック送信" },
+  feedback_sending:     { vi: "Đang gửi...",                         en: "Sending...",                         zh: "发送中...",           ko: "전송 중...",             ja: "送信中..." },
+  feedback_done_title:  { vi: "Cảm ơn bạn!",                         en: "Thank you!",                         zh: "谢谢！",              ko: "감사합니다!",           ja: "ありがとうございます！" },
+  feedback_done_sub:    { vi: "Phản hồi đã được gửi đi.",            en: "Your feedback has been sent.",       zh: "反馈已发送。",        ko: "피드백이 전송되었습니다.", ja: "フィードバックが送信されました。" },
+
   sos_title:       { vi: "Số khẩn cấp",           en: "Emergency Contacts",      zh: "紧急联系",          ko: "긴급 연락처",        ja: "緊急連絡先" },
   sos_tap_to_call: { vi: "Bấm vào số để gọi ngay", en: "Tap to call immediately", zh: "点击号码立即拨打",   ko: "번호를 눌러 즉시 전화", ja: "番号をタップしてすぐ電話" },
 

@@ -3,14 +3,15 @@ import { X, Bug, Lightbulb, FileText, HelpCircle, Send, CheckCircle } from "luci
 import { useState } from "react";
 import { submitFeedback } from "@/services/api";
 import { useLanguage } from "@/context/LanguageContext";
+import { tr } from "@/lib/translations";
 
 type FeedbackType = "bug" | "suggestion" | "content" | "other";
 
-const TYPES: { key: FeedbackType; label: string; labelEn: string; icon: React.ReactNode; color: string }[] = [
-  { key: "bug",        label: "Lỗi kỹ thuật",   labelEn: "Bug",        icon: <Bug size={16} />,         color: "#dc2626" },
-  { key: "suggestion", label: "Góp ý cải thiện", labelEn: "Suggestion", icon: <Lightbulb size={16} />,   color: "#c8a96e" },
-  { key: "content",    label: "Nội dung sai",    labelEn: "Content",    icon: <FileText size={16} />,    color: "#0891b2" },
-  { key: "other",      label: "Khác",            labelEn: "Other",      icon: <HelpCircle size={16} />,  color: "#8c7a5e" },
+const TYPES: { key: FeedbackType; trKey: string; icon: React.ReactNode; color: string }[] = [
+  { key: "bug",        trKey: "feedback_type_bug",     icon: <Bug size={16} />,        color: "#dc2626" },
+  { key: "suggestion", trKey: "feedback_type_suggest", icon: <Lightbulb size={16} />,  color: "#c8a96e" },
+  { key: "content",    trKey: "feedback_type_content", icon: <FileText size={16} />,   color: "#0891b2" },
+  { key: "other",      trKey: "feedback_type_other",   icon: <HelpCircle size={16} />, color: "#8c7a5e" },
 ];
 
 type Props = { open: boolean; onClose: () => void; poiId?: string };
@@ -43,7 +44,7 @@ export default function FeedbackModal({ open, onClose, poiId }: Props) {
   const selectedType = TYPES.find(t => t.key === type)!;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-end justify-center">
+    <div className="fixed inset-0 z-9999 flex items-end justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
       <div className="relative w-full max-w-md bg-[#fdfaf4] rounded-t-3xl pt-2 pb-8 shadow-2xl">
@@ -55,12 +56,8 @@ export default function FeedbackModal({ open, onClose, poiId }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#e8dfc8]">
           <div>
-            <p className="text-base font-semibold text-[#2c2416]">
-              {lang === "en" ? "Feedback" : "Góp ý & Báo cáo"}
-            </p>
-            <p className="text-[11px] text-[#b09878] mt-0.5">
-              {lang === "en" ? "Help us improve VozTrip" : "Giúp chúng tôi cải thiện VozTrip"}
-            </p>
+            <p className="text-base font-semibold text-[#2c2416]">{tr("feedback_title", lang)}</p>
+            <p className="text-[11px] text-[#b09878] mt-0.5">{tr("feedback_subtitle", lang)}</p>
           </div>
           <button onClick={onClose} className="p-1">
             <X size={22} color="#8c7a5e" />
@@ -70,19 +67,15 @@ export default function FeedbackModal({ open, onClose, poiId }: Props) {
         {done ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
             <CheckCircle size={48} color="#16a34a" />
-            <p className="text-base font-medium text-[#2c2416]">
-              {lang === "en" ? "Thank you!" : "Cảm ơn bạn!"}
-            </p>
-            <p className="text-sm text-[#8c7a5e]">
-              {lang === "en" ? "Your feedback has been sent." : "Phản hồi đã được gửi đi."}
-            </p>
+            <p className="text-base font-medium text-[#2c2416]">{tr("feedback_done_title", lang)}</p>
+            <p className="text-sm text-[#8c7a5e]">{tr("feedback_done_sub", lang)}</p>
           </div>
         ) : (
           <div className="px-5 pt-5 flex flex-col gap-4">
             {/* Type selector */}
             <div>
               <p className="text-[11px] text-[#b09060] tracking-wider uppercase mb-2">
-                {lang === "en" ? "Type" : "Loại phản hồi"}
+                {tr("feedback_type_label", lang)}
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {TYPES.map(t => (
@@ -97,9 +90,7 @@ export default function FeedbackModal({ open, onClose, poiId }: Props) {
                     }}
                   >
                     <span style={{ color: type === t.key ? t.color : "#b09878" }}>{t.icon}</span>
-                    <span className="text-[13px] font-medium">
-                      {lang === "en" ? t.labelEn : t.label}
-                    </span>
+                    <span className="text-[13px] font-medium">{tr(t.trKey, lang)}</span>
                   </button>
                 ))}
               </div>
@@ -108,14 +99,12 @@ export default function FeedbackModal({ open, onClose, poiId }: Props) {
             {/* Message */}
             <div>
               <p className="text-[11px] text-[#b09060] tracking-wider uppercase mb-2">
-                {lang === "en" ? "Message" : "Nội dung"}
+                {tr("feedback_msg_label", lang)}
               </p>
               <textarea
                 value={message}
                 onChange={e => setMessage(e.target.value)}
-                placeholder={lang === "en"
-                  ? "Describe the issue or suggestion..."
-                  : "Mô tả vấn đề hoặc góp ý của bạn..."}
+                placeholder={tr("feedback_placeholder", lang)}
                 rows={4}
                 maxLength={1000}
                 className="w-full bg-white border border-[#e8dfc8] rounded-xl px-3.5 py-3 text-sm text-[#2c2416] placeholder:text-[#b09878] outline-none resize-none focus:border-[#c8a96e]"
@@ -132,9 +121,7 @@ export default function FeedbackModal({ open, onClose, poiId }: Props) {
             >
               <Send size={16} color="#fff" />
               <span className="text-[15px] font-semibold text-white">
-                {submitting
-                  ? (lang === "en" ? "Sending..." : "Đang gửi...")
-                  : (lang === "en" ? "Send Feedback" : "Gửi phản hồi")}
+                {submitting ? tr("feedback_sending", lang) : tr("feedback_send", lang)}
               </span>
             </button>
           </div>
