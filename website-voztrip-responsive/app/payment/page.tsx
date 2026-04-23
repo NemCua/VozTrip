@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { RefreshCw, Copy, Clock } from "lucide-react";
+import { RefreshCw, Copy, Clock, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { checkDeviceStatus } from "@/services/api";
 import { useLanguage } from "@/context/LanguageContext";
@@ -14,10 +14,13 @@ export default function PaymentPage() {
   const [status, setStatus] = useState<"idle" | "pending" | "simulating">("idle");
   const [countdown, setCountdown] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [showConsentWarning, setShowConsentWarning] = useState(false);
 
   useEffect(() => {
     const id = localStorage.getItem("voz_session") ?? "";
     setDeviceId(id);
+    if (localStorage.getItem("voz_consent") === "true") setAgreed(true);
   }, []);
 
   const navigateAfterApproval = () => {
@@ -55,7 +58,15 @@ export default function PaymentPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const toggleAgreed = () => {
+    const next = !agreed;
+    setAgreed(next);
+    setShowConsentWarning(false);
+    localStorage.setItem("voz_consent", String(next));
+  };
+
   const handleCheck = async () => {
+    if (!agreed) { setShowConsentWarning(true); return; }
     if (!deviceId || checking || countdown > 0) return;
     setChecking(true);
     setStatus("idle");
@@ -135,6 +146,35 @@ export default function PaymentPage() {
           </p>
         </div>
       )}
+
+      {/* Consent */}
+      <div className="w-full max-w-xs flex flex-col gap-1.5">
+        {showConsentWarning && !agreed && (
+          <p className="text-[11px] text-[#c0392b] bg-[#fdf2f2] border border-[#f5c6c6] rounded-lg px-3 py-2">
+            {tr("lang_consent_warning", lang)}
+          </p>
+        )}
+        <button onClick={toggleAgreed} className="flex items-start gap-3 text-left">
+          <div className={`w-5 h-5 rounded-md border-[1.5px] flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+            agreed ? "bg-[#2c2416] border-[#2c2416]" : "bg-white border-[#d8cbb0]"
+          }`}>
+            {agreed && <Check size={13} color="#fdfaf4" />}
+          </div>
+          <p className="flex-1 text-[13px] text-[#5c4a30] leading-5">
+            {tr("lang_consent_text", lang)}{" "}
+            <a
+              href="/privacy"
+              target="_blank"
+              onClick={(e) => e.stopPropagation()}
+              className="text-[#c8a96e] underline"
+            >
+              {tr("lang_consent_link", lang)}
+            </a>{" "}
+            {tr("lang_consent_suffix", lang)}
+          </p>
+        </button>
+        <p className="text-[11px] text-[#b09878] pl-8">{tr("lang_consent_sub", lang)}</p>
+      </div>
 
       {/* Check button */}
       <button

@@ -9,13 +9,13 @@ type LanguageCtx = {
 };
 
 const LanguageContext = createContext<LanguageCtx>({
-  lang: "vi",
+  lang: "en",
   langId: "",
   setLang: () => {},
 });
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangCode] = useState<LangCode>("vi");
+  const [lang, setLangCode] = useState<LangCode>("en");
   const [langId, setLangId] = useState("");
 
   useEffect(() => {
