@@ -17,6 +17,7 @@ const t: Record<string, Record<LangCode, string>> = {
   home_filter_all:   { vi: "Tất cả",                en: "All",                   zh: "全部",        ko: "전체",           ja: "すべて" },
   home_filter_near:  { vi: "Gần đây",               en: "Nearby",                zh: "附近",        ko: "근처",           ja: "近く" },
   home_filter_popular: { vi: "Nổi bật",             en: "Popular",               zh: "热门",        ko: "인기",           ja: "人気" },
+  home_featured:     { vi: "Nổi bật",               en: "Featured",              zh: "推荐",        ko: "추천",           ja: "おすすめ" },
   home_loading:      { vi: "Đang tải địa điểm...",  en: "Loading places...",     zh: "正在加载...", ko: "불러오는 중...", ja: "読み込み中..." },
   home_empty:        { vi: "Không tìm thấy địa điểm", en: "No places found",    zh: "未找到地点",  ko: "장소 없음",      ja: "場所が見つかりません" },
 

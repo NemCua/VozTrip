@@ -1,13 +1,27 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
-import { Search, X, Languages, MapPin, Play, Pause, Radio, ChevronRight } from "lucide-react";
+import { Search, X, Languages, MapPin, Play, Pause, Radio, ChevronRight, Star } from "lucide-react";
 import { getPois, Poi } from "@/services/api";
 import { useGpsTriggerQueue } from "@/hooks/useGpsTriggerQueue";
 import { useLanguage } from "@/context/LanguageContext";
 import { tr } from "@/lib/translations";
+
+function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatDist(m: number) {
+  return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
+}
 
 const FILTERS = ["all", "near", "popular"] as const;
 
@@ -16,11 +30,22 @@ export default function HomePage() {
   const { lang, langId } = useLanguage();
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const sessionId =
     typeof window !== "undefined"
       ? (localStorage.getItem("voz_session") ?? "guest")
       : "guest";
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    const id = navigator.geolocation.watchPosition(
+      (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 10000 }
+    );
+    return () => navigator.geolocation.clearWatch(id);
+  }, []);
 
   const { currentPoi, bannerVisible, queueCount, dismiss, play, playing, currentId } =
     useGpsTriggerQueue(langId, lang, sessionId);
@@ -30,10 +55,22 @@ export default function HomePage() {
     queryFn: () => getPois(langId || undefined),
   });
 
-  const filtered = pois.filter((p) =>
-    search.length === 0 ||
-    (p.localizedName ?? p.poiName).toLowerCase().includes(search.toLowerCase())
-  );
+  const poisWithDist = pois.map((p) => ({
+    ...p,
+    dist: userCoords ? haversine(userCoords.lat, userCoords.lng, p.latitude, p.longitude) : null,
+  }));
+
+  const filtered = poisWithDist
+    .filter((p) =>
+      search.length === 0 ||
+      (p.localizedName ?? p.poiName).toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (a.dist === null && b.dist === null) return 0;
+      if (a.dist === null) return 1;
+      if (b.dist === null) return -1;
+      return a.dist - b.dist;
+    });
 
   return (
     <div className="flex flex-col min-h-screen bg-[#fdfaf4]">
@@ -129,13 +166,18 @@ export default function HomePage() {
               <p className="text-sm text-[#b09878]">{tr("home_empty", lang)}</p>
             </div>
           ) : (
-            filtered.map((poi, index) => {
+            filtered.map((poi) => {
               const isThisPlaying = playing && currentId === poi.poiId;
+              const featured = poi.isFeatured;
               return (
                 <div
                   key={poi.poiId}
                   onClick={() => router.push(`/poi/${poi.poiId}`)}
-                  className="bg-white rounded-2xl overflow-hidden border border-[#e8dfc8] shadow-sm text-left w-full cursor-pointer"
+                  className={`rounded-2xl overflow-hidden shadow-sm text-left w-full cursor-pointer transition-shadow ${
+                    featured
+                      ? "bg-[#fffbf2] border-2 border-[#c8a96e] shadow-[0_2px_12px_rgba(200,169,110,0.25)]"
+                      : "bg-white border border-[#e8dfc8]"
+                  }`}
                 >
                   {/* Card image */}
                   <div className="relative h-36 bg-[#f5f0e8]">
@@ -152,52 +194,57 @@ export default function HomePage() {
                         <MapPin size={32} color="#d8cbb0" />
                       </div>
                     )}
+
+                    {/* Featured badge */}
+                    {featured && (
+                      <div className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-[#c8a96e] rounded-full px-2.5 py-1 shadow-sm">
+                        <Star size={10} color="#2c2416" fill="#2c2416" />
+                        <span className="text-[10px] font-semibold text-[#2c2416]">
+                          {tr("home_featured", lang)}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Distance badge */}
+                    {poi.dist !== null && (
+                      <div className="absolute top-2.5 right-2.5 bg-[#2c2416]/75 backdrop-blur-sm rounded-full px-2.5 py-1">
+                        <span className="text-[10px] text-white font-medium">{formatDist(poi.dist)}</span>
+                      </div>
+                    )}
+
                     {/* Play button */}
                     <button
-                      className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-[#2c2416] flex items-center justify-center shadow-md"
+                      className={`absolute bottom-3 right-3 w-10 h-10 rounded-full flex items-center justify-center shadow-md ${
+                        featured ? "bg-[#c8a96e]" : "bg-[#2c2416]"
+                      }`}
                       onClick={(e) => {
                         e.stopPropagation();
                         play(poi.poiId, null, poi.localizedName ?? poi.poiName, lang);
                       }}
                     >
                       {isThisPlaying ? (
-                        <Pause size={16} color="#fdfaf4" />
+                        <Pause size={16} color={featured ? "#2c2416" : "#fdfaf4"} />
                       ) : (
-                        <Play size={16} color="#fdfaf4" />
+                        <Play size={16} color={featured ? "#2c2416" : "#fdfaf4"} />
                       )}
                     </button>
                   </div>
 
                   {/* Card body */}
                   <div className="p-3.5">
-                    <div className="flex justify-between items-center mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="bg-[#fdf6e8] rounded-md px-2 py-0.5 text-[10px] text-[#c8a96e] tracking-wider uppercase">
-                          POI
-                        </span>
-                        <div className="flex items-center gap-1">
-                          <MapPin size={11} color="#b09878" />
-                          <span className="text-[11px] text-[#b09878]">{poi.triggerRadius}m</span>
-                        </div>
-                      </div>
-                      <span className="text-xs text-[#c8b898] font-medium">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-                    </div>
-
-                    <p className="text-base font-medium text-[#2c2416] mb-0.5">
+                    <p className={`text-base font-medium mb-0.5 ${featured ? "text-[#2c2416]" : "text-[#2c2416]"}`}>
                       {poi.localizedName ?? poi.poiName}
                     </p>
                     <p className="text-xs text-[#b09878] mb-2.5 truncate">{poi.shopName}</p>
 
                     <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-1 bg-[#f0fdf4] border border-[#bbf7d0] rounded-full px-2.5 py-1">
+                      <div className="flex items-center gap-1.5 bg-[#f0fdf4] border border-[#bbf7d0] rounded-full px-2.5 py-1">
                         <Radio size={11} color="#16a34a" />
                         <span className="text-[10px] text-[#16a34a] font-medium">
                           {tr("common_gps_chip", lang)}
                         </span>
                       </div>
-                      <ChevronRight size={16} color="#d8cbb0" />
+                      <ChevronRight size={16} color={featured ? "#c8a96e" : "#d8cbb0"} />
                     </div>
                   </div>
                 </div>

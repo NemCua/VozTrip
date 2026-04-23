@@ -7,6 +7,7 @@ export type Poi = {
   latitude: number;
   longitude: number;
   triggerRadius: number;
+  isFeatured: boolean;
   shopName: string;
   thumbnailUrl: string | null;
 };

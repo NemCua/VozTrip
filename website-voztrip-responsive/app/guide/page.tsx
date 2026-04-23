@@ -604,7 +604,7 @@ export default function GuidePage() {
   const steps = STEPS[validLang];
 
   return (
-    <div className="min-h-screen bg-[#fdfaf4]">
+    <div className="min-h-screen bg-[#f5efe3]">
       {/* Header */}
       <div className="bg-[#2c2416] px-6 pt-12 pb-8">
         <p className="text-[10px] tracking-[3px] text-[#c8a96e] uppercase mb-2">VozTrip</p>
@@ -616,7 +616,7 @@ export default function GuidePage() {
       </div>
 
       {/* Badge */}
-      <div className="px-5 py-4 bg-[#fdf6e8] border-b border-[#e8dfc8]">
+      <div className="px-5 py-3.5 bg-[#fdf6e8] border-b border-[#e8dfc8]">
         <div className="flex items-center gap-2 text-[11px] text-[#16a34a] font-medium">
           <Zap size={13} color="#16a34a" />
           <span>{tr("guide_badge", lang)}</span>
@@ -624,47 +624,67 @@ export default function GuidePage() {
       </div>
 
       {/* Steps */}
-      <div className="px-5 py-6 flex flex-col gap-7">
+      <div className="px-4 py-5 flex flex-col gap-5">
         {steps.map((step, idx) => (
-          <div key={idx}>
-            {/* Step header */}
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-[#fdf0d8] border border-[#e8dfc8] flex items-center justify-center shrink-0">
-                {step.icon}
-              </div>
-              <h2 className="text-[15px] font-semibold text-[#2c2416] leading-snug">{step.title}</h2>
-            </div>
+          <div key={idx} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-[#e8dfc8]">
 
-            {/* Bullet points */}
-            <div className="flex flex-col gap-2 ml-1">
-              {step.content.map((item, i) => (
-                <div key={i} className="flex gap-2.5">
-                  <span className="text-[#c8a96e] mt-1 shrink-0 text-xs">•</span>
-                  <p className="text-sm text-[#5a4a35] leading-relaxed">{renderContent(item)}</p>
+            {/* Screenshot slot */}
+            <div className="w-full aspect-[9/16] bg-[#ede5d4] relative overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/guide/step-${String(idx + 1).padStart(2, "0")}.jpg`}
+                alt={step.title}
+                className="w-full h-full object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+              {/* Step number badge — luôn nổi trên ảnh */}
+              <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-[#2c2416]/75 backdrop-blur-sm rounded-full px-2.5 py-1">
+                <div className="w-4 h-4 rounded-full bg-[#c8a96e] flex items-center justify-center">
+                  <span className="text-[9px] font-bold text-[#2c2416]">{idx + 1}</span>
                 </div>
-              ))}
+                <span className="text-[11px] text-white/90 font-medium">{step.title.split("—")[0].trim()}</span>
+              </div>
             </div>
 
-            {/* Tip box */}
-            {step.tip && (
-              <div className="mt-3 ml-1 bg-[#fdf6e8] border border-[#e8dfc8] rounded-xl px-3.5 py-2.5 flex gap-2">
-                <span className="text-[11px] font-semibold text-[#c8a96e] shrink-0 mt-0.5">{tr("guide_tip", lang)}</span>
-                <p className="text-[12px] text-[#8c7a5e] leading-relaxed">{step.tip}</p>
+            {/* Content */}
+            <div className="px-4 pt-4 pb-5 flex flex-col gap-3">
+              {/* Title row */}
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#fdf0d8] border border-[#e8dfc8] flex items-center justify-center shrink-0">
+                  {step.icon}
+                </div>
+                <h2 className="text-[15px] font-semibold text-[#2c2416] leading-snug flex-1">
+                  {step.title.split("—").slice(1).join("—").trim() || step.title}
+                </h2>
               </div>
-            )}
 
-            {/* Note box */}
-            {step.note && (
-              <div className="mt-3 ml-1 bg-white border border-[#ddd0b8] rounded-xl px-3.5 py-2.5 flex gap-2">
-                <span className="text-[11px] font-semibold text-[#8c7a5e] shrink-0 mt-0.5">{tr("guide_note", lang)}</span>
-                <p className="text-[12px] text-[#8c7a5e] leading-relaxed">{step.note}</p>
+              {/* Bullet points */}
+              <div className="flex flex-col gap-2">
+                {step.content.map((item, i) => (
+                  <div key={i} className="flex gap-2.5">
+                    <span className="text-[#c8a96e] mt-[3px] shrink-0 text-xs leading-5">•</span>
+                    <p className="text-sm text-[#5a4a35] leading-relaxed">{renderContent(item)}</p>
+                  </div>
+                ))}
               </div>
-            )}
 
-            {/* Divider (not after last) */}
-            {idx < steps.length - 1 && (
-              <div className="mt-6 border-b border-[#e8dfc8]" />
-            )}
+              {/* Tip box */}
+              {step.tip && (
+                <div className="bg-[#fdf6e8] border border-[#e8dfc8] rounded-xl px-3.5 py-2.5 flex gap-2">
+                  <span className="text-[11px] font-semibold text-[#c8a96e] shrink-0 mt-0.5">{tr("guide_tip", lang)}</span>
+                  <p className="text-[12px] text-[#8c7a5e] leading-relaxed">{step.tip}</p>
+                </div>
+              )}
+
+              {/* Note box */}
+              {step.note && (
+                <div className="bg-[#fafaf8] border border-[#ddd0b8] rounded-xl px-3.5 py-2.5 flex gap-2">
+                  <span className="text-[11px] font-semibold text-[#8c7a5e] shrink-0 mt-0.5">{tr("guide_note", lang)}</span>
+                  <p className="text-[12px] text-[#8c7a5e] leading-relaxed">{step.note}</p>
+                </div>
+              )}
+            </div>
+
           </div>
         ))}
       </div>

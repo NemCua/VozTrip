@@ -81,7 +81,7 @@ export default function PaymentPage() {
   return (
     <div className="min-h-screen bg-[#fce4ec] flex flex-col items-center justify-center px-8 gap-3">
       <p className="text-xl font-bold text-[#2c2416] tracking-wide">NGUYỄN QUỐC HUY</p>
-      <p className="text-sm text-[#8c7a5e] mb-2">*******085</p>
+      <p className="text-sm text-[#8c7a5e] mb-2">********4611</p>
 
       {/* QR card */}
       <div className="bg-white rounded-2xl p-6 shadow-lg mb-2">

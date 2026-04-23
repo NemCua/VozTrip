@@ -28,6 +28,7 @@ public static class GuestRoutes
                 .Select(p => new
                 {
                     p.PoiId, p.PoiName, p.Latitude, p.Longitude, p.TriggerRadius,
+                    isFeatured = p.IsFeatured && p.FeaturedUntil > DateTime.UtcNow,
                     shopName = p.Seller.User.FullName ?? p.Seller.ShopName,
                     thumbnailUrl = features.Features.Guest.ExplorePois.Thumbnail.Enabled
                         ? p.Media.OrderBy(m => m.SortOrder).Select(m => m.MediaUrl).FirstOrDefault()
