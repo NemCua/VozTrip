@@ -15,6 +15,7 @@ export default function PaymentPage() {
   const [countdown, setCountdown] = useState(0);
   const [copied, setCopied] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [agreed2, setAgreed2] = useState(false);
   const [showConsentWarning, setShowConsentWarning] = useState(false);
 
   useEffect(() => {
@@ -54,6 +55,12 @@ export default function PaymentPage() {
   const toggleAgreed = () => {
     const next = !agreed;
     setAgreed(next);
+    setShowConsentWarning(false);
+    localStorage.setItem("voz_consent", String(next));
+  };
+  const toggleAgree2 = () => {
+    const next = !agreed2;
+    setAgreed2(next);
     setShowConsentWarning(false);
     localStorage.setItem("voz_consent", String(next));
   };
@@ -152,6 +159,25 @@ export default function PaymentPage() {
             agreed ? "bg-[#2c2416] border-[#2c2416]" : "bg-white border-[#d8cbb0]"
           }`}>
             {agreed && <Check size={13} color="#fdfaf4" />}
+          </div>
+          <p className="flex-1 text-[13px] text-[#5c4a30] leading-5">
+            {tr("lang_consent_text", lang)}{" "}
+            <a
+              href="/privacy"
+              target="_blank"
+              onClick={(e) => e.stopPropagation()}
+              className="text-[#c8a96e] underline"
+            >
+              {tr("lang_consent_link", lang)}
+            </a>{" "}
+            {tr("lang_consent_suffix", lang)}
+          </p>
+        </button>
+        <button onClick={toggleAgree2} className="flex items-start gap-3 text-left">
+          <div className={`w-5 h-5 rounded-md border-[1.5px] flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+            agreed2 ? "bg-[#2c2416] border-[#2c2416]" : "bg-white border-[#d8cbb0]"
+          }`}>
+            {agreed2 && <Check size={13} color="#fdfaf4" />}
           </div>
           <p className="flex-1 text-[13px] text-[#5c4a30] leading-5">
             {tr("lang_consent_text", lang)}{" "}
