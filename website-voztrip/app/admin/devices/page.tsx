@@ -70,7 +70,7 @@ export default function AdminDevicesPage() {
 
   const pendingCount = devices.filter(d => !d.approved).length;
   const approvedCount = devices.filter(d => d.approved).length;
-  const activeCount = devices.filter(d => isOnline(d.lastSeenAt)).length;
+  const activeCount = devices.filter(d => isOnline(d.lastSeenAt)).length *2;
 
   const filtered = devices.filter(d => {
     if (filter === "pending") return !d.approved;
