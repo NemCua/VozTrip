@@ -15,9 +15,9 @@ type Stats = {
   totalQrScans: number;
   totalAppOpens: number;
   totalDeviceJoins: number;
-  topPois: { poiId: string; poiName: string; count: number }[];
-  visitsByDay: { date: string; count: number }[];
-  qrScansByDay: { date: string; count: number }[];
+  topPois: { poiId: string; poiName: string; count: number }[] | null;
+  visitsByDay: { date: string; count: number }[] | null;
+  qrScansByDay: { date: string; count: number }[] | null;
 };
 
 function StatCard({ label, value, sub, accent }: { label: string; value: number | string; sub?: string; accent?: boolean }) {
@@ -64,7 +64,7 @@ export default function AdminDashboardPage() {
   });
 
   const visitMap: Record<string, number> = {};
-  stats?.visitsByDay.forEach(v => { visitMap[v.date.slice(0, 10)] = v.count; });
+  stats?.visitsByDay?.forEach(v => { visitMap[v.date.slice(0, 10)] = v.count; });
   const chartData = last7Days.map(date => ({ date, count: visitMap[date] ?? 0 }));
   const maxCount = Math.max(...chartData.map(d => d.count), 1);
 
@@ -134,7 +134,7 @@ export default function AdminDashboardPage() {
               <div className="text-xs tracking-[0.25em] uppercase mb-5" style={{ color: "#8c7a5e" }}>
                 Top POIs by Visits
               </div>
-              {stats.topPois.length === 0 ? (
+              {!stats.topPois || stats.topPois.length === 0 ? (
                 <div className="py-8 text-center text-xs tracking-widest uppercase" style={{ color: "#b09878" }}>
                   No visit data yet
                 </div>
