@@ -92,8 +92,6 @@ export default function AdminDashboardPage() {
             <StatCard label="Total Visits" value={stats.totalVisits} sub="all time" />
             <StatCard label="Visits Today" value={stats.visitsToday} />
             <StatCard label="Device Joins" value={stats.totalDeviceJoins} sub="đã thanh toán" accent />
-            <StatCard label="QR Scans" value={stats.totalQrScans} sub="all time" />
-            <StatCard label="App Opens" value={stats.totalAppOpens} sub="all time" />
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -163,35 +161,6 @@ export default function AdminDashboardPage() {
                   ))}
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* QR Scans chart — 7 ngày */}
-          <div
-            className="mt-6 p-6"
-            style={{ backgroundColor: "#fdfaf4", border: "1px solid #e8dfc8", borderRadius: "2px" }}
-          >
-            <div className="text-xs tracking-[0.25em] uppercase mb-5" style={{ color: "#8c7a5e" }}>
-              QR Scans — Last 7 Days
-            </div>
-            <div className="flex items-end gap-2 h-32">
-              {qrChartData.map(({ date, count }) => (
-                <div key={date} className="flex-1 flex flex-col items-center gap-1">
-                  <div className="text-xs" style={{ color: "#c8a96e" }}>{count > 0 ? count : ""}</div>
-                  <div
-                    style={{
-                      width: "100%",
-                      height: `${Math.max((count / qrMaxCount) * 96, count > 0 ? 4 : 2)}px`,
-                      backgroundColor: count > 0 ? "#2c2416" : "#e8dfc8",
-                      borderRadius: "1px",
-                      transition: "height 0.3s",
-                    }}
-                  />
-                  <div className="text-xs" style={{ color: "#b09878" }}>
-                    {new Date(date).toLocaleDateString("en", { weekday: "short" })}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
 
